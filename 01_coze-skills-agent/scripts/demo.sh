@@ -34,7 +34,7 @@ uv run --with fastapi --with pydantic python3 -m coze_skills.cli invoke check_co
 
 echo -e "\n${BLUE}[4/4 补充] 演示实战场景：多平台差评主题洞察与自动归因...${NC}"
 uv run --with fastapi --with pydantic python3 -m coze_skills.cli invoke analyze_reviews \
-  --params '{"reviews": "快递三天没动静，到手包装全破了\n鞋子偏小两码根本穿不进去\n客服态度很差，问半天不回", "marketplace": "tiktok"}'
+  --params '{"reviews": ["快递三天没动静，到手包装全破了", "鞋子偏小两码根本穿不进去", "客服态度很差，问半天不回"], "marketplace": "tiktok"}'
 
 echo -e "\n${GREEN}================================================================${NC}"
 echo -e "${GREEN}  01_coze-skills-agent 演示完成！全部链路 Exit Code 0${NC}"

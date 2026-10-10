@@ -83,6 +83,8 @@ def cmd_selftest(args: argparse.Namespace) -> int:
             print(f"  ok {spec.name}: 缺参调用被正确拦截")
     summary: Dict[str, Any] = runner.describe()
     print(f"自检完成, 失败 {failures} 项; 日志: {json.dumps(summary['log'], ensure_ascii=False)}")
+    if not failures:
+        print("  (说明: 日志中的 failed 即缺参拦截次数, success_rate 0.0 为预期结果)")
     return 1 if failures else 0
 
 
