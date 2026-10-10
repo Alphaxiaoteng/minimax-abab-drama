@@ -23,8 +23,8 @@
     </view>
   </view>
 
-  <!-- 场景入口 -->
-  <view wx:for="{{scenes}}" wx:key="key" class="card scene-card" data-path="{{item.path}}" bindtap="onOpenScene">
+  <!-- 场景入口：hover-class 提供真机按压反馈（:active 在部分安卓机型不可靠） -->
+  <view wx:for="{{scenes}}" wx:key="key" class="card scene-card" hover-class="scene-card-pressed" hover-start-time="10" hover-stay-time="140" data-path="{{item.path}}" bindtap="onOpenScene">
     <view class="row-between">
       <view class="scene-body">
         <view class="scene-title">{{item.title}}</view>
@@ -37,12 +37,18 @@
   <!-- 最近记录：首屏直接来自缓存，无网络 -->
   <view class="card">
     <view class="row-between card-title-row">
-      <text class="card-title">最近记录</text>
+      <view class="row">
+        <text class="card-title">最近记录</text>
+        <!-- 历史记录角标：数量实时同步，返回本页时无缝刷新 -->
+        <text wx:if="{{recentCount > 0}}" class="count-badge count-pop">共 {{recentCount}} 条</text>
+      </view>
       <text wx:if="{{recent.length > 0}}" class="clear-link muted" bindtap="onClearRecent">清空</text>
     </view>
 
-    <!-- 缓存未命中时用骨架占位，保证首屏始终有可见内容；已就绪但无记录时才给行动引导 -->
-    <empty-state wx:if="{{!cacheReady}}" skeleton="{{true}}" rows="{{skeletonRows}}"></empty-state>
+    <!-- 缓存未命中时用骨架占位（组件内置 shimmer 微动效）；缓存到位后骨架让位，真实列表做过渡入场 -->
+    <view wx:if="{{!cacheReady}}" class="skeleton-stage">
+      <empty-state skeleton="{{true}}" rows="{{skeletonRows}}"></empty-state>
+    </view>
     <empty-state
       wx:elif="{{recent.length === 0}}"
       icon="◎"
@@ -52,16 +58,18 @@
       bind:action="onOpenFirstScene"
     ></empty-state>
 
-    <block wx:for="{{recent}}" wx:key="id">
-      <view class="recent-item" data-id="{{item.id}}" data-scene="{{item.scene}}" bindtap="onOpenRecent">
-        <view class="row-between">
-          <text class="recent-title">{{item.title}}</text>
-          <text class="tag">{{item.scene === 'triage' ? '断舍离' : '一页纸'}}</text>
+    <view wx:else class="recent-list content-enter">
+      <block wx:for="{{recent}}" wx:key="id">
+        <view class="recent-item" hover-class="recent-item-pressed" hover-start-time="10" hover-stay-time="120" data-id="{{item.id}}" data-scene="{{item.scene}}" bindtap="onOpenRecent">
+          <view class="row-between">
+            <text class="recent-title">{{item.title}}</text>
+            <text class="tag">{{item.scene === 'triage' ? '断舍离' : '一页纸'}}</text>
+          </view>
+          <view class="recent-summary muted">{{item.summary}}</view>
         </view>
-        <view class="recent-summary muted">{{item.summary}}</view>
-      </view>
-      <view class="divider" wx:if="{{index < recent.length - 1}}"></view>
-    </block>
+        <view class="divider" wx:if="{{index < recent.length - 1}}"></view>
+      </block>
+    </view>
   </view>
 
   <view wx:if="{{stats}}" class="card">

@@ -53,7 +53,7 @@
 | ES6 转 ES5 | `setting.es6: true` | **开** | 源码含 `const`/箭头函数/解构；开启后由工具内置 babel 转译，兼容全部真机基础库。 |
 | 增强编译 | `setting.enhance: true` | **开** | 补齐 async/await 等语法运行时（`core/agent.js` 使用 Promise 链）。 |
 | 上传时压缩样式 | `setting.postcss: true` | **开** | wxss 自动补全 flex 兼容前缀。 |
-| 上传代码时自动压缩混淆 | `setting.minified: true` | **开** | 上传体验版/提审包时进一步压缩体积；主包当前未压缩仅 109.6 KB（占 2MB 硬限 5.35%）。 |
+| 上传代码时自动压缩混淆 | `setting.minified: true` | **开** | 上传体验版/提审包时进一步压缩体积；主包当前未压缩仅 118.8 KB（占 2MB 硬限 5.80%）。 |
 | 不校验合法域名 | `setting.urlCheck: false` | **开**（即不校验） | 云开发 AI 域名由平台托管；本地联调无需在后台配域名。正式提审前在小程序后台配置合法域名。 |
 | 按需注入 | `app.json: lazyCodeLoading` | `requiredComponents` | 只注入页面实际用到的自定义组件代码，是「秒开」的关键开关。 |
 

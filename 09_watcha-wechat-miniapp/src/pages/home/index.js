@@ -15,6 +15,7 @@ Page({
     firstRenderMs: 0,
     cacheReady: false,
     recent: [],
+    recentCount: 0,
     skeletonRows: 3,
 
     // ---- 启动后异步补充的数据 ----
@@ -52,6 +53,7 @@ Page({
       bootMs: g.bootMs || 0,
       cacheReady: !!g.cacheReady,
       recent: recent,
+      recentCount: this.syncHistoryBadges(g.cache),
       cloudReady: !!g.cloudReady
     });
 
@@ -70,15 +72,40 @@ Page({
   },
 
   onShow() {
-    // 从分包页面返回时，缓存可能已被写入新记录，这里同步刷新列表（仍是本地同步读，非网络）。
+    // 从场景页返回时，缓存可能已被写入新记录，这里同步刷新列表与角标（仍是本地同步读，非网络）。
     const g = app.globalData || {};
     if (g.cache) {
       try {
-        this.setData({ recent: g.cache.rank().slice(0, 5) });
+        const all = g.cache.rank();
+        this.setData({ recent: all.slice(0, 5), recentCount: this.syncHistoryBadges(g.cache) });
       } catch (e) {
         // 读缓存失败保持原样
       }
     }
+  },
+
+  // 历史记录角标同步：按场景统计缓存条数，写进两个 tab 的徽标；数量为 0 时摘除徽标。
+  // 返回本页 / 清空记录后都会调用，保证角标与列表始终一致。返回总条数供卡片角标渲染。
+  syncHistoryBadges(cache) {
+    let all = [];
+    try {
+      all = cache ? cache.rank() : [];
+    } catch (e) {
+      all = [];
+    }
+    const triageCount = all.filter(function (r) { return r.scene === 'triage'; }).length;
+    const quickCount = all.length - triageCount;
+    const setBadge = function (index, n) {
+      try {
+        if (n > 0) wx.setTabBarBadge({ index: index, text: n > 99 ? '99+' : String(n), fail() {} });
+        else wx.removeTabBarBadge({ index: index, fail() {} });
+      } catch (e) {
+        // 角标失败不影响页面
+      }
+    };
+    setBadge(1, quickCount);
+    setBadge(2, triageCount);
+    return all.length;
   },
 
   // 统计信息：本地计算，不发起网络请求。
@@ -135,7 +162,7 @@ Page({
         } catch (e) {
           // 忽略
         }
-        this.setData({ recent: [] });
+        this.setData({ recent: [], recentCount: this.syncHistoryBadges(g.cache) });
         wx.showToast({ title: '已清空', icon: 'success' });
       }
     });

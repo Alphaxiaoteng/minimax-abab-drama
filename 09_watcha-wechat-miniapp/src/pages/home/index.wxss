@@ -54,11 +54,14 @@
 }
 
 .scene-card {
-  transition: transform 0.1s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.scene-card:active {
-  transform: scale(0.985);
+/* hover-class 按压态：真机（尤其安卓）上 :active 不可靠，官方机制是 hover-class */
+.scene-card-pressed {
+  transform: scale(0.975);
+  box-shadow: 0 4rpx 16rpx rgba(31, 111, 235, 0.16);
+  background: #F8FAFF;
 }
 
 .scene-body {
@@ -94,10 +97,13 @@
 
 .recent-item {
   padding: 8rpx 0;
+  border-radius: 12rpx;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
 }
 
-.recent-item:active {
+.recent-item-pressed {
   opacity: 0.6;
+  background: #F2F6FF;
 }
 
 .recent-title {
@@ -120,4 +126,42 @@
 
 .stat-row {
   padding: 10rpx 0;
+}
+
+/* ===== 骨架屏 → 真实内容的过渡动效 ===== */
+.skeleton-stage {
+  animation: skeleton-in 0.2s ease-out;
+}
+
+.recent-list.content-enter {
+  animation: fade-up 0.28s ease-out;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeleton-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== 历史记录角标：数量徽标 + 变化时的弹入 ===== */
+.count-badge {
+  margin-left: 14rpx;
+  padding: 2rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  background: rgba(31, 111, 235, 0.1);
+  color: var(--accent);
+}
+
+.count-pop {
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badge-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
 }
