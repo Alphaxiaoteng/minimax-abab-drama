@@ -16,7 +16,7 @@ from typing import Callable, List, Optional, Tuple
 from ..config import Settings
 from ..device.base import Device
 from ..guard.popup import PopupGovernor
-from ..perception.health import HealthProbe, HealthReport
+from ..perception.health import HealthProbe, HealthReport, frame_signatures
 from ..perception.screen import capture
 from ..vision.base import OcrBackend
 
@@ -111,34 +111,51 @@ class Watchdog:
 
     # ---- 主入口 ----
     def check(self, screen=None) -> List[Issue]:
-        """体检 + 处置一圈，返回本次发现并处置过的故障（每轮最多处置一项，避免连续误操作）。
+        """动作前的预防性体检：**不做冻结判定**，只处理弹窗与黑屏。
 
-        关键点：体检必须用 `evaluate`（不推进「上一帧」基线），
-        否则每个动作前都调用会出现“画面与上次体检相同 → 被当成新基线 → 永远检测不到冻结”。
-        基线只在**未处置**时由 `remember()` 推进。
+        冻结的语义是「动作之后画面毫无变化」，因此必须由动作前后配对取样判定
+        （见 `Controller._assert_progress`）。在动作前无差别比较两次体检结果，
+        会把静止的正常页面误判为冻结并触发破坏性的 back/重启。
         """
         screen = screen if screen is not None else capture(self.device, self.ocr)
-        report = self.probe.evaluate(screen)
-        issues: List[Issue] = []
-        for kind, severity in classify(report):
-            if severity < SEVERITY.get(kind, 1.0):
-                continue
-            issue = Issue(kind=kind, severity=round(severity, 3),
-                          detail="；".join(report.reasons), title=report.popup_title)
-            # 升级门槛看「自上次实质性进展以来的累计故障次数」，不看单一类型的连续帧数：
-            # back() 等处置会改变画面，按帧数计数会被自然打断，导致卡死的设备永远只回退不重启。
-            faults = self._count_fault()
-            self._handle(issue, faults)
-            self._log({"kind": kind, "severity": issue.severity,
+        report = self.probe.evaluate(screen, freeze=False)
+        if report.popup_pending:
+            issue = Issue(kind=POPUP, severity=0.90, detail="；".join(report.reasons),
+                          title=report.popup_title)
+            self._handle(issue, self._count_fault())
+            self._log({"kind": POPUP, "severity": issue.severity,
                        "detail": issue.detail, "action": issue.action})
-            self.probe.clear_baseline()  # 基线作废（画面已变），但不影响上述累计计数
-            issues.append(issue)
-            break  # 一次只处置一项：处置后画面已变，剩余判断基于旧帧不可靠
-        if not issues:
+            self.probe.clear_baseline()
+            return [issue]
+        if report.blank:
+            issue = Issue(kind=BLANK, severity=0.60, detail="；".join(report.reasons))
+            self._handle(issue, self._count_fault())
+            self._log({"kind": BLANK, "severity": issue.severity,
+                       "detail": issue.detail, "action": issue.action})
+            self.probe.clear_baseline()
+            return [issue]
+        return []
+
+    def assert_progress(self, before: Screen, after: Optional[Screen] = None) -> Optional[Issue]:
+        """动作后校验：与动作前同签名则判定冻结并按 streak 升级处置。
+
+        `before` 是动作执行前抓取的一帧（由 `Controller._act_with_watchdog` 提供）。
+        """
+        after = after if after is not None else capture(self.device, self.ocr)
+        report = self.probe.evaluate(after, freeze=False)
+        prev = frame_signatures(before)[0]
+        same = report.screen_sig == prev
+        self.probe.remember(report)
+        if not same or report.blank:
             self._frozen_streak = 0
-            self._blank_streak = 0
-            self.probe.remember(report)  # 未处置：本帧成为下一帧的比较基线
-        return issues
+            return None
+        issue = Issue(kind=FROZEN, severity=0.30,
+                      detail="；".join(report.reasons) or "动作后画面未发生任何变化")
+        self._handle(issue, self._count_fault())
+        self._log({"kind": FROZEN, "severity": issue.severity,
+                   "detail": issue.detail, "action": issue.action})
+        self.probe.clear_baseline()
+        return issue
 
     def _handle(self, issue: Issue, faults: int) -> None:
         """按故障类型处置；`faults` 为累计故障次数，用于决定是否升级到重启应用。"""

@@ -22,6 +22,7 @@ from autoglm_agent.locate.locator import LocateError
 from autoglm_agent.locate.spec import ElementSpec
 from autoglm_agent.memory.checkpoint import CheckpointStore
 from autoglm_agent.perception.health import HealthProbe, format_health
+from autoglm_agent.perception.screen import capture
 from autoglm_agent.tasks import auth_scenario, price_coupon
 from autoglm_agent.tasks.scenarios import (gov_auth_scenario, gov_auth_with_popups,
                                            mobile_price_coupon_with_popups)
@@ -180,7 +181,9 @@ class TestHealthAndSelfHealing(ResilienceCase):
         dev.launch("a")
         normal = probe.sample()
         self.assertFalse(normal.blank)
-        frozen = probe.sample()
+        # 冻结只在「动作前后配对」时成立：arm 记录动作前帧，同帧再体检即判为冻结
+        probe.arm()
+        frozen = probe.evaluate(capture(dev, VirtualJsonOcr()))
         self.assertTrue(frozen.frozen)
         self.assertIn("冻结", format_health(frozen))
 
@@ -195,32 +198,21 @@ class TestHealthAndSelfHealing(ResilienceCase):
         actions = [e["watchdog"]["action"] for e in dev.world["log"] if "watchdog" in e]
         self.assertTrue(any(a.startswith("dismissed") for a in actions))
 
-    def test_frozen_screen_escalates_from_back_to_app_restart(self):
-        """连续冻结的处置必须升级：先 back 打破僵局，再重启前台应用。"""
-        scenario = Scenario(
-            screens={"stuck": ScreenDef(elements=[
-                VElem(key="t", x=0.2, y=0.2, w=0.6, h=0.06, text="卡死的页面"),
-            ])},
-            apps={"stuckapp": "stuck"},
-            initial="stuck",
-        )
-        dev = self.device(scenario)
+    def test_healthy_static_page_is_not_flagged_as_frozen(self):
+        """静止的正常页面（等待页/结果页）不得被判为冻结——否则会触发破坏性的 back/重启。"""
+        dev = self.device(mobile_price_coupon_with_popups(), seed=42)
         ctrl = self.controller(dev)
-        dev.launch("stuckapp")
-        actions = []
-        for _ in range(6):
-            actions += [i.action for i in ctrl.watch()]
-            if any(a.startswith("restart") for a in actions):
-                break
-        self.assertIn("back", actions, f"首次冻结应先尝试返回：{actions}")
-        self.assertTrue(any(a.startswith("restart:stuckapp") for a in actions),
-                        f"连续冻结应升级为重启前台应用：{actions}")
+        ctrl.launch("juhai")
+        for _ in range(4):
+            self.assertEqual(ctrl.watch(), [], "健康页面不该产生故障处置")
+        actions = [e["watchdog"]["action"] for e in dev.world["log"] if "watchdog" in e]
+        self.assertEqual(actions, [], f"健康页面被误伤：{actions}")
 
-    def test_persistently_frozen_screen_is_flagged_on_second_frame(self):
-        """冻结判定跨帧有效：首帧建立基线，第二帧起必须报 frozen。"""
+    def test_stalled_action_escalates_from_back_to_app_restart(self):
+        """点击后画面毫无变化 → 冻结；处置必须升级：back 打破僵局，再重启前台应用。"""
         scenario = Scenario(
             screens={"stuck": ScreenDef(elements=[
-                VElem(key="t", x=0.2, y=0.2, w=0.6, h=0.06, text="卡死的页面"),
+                VElem(key="dead", x=0.2, y=0.2, w=0.6, h=0.06, text="点了没反应的按钮"),
             ])},
             apps={"stuckapp": "stuck"},
             initial="stuck",
@@ -228,13 +220,29 @@ class TestHealthAndSelfHealing(ResilienceCase):
         dev = self.device(scenario)
         ctrl = self.controller(dev)
         dev.launch("stuckapp")
-        reports = []
-        for _ in range(3):
-            reports.append(ctrl.watchdog.probe.evaluate(ctrl.snapshot()))
-            ctrl.watchdog.probe.remember(reports[-1])  # 未处置时基线推进
-        self.assertFalse(reports[0].frozen)
-        self.assertTrue(reports[1].frozen)
-        self.assertTrue(reports[2].frozen)
+        spec = ElementSpec(name="dead", texts=["点了没反应的按钮"])
+        for _ in range(4):
+            ctrl.click(spec, timeout=0.6, settle=0.02)
+        handled = [t["handled"] for t in ctrl.trace if t.get("action") == "stall"]
+        self.assertIn("back", handled, f"首次卡住应先尝试返回：{handled}")
+        self.assertTrue(any(h.startswith("restart:stuckapp") for h in handled),
+                        f"持续卡住应升级为重启前台应用：{handled}")
+
+    def test_blank_screen_flagged_and_handled_before_action(self):
+        """空白屏属于「动作前就能看出」的故障，应被体检直接拦截。"""
+        scenario = Scenario(
+            screens={"blank": ScreenDef(elements=[]), "app": ScreenDef(elements=[
+                VElem(key="ok", x=0.3, y=0.3, w=0.4, h=0.06, text="正常页面"),
+            ])},
+            apps={"b": "blank", "a": "app"},
+            initial="blank",
+        )
+        dev = self.device(scenario)
+        ctrl = self.controller(dev)
+        issues = ctrl.watch()
+        self.assertTrue(any(i.kind == "blank" for i in issues), "空白屏未被识别")
+        actions = [e["watchdog"]["action"] for e in dev.world["log"] if "watchdog" in e]
+        self.assertTrue(actions and actions[0].startswith("wait:"), f"首次空白应先等一帧：{actions}")
 
 
 class TestGovAuthClosedLoop(ResilienceCase):

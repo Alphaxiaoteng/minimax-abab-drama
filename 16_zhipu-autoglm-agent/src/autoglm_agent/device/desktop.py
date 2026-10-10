@@ -13,7 +13,7 @@ import sys
 import time
 from typing import List, Optional, Tuple
 
-from .base import Bounds, Device, DeviceError, UiElement
+from .base import Device, DeviceError, UiElement
 
 
 class NullDesktopBackend:

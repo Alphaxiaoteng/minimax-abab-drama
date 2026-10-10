@@ -23,7 +23,7 @@ from ..config import Settings
 from ..flow.engine import FlowEngine, FlowResult
 from ..flow.step import Flow, Step
 from ..locate.spec import ElementSpec
-from ..perception.screen import Screen, capture
+from ..perception.screen import Screen
 
 ACCOUNT = "13800138000"
 DEMO_CODE = "111111"

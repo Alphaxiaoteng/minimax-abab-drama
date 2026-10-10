@@ -9,7 +9,7 @@ from __future__ import annotations
 """
 
 import time
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional
 
 from ..config import Settings
 from ..device.base import Device
@@ -47,13 +47,27 @@ class Controller:
         self.popups.handle(self.device, self.ocr)
 
     def watch(self) -> List[Issue]:
-        """动作前体检 + 自愈处置。返回本轮发现并处置过的故障。"""
+        """动作前预防性体检 + 自愈处置。返回本轮发现并处置过的故障。"""
         found = self.watchdog.check()
         for issue in found:
             self.issues.append(issue)
             self.trace.append({"action": "watch", "kind": issue.kind,
                                "severity": issue.severity, "handled": issue.action})
         return found
+
+    def _act_with_watchdog(self, action: Callable[[], None]) -> None:
+        """执行动作并在动作后校验“画面确实变了”。
+
+        这是冻结/卡死的**唯一**正确判据：静止的正常页面不会因为“两次体检结果相同”而被误判，
+        只有「做过操作但画面毫无变化」才说明设备卡住（ANR、弹窗吃掉点击、后台残留）。
+        """
+        before = self.snapshot()
+        action()
+        issue = self.watchdog.assert_progress(before)
+        if issue is not None:
+            self.issues.append(issue)
+            self.trace.append({"action": "stall", "kind": issue.kind,
+                               "severity": issue.severity, "handled": issue.action})
 
     # ---- 定位后自校验 ----
     @staticmethod
@@ -102,7 +116,7 @@ class Controller:
         self.watch()
         cand = self.locator.locate(spec, timeout=timeout)
         cand = self._confirm_target(spec, cand)
-        self.device.tap(*cand.center)
+        self._act_with_watchdog(lambda: self.device.tap(*cand.center))
         self.trace.append({"action": "click", "spec": spec.name,
                            "source": cand.source, "conf": cand.conf,
                            "at": [round(v) for v in cand.center]})
@@ -162,12 +176,20 @@ class Controller:
                 self.device.clear_field()
             self.device.input_text(text)
             self.device.key("hide_keyboard")
-            last_seen = self._field_text(spec)
-            if not last_seen or last_seen.strip() == text.strip():
+            last_seen = self._field_text(spec, cand)
+            if last_seen.strip() == text.strip():
                 self.trace.append({"action": "type", "spec": spec.name, "text": text,
-                                   "attempt": attempt, "readback": bool(last_seen)})
+                                   "attempt": attempt, "readback": True})
                 time.sleep(settle)
                 return
+            if not last_seen:
+                # 空回读有两种可能：①设备压根没有可读状态（真机/桌面）
+                # ②内容被清空或未写入。用屏幕文本区分，不能让①掩盖②。
+                if self.snapshot().contains(text):
+                    self.trace.append({"action": "type", "spec": spec.name, "text": text,
+                                       "attempt": attempt, "readback": False})
+                    time.sleep(settle)
+                    return
             self.trace.append({"action": "type_retry", "spec": spec.name,
                                "attempt": attempt, "got": last_seen})
             re_located = self.locator.find(spec, screen=self.snapshot())

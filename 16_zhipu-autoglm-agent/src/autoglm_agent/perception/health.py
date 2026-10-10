@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..device.base import Device
 from ..vision.base import OcrBackend
@@ -87,6 +87,9 @@ class HealthProbe:
         self._popups = popups
         self._prev_screen_sig: Optional[str] = None
         self._prev_text_sig: Optional[str] = None
+        # 冻结只在「动作之后画面仍未变」时才成立：静止的正常页面不该被判为故障。
+        # 由调用方（Controller）在动作前后配对取样，见 expect_change() 的用法说明。
+        self._arm_freeze_check = False
 
     @property
     def popups(self) -> "PopupGovernor":
@@ -104,6 +107,19 @@ class HealthProbe:
         """只作废「上一帧」比较基线，不影响调用方的连续故障计数。"""
         self._prev_screen_sig = None
         self._prev_text_sig = None
+        self._arm_freeze_check = False
+
+    def arm(self, screen: Optional[Screen] = None) -> None:
+        """记录动作**执行前**的一帧，并开启冻结判定。
+
+        冻结的语义是「刚做过一次操作，画面却毫无变化」——这才是 ANR/残留的特征。
+        若只在两次 `check()` 之间比较，任何静止的正常页面（等待页、结果页）都会被误判，
+        进而触发 `back`/重启这类破坏性处置。
+        """
+        frame = screen if screen is not None else capture(self.device, self.ocr)
+        self._prev_screen_sig = frame_signatures(frame)[0]
+        self._prev_text_sig = frame_signatures(frame)[1]
+        self._arm_freeze_check = True
 
     def remember(self, report: HealthReport) -> None:
         """把某份体检结论登记为「上一帧」基线（由看门狗在决定不处置后调用）。"""
@@ -118,8 +134,8 @@ class HealthProbe:
         self._prev_text_sig = report.text_sig
         return report
 
-    def evaluate(self, screen: Screen) -> HealthReport:
-        """只体检**不推进**基线：与 sample 分离，使「探测—决定不处置」不会吞掉冻结信号。"""
+    def evaluate(self, screen: Screen, freeze: bool = True) -> HealthReport:
+        """体检。`freeze=False` 时不判定冻结（动作前的预防性体检用）。"""
         screen_sig, text_sig = frame_signatures(screen)
         texts = _texts(screen)
         report = HealthReport(
@@ -133,10 +149,11 @@ class HealthProbe:
             report.blank = True
             report.health -= 0.45
             report.reasons.append("空白屏：未渲染出可见元素")
-        if self._prev_screen_sig is not None and screen_sig == self._prev_screen_sig:
+        if (freeze and self._arm_freeze_check and self._prev_screen_sig is not None
+                and screen_sig == self._prev_screen_sig):
             report.frozen = True
             report.health -= 0.3
-            report.reasons.append("画面冻结：与上一帧完全一致")
+            report.reasons.append("画面冻结：动作后画面与操作前完全一致")
         pending = self.popups.find_pending(screen) if self._popups is not None else _popup_probe(screen)
         if pending is not None:
             kind, cand = pending
