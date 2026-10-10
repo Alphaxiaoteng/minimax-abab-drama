@@ -1,0 +1,67 @@
+<view class="page-root">
+  <block wx:if="{{hasRecord}}">
+    <!-- 结果回放 -->
+    <view class="row-between head-row">
+      <view class="head-title">{{title}}</view>
+      <text class="tag {{offline ? 'tag-offline' : 'tag-ok'}}">{{offline ? '离线分析' : '云端 AI'}}</text>
+    </view>
+
+    <markdown-card scene="quickread" structured="{{structured}}" offline="{{offline}}"></markdown-card>
+
+    <!-- 追问区 -->
+    <view class="card ask-card">
+      <view class="card-title">基于这份结果追问</view>
+      <view class="ask-hints">
+        <text class="ask-hint" bindtap="onAskHint" data-q="有哪些风险点？">有哪些风险点？</text>
+        <text class="ask-hint" bindtap="onAskHint" data-q="关键数据是多少？">关键数据是多少？</text>
+        <text class="ask-hint" bindtap="onAskHint" data-q="结论是什么？">结论是什么？</text>
+      </view>
+
+      <view class="ask-input-row">
+        <input
+          class="ask-input"
+          value="{{question}}"
+          placeholder="追问这份文档，例如：风险点有哪些"
+          bindinput="onQuestionInput"
+          confirm-type="send"
+          bindconfirm="onAsk"
+        />
+        <view class="btn ask-send {{asking ? 'ask-send-disabled' : ''}}" bindtap="onAsk">{{asking ? '思考中' : '提问'}}</view>
+      </view>
+
+      <block wx:for="{{answers}}" wx:key="index">
+        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}}">
+          <text class="qa-role">{{item.role === 'user' ? '我' : 'AI'}}</text>
+          <text class="qa-text">{{item.text}}</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 分享卡片 -->
+    <view class="card">
+      <view class="row-between card-title-row">
+        <text class="card-title">分享卡片</text>
+        <text class="muted">长图无法生成时自动退化为纯文本</text>
+      </view>
+      <block wx:if="{{shareCard}}">
+        <view class="sc-title">{{shareCard.title}}</view>
+        <view class="sc-sub muted">{{shareCard.subtitle}}</view>
+        <view wx:for="{{shareCard.lines}}" wx:key="index" class="sc-line">{{item}}</view>
+        <view class="sc-tag">{{shareCard.hashtag}}</view>
+      </block>
+      <view class="result-actions">
+        <view class="btn btn-ghost result-btn" bindtap="onBuildCard">重新生成</view>
+        <view class="btn result-btn" bindtap="onCopyCard">复制分享文案</view>
+      </view>
+    </view>
+  </block>
+
+  <empty-state
+    wx:else
+    icon="◌"
+    title="没有找到这条记录"
+    desc="记录可能已被清空，回到快读页重新生成即可"
+    actionText="去生成"
+    bind:action="onOpenFirstScene"
+  ></empty-state>
+</view>

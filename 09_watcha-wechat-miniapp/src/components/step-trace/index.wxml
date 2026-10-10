@@ -1,0 +1,22 @@
+<!-- 骨架步骤条：竖排时间线，state 决定圆点样式 -->
+<view class="st-wrap" wx:if="{{steps.length > 0}}">
+  <view class="st-head row-between">
+    <text class="st-title">分析过程</text>
+    <view class="st-actions">
+      <text class="st-progress mono">{{progress}}%</text>
+      <text class="st-toggle muted" bindtap="toggleExpand">{{expanded ? '收起' : '明细'}}</text>
+    </view>
+  </view>
+
+  <view class="st-bar">
+    <view class="st-bar-inner" style="width: {{progress}}%;"></view>
+  </view>
+
+  <view wx:for="{{steps}}" wx:key="id" class="st-item">
+    <view class="st-dot st-dot-{{item.state}}"></view>
+    <view class="st-body">
+      <view class="st-name st-name-{{item.state}}">{{item.name}}</view>
+      <view wx:if="{{expanded && item.text}}" class="st-text muted">{{item.text}}</view>
+    </view>
+  </view>
+</view>

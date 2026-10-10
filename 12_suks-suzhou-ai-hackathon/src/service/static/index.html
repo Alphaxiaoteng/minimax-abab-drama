@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>INSPECT-AI · 工业零部件视觉质检工作台</title>
+<style>
+/* ===== 分区 1 · 设计令牌与全局基础样式 ===== */
+:root {
+  --bg: #0b0f14; --panel: #131a23; --panel-2: #182231; --panel-3: #1f2b3a;
+  --line: #26333f; --line-soft: #1e2a36;
+  --cyan: #22d3ee; --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+  --txt: #e6edf3; --txt-dim: #93a4b5; --txt-faint: #5b6b7c;
+  --mono: "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  --r: 8px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--txt); font-family: var(--sans);
+  font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow: hidden;
+}
+button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2c3a49; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #3b4c5e; }
+.num, .mono { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; border: 1px solid var(--line); background: var(--panel-2); color: var(--txt-dim);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.badge i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); display: inline-block; }
+.card { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 12px; }
+.sect-title {
+  font-size: 11px; letter-spacing: .12em; color: var(--txt-faint);
+  text-transform: uppercase; margin: 0 0 8px; font-weight: 600;
+}
+.muted { color: var(--txt-dim); } .faint { color: var(--txt-faint); }
+
+/* ===== 分区 2 · 顶部栏 ===== */
+header#topbar {
+  height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 18px;
+  background: linear-gradient(180deg, #101823, #0d141c); border-bottom: 1px solid var(--line);
+  position: relative; z-index: 20;
+}
+#brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+#brand .logo {
+  width: 34px; height: 34px; border-radius: 9px; flex: none; color: #04191f; font-weight: 800;
+  background: linear-gradient(140deg, #0e7490, #22d3ee 55%, #67e8f9);
+  display: grid; place-items: center; font-size: 15px; box-shadow: 0 0 16px rgba(34, 211, 238, .35);
+}
+#brand .t1 { font-weight: 700; letter-spacing: .08em; font-size: 15px; }
+#brand .t2 { font-size: 11px; color: var(--txt-dim); white-space: nowrap; }
+#topmid { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+#topright { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.thr { text-align: right; font-size: 10.5px; color: var(--txt-faint); letter-spacing: .04em; }
+.thr b { display: block; font-size: 15px; color: var(--cyan); font-family: var(--mono); }
+.thr.rev b { color: var(--amber); }
+
+/* ===== 分区 3 · 三栏布局骨架 ===== */
+main#layout {
+  height: calc(100vh - 56px); display: grid; grid-template-columns: 300px minmax(0, 1fr) 380px;
+  gap: 1px; background: var(--line-soft);
+}
+main#layout > section { background: var(--bg); overflow-y: auto; }
+#left { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+#center { display: flex; flex-direction: column; overflow: hidden !important; }
+#right { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+/* ===== 分区 4 · 左侧控制面板 ===== */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field > label { font-size: 11px; color: var(--txt-dim); }
+select, input[type="text"], input[type="number"] {
+  width: 100%; background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 6px; padding: 7px 9px; outline: none; transition: border-color .15s;
+}
+select:focus, input:focus { border-color: var(--cyan); }
+input::placeholder { color: var(--txt-faint); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#drop {
+  border: 1.5px dashed #33465a; border-radius: var(--r); background: var(--panel);
+  padding: 16px 12px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+}
+#drop:hover, #drop.hot { border-color: var(--cyan); background: #10212b; }
+#drop .ic { font-size: 20px; color: var(--cyan); }
+#drop .l1 { font-size: 12px; margin-top: 4px; }
+#drop .l2 { font-size: 10.5px; color: var(--txt-faint); margin-top: 2px; }
+#file-meta { font-size: 10.5px; color: var(--txt-dim); margin-top: 8px; word-break: break-all; display: none; }
+#file-meta b { color: var(--txt); font-family: var(--mono); }
+.switch { display: flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px; }
+.switch button { flex: 1; background: transparent; border: 0; border-radius: 5px; padding: 6px 4px; color: var(--txt-dim); font-size: 12px; transition: all .15s; }
+.switch button.on { background: var(--cyan); color: #04191f; font-weight: 600; }
+.switch button.on.ng { background: var(--red); color: #fff; }
+.btn { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 9px; background: var(--panel-3); font-weight: 600; transition: all .15s; }
+.btn:hover { border-color: var(--cyan); }
+.btn.primary { background: linear-gradient(140deg, #0e7490, #22d3ee); color: #04191f; border: 0; }
+.btn.primary:hover { filter: brightness(1.1); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+#stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+#stats .v { font-size: 17px; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--cyan); }
+#stats .k { font-size: 10px; color: var(--txt-faint); }
+
+/* ===== 分区 5 · 中间画布 ===== */
+#tabs { display: flex; gap: 4px; padding: 9px 12px 0; border-bottom: 1px solid var(--line-soft); background: var(--panel); flex: none; }
+#tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 7px 13px; color: var(--txt-dim); font-size: 12.5px; margin-bottom: -1px; }
+#tabs button.active { color: var(--cyan); border-bottom-color: var(--cyan); font-weight: 600; }
+#tabs .spacer { flex: 1; }
+#tabs .meta { align-self: center; font-size: 11px; color: var(--txt-faint); font-family: var(--mono); }
+#canvas-wrap { flex: 1; position: relative; overflow: hidden; display: flex; }
+#stage { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; padding: 16px; min-width: 0; }
+#imgbox { position: relative; line-height: 0; max-width: 100%; max-height: 100%; }
+#main-img { max-width: 100%; max-height: 100%; display: block; border-radius: 4px; }
+#overlay-layer { position: absolute; inset: 0; pointer-events: none; }
+.dbox {
+  position: absolute; border: 1.5px solid var(--amber); border-radius: 3px; pointer-events: auto;
+  cursor: pointer; transition: box-shadow .12s, background .12s; background: rgba(245, 158, 11, .07); color: var(--amber);
+}
+.dbox.sev-high { border-color: var(--red); background: rgba(239, 68, 68, .1); color: var(--red); }
+.dbox.sev-low { border-color: var(--cyan); background: rgba(34, 211, 238, .07); color: var(--cyan); }
+.dbox.hl { box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 0 14px currentColor; z-index: 3; background: rgba(255,255,255,.14); }
+.dbox .tag {
+  position: absolute; top: -17px; left: -1px; font-size: 10px; font-family: var(--mono); background: #0b0f14;
+  border: 1px solid currentColor; color: inherit; padding: 0 4px; border-radius: 3px; white-space: nowrap; line-height: 15px;
+}
+.dbox.gt { border-style: dashed; border-color: #a78bfa; background: rgba(167, 139, 250, .05); pointer-events: none; color: #a78bfa; }
+#iou-chip {
+  position: absolute; right: 12px; bottom: 12px; z-index: 5; background: rgba(11,15,20,.85);
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font-size: 11px; font-family: var(--mono);
+}
+#skeleton {
+  position: absolute; inset: 0; z-index: 8; display: none; background: rgba(11,15,20,.86);
+  backdrop-filter: blur(2px); align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+}
+#skeleton.on { display: flex; }
+.sk { border-radius: 6px; background: linear-gradient(90deg, #1b2735 25%, #26384b 50%, #1b2735 75%); background-size: 200% 100%; animation: sk 1.3s infinite; }
+@keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+#skeleton .big { width: 240px; height: 170px; }
+#skeleton .lbl { color: var(--cyan); font-size: 13px; letter-spacing: .05em; }
+#empty-canvas { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; color: var(--txt-faint); text-align: center; }
+#empty-canvas .ic { font-size: 34px; opacity: .35; }
+#side-stage { flex: 1; display: none; gap: 12px; padding: 16px; }
+#side-stage > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#side-stage .cap { font-size: 11px; color: var(--txt-dim); text-align: center; }
+#side-stage img { width: 100%; object-fit: contain; border-radius: 4px; background: #05080b; }
+
+/* ===== 分区 6 · 右侧结果面板 ===== */
+#verdict { border-radius: var(--r); padding: 14px; text-align: center; border: 1px solid var(--line); background: var(--panel); transition: all .25s; }
+#verdict .v-label { font-size: 19px; font-weight: 700; letter-spacing: .04em; }
+#verdict .v-sub { font-size: 11px; color: var(--txt-dim); margin-top: 3px; font-family: var(--mono); }
+#verdict.pass { border-color: #1d5e38; background: linear-gradient(180deg, rgba(34,197,94,.14), var(--panel)); }
+#verdict.pass .v-label { color: var(--green); }
+#verdict.review { border-color: #7a5410; background: linear-gradient(180deg, rgba(245,158,11,.14), var(--panel)); }
+#verdict.review .v-label { color: var(--amber); }
+#verdict.fail { border-color: #7a2626; background: linear-gradient(180deg, rgba(239,68,68,.16), var(--panel)); }
+#verdict.fail .v-label { color: var(--red); }
+#verdict.idle .v-label { color: var(--txt-faint); }
+#gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#gauge-legend { display: flex; gap: 14px; font-size: 10.5px; color: var(--txt-dim); }
+#gauge-legend s { display: inline-block; width: 9px; height: 2.5px; vertical-align: middle; margin-right: 4px; text-decoration: none; }
+#gauge-legend b { font-family: var(--mono); color: var(--txt); }
+.bar-row { display: grid; grid-template-columns: 74px 1fr 52px; align-items: center; gap: 8px; margin-bottom: 7px; }
+.bar-row .n { font-size: 11px; color: var(--txt-dim); }
+.bar-row .n small { color: var(--txt-faint); font-family: var(--mono); }
+.bar-track { height: 8px; background: var(--panel-3); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #0e7490, var(--cyan)); transition: width .35s ease; }
+.bar-row .v { font-size: 11px; font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+table.kv { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+table.kv td { padding: 4px 2px; border-bottom: 1px solid var(--line-soft); }
+table.kv td:first-child { color: var(--txt-dim); }
+table.kv td:last-child { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+table.kv tr:last-child td { border-bottom: 0; }
+#defect-list { display: flex; flex-direction: column; gap: 7px; }
+.dcard { border: 1px solid var(--line-soft); border-radius: 7px; background: var(--panel); padding: 9px; cursor: pointer; transition: border-color .15s, background .15s; }
+.dcard:hover, .dcard.hl { border-color: var(--cyan); background: var(--panel-2); }
+.dcard .h { display: flex; align-items: center; gap: 7px; }
+.dcard .id { font-family: var(--mono); font-size: 11px; color: var(--txt-faint); }
+.dcard .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dcard .cls { font-weight: 600; font-size: 12.5px; flex: 1; }
+.dcard .sc { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.dcard .m { display: flex; gap: 12px; margin-top: 5px; font-size: 10.5px; color: var(--txt-dim); font-family: var(--mono); }
+.dcard .feat { display: none; margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line-soft); }
+.dcard.open .feat { display: block; }
+#empty-right { text-align: center; padding: 26px 8px; color: var(--txt-faint); }
+#empty-right .ic { font-size: 30px; opacity: .3; }
+
+/* ===== 分区 7 · 底部评测报告抽屉 ===== */
+#drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; max-height: 72vh; background: #0e151d;
+  border-top: 1px solid var(--line); box-shadow: 0 -12px 40px rgba(0,0,0,.5); transition: transform .3s ease;
+  transform: translateY(100%); display: flex; flex-direction: column;
+}
+#drawer.open { transform: translateY(0); }
+#drawer-head { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--line-soft); flex: none; background: #101823; }
+#drawer-head .ttl { font-weight: 700; letter-spacing: .05em; }
+#drawer-body { overflow-y: auto; padding: 16px 18px 26px; }
+.rgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.rblock { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 12px; }
+.rblock h4 { margin: 0 0 10px; font-size: 12px; letter-spacing: .05em; color: var(--cyan); font-weight: 600; }
+.metric { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11.5px; }
+.metric span:first-child { color: var(--txt-dim); }
+.metric span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+table.grid-t { width: 100%; border-collapse: collapse; font-size: 11px; }
+table.grid-t th, table.grid-t td { padding: 4px 5px; border-bottom: 1px solid var(--line-soft); text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+table.grid-t th { color: var(--txt-faint); font-weight: 500; }
+table.grid-t td:first-child, table.grid-t th:first-child { text-align: left; font-family: var(--sans); color: var(--txt); }
+#cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px; }
+#cm .cx { padding: 10px 4px; text-align: center; border-radius: 5px; }
+#cm .hd { font-size: 10.5px; color: var(--txt-faint); display: grid; place-items: center; }
+#cm .cell .big { font-size: 17px; font-family: var(--mono); font-weight: 700; display: block; }
+#cm .cell .sm { font-size: 9.5px; color: var(--txt-faint); }
+.sep-track { height: 12px; background: var(--panel-3); border-radius: 6px; overflow: hidden; margin-top: 8px; }
+.sep-fill { height: 100%; border-radius: 6px; }
+#failures { font-size: 11px; font-family: var(--mono); max-height: 190px; overflow-y: auto; }
+#failures div { padding: 3px 0; border-bottom: 1px solid var(--line-soft); }
+
+/* ===== 分区 8 · 错误条与 Toast ===== */
+#errbar {
+  position: fixed; top: 66px; left: 50%; transform: translateX(-50%) translateY(-120%); z-index: 60;
+  background: #2a1414; border: 1px solid #7a2626; color: #fca5a5; padding: 9px 16px; border-radius: 7px;
+  font-size: 12.5px; max-width: 82vw; transition: transform .25s ease; box-shadow: 0 8px 26px rgba(0,0,0,.5);
+}
+#errbar.on { transform: translateX(-50%) translateY(0); }
+#toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%) translateY(140%); z-index: 60;
+  background: var(--panel-3); border: 1px solid var(--cyan); color: var(--txt); padding: 8px 16px;
+  border-radius: 7px; font-size: 12.5px; transition: transform .25s ease;
+}
+#toast.on { transform: translateX(-50%) translateY(0); }
+.spin { display: inline-block; width: 11px; height: 11px; border: 2px solid rgba(255,255,255,.25); border-top-color: currentColor; border-radius: 50%; animation: sp .7s linear infinite; vertical-align: -1px; }
+@keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部栏 ===== -->
+<header id="topbar">
+  <div id="brand">
+    <div class="logo">IA</div>
+    <div>
+      <div class="t1">INSPECT-AI</div>
+      <div class="t2">长三角工业零部件视觉缺陷智能质检系统</div>
+    </div>
+  </div>
+  <div id="topmid">
+    <span class="badge" id="badge-version"><i></i>契约 —</span>
+    <span class="badge" id="badge-model">模型 —</span>
+  </div>
+  <div id="topright">
+    <div class="thr">判定阈值<b id="thr-dec">—</b></div>
+    <div class="thr rev">复检阈值<b id="thr-rev">—</b></div>
+  </div>
+</header>
+
+<!-- ===== 三栏主体 ===== -->
+<main id="layout">
+
+  <section id="left">
+    <div class="card">
+      <p class="sect-title">质检工位</p>
+      <div class="field">
+        <label for="scene">场景</label>
+        <select id="scene"><option value="auto">自动识别</option></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="sect-title">上传工件图像</p>
+      <div id="drop">
+        <div class="ic">⬆</div>
+        <div class="l1">点击 / 拖拽 / 粘贴 图像</div>
+        <div class="l2">支持 PNG · JPG · BMP · WEBP</div>
+        <div id="file-meta"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="sect-title">合成样本检测</p>
+      <div class="field" style="margin-bottom:8px">
+        <div class="switch" id="gt-switch">
+          <button data-ng="0" class="on">无缺陷 OK</button>
+          <button data-ng="1">有缺陷 NG</button>
+        </div>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="field"><label for="n-def">缺陷数量</label><input id="n-def" type="number" min="1" max="3" value="1" /></div>
+        <div class="field"><label for="seed">随机种子</label><input id="seed" type="text" placeholder="留空=随机" /></div>
+      </div>
+      <button class="btn primary" id="btn-demo">生成并检测 <span class="faint">↵</span></button>
+    </div>
+
+    <div class="card">
+      <p class="sect-title">一键基准评测</p>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="field"><label for="n-ok">OK 张数</label><input id="n-ok" type="number" min="1" max="200" value="20" /></div>
+        <div class="field"><label for="n-ng">NG 张数</label><input id="n-ng" type="number" min="1" max="200" value="20" /></div>
+      </div>
+      <button class="btn ghost" id="btn-bench">运行基准评测（全场景）</button>
+    </div>
+
+    <div class="card">
+      <p class="sect-title">本次会话统计</p>
+      <div id="stats">
+        <div><div class="v" id="st-n">0</div><div class="k">已检测</div></div>
+        <div><div class="v" id="st-m" style="color:var(--red)">0</div><div class="k">拦截</div></div>
+        <div><div class="v" id="st-t">—</div><div class="k">平均耗时 ms</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="center">
+    <div id="tabs">
+      <button class="active" data-tab="orig">原图</button>
+      <button data-tab="overlay">缺陷热力图（叠加）</button>
+      <button data-tab="side">并排对比</button>
+      <span class="spacer"></span>
+      <span class="meta" id="canvas-meta"></span>
+    </div>
+    <div id="canvas-wrap">
+      <div id="stage">
+        <div id="empty-canvas">
+          <div class="ic">▦</div>
+          <div>等待上料…</div>
+          <div class="faint" style="font-size:11px">上传图像，或生成一张合成样本开始检测</div>
+        </div>
+        <div id="imgbox" style="display:none">
+          <img id="main-img" alt="检测图像" />
+          <div id="overlay-layer"></div>
+        </div>
+        <div id="iou-chip" style="display:none"></div>
+      </div>
+      <div id="side-stage">
+        <div><div class="cap">原图</div><img id="side-a" alt="原图" /></div>
+        <div><div class="cap">缺陷叠加</div><img id="side-b" alt="叠加图" /></div>
+      </div>
+      <div id="skeleton">
+        <div class="sk big"></div>
+        <div class="lbl">检测中…</div>
+        <div class="faint" style="font-size:11px" id="sk-sub">图像推理与缺陷热力图计算</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="right">
+    <div id="verdict" class="idle">
+      <div class="v-label">等待上料…</div>
+      <div class="v-sub" id="verdict-sub">尚未执行检测</div>
+    </div>
+
+    <div class="card" id="gauge-card" style="display:none">
+      <div id="gauge-wrap">
+        <svg id="gauge" width="180" height="180" viewBox="0 0 180 180"></svg>
+        <div id="gauge-legend">
+          <span><s style="background:var(--amber)"></s>复检 <b id="leg-rev">—</b></span>
+          <span><s style="background:var(--red)"></s>拦截 <b id="leg-dec">—</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="breakdown-card" style="display:none">
+      <p class="sect-title">得分归因 · Breakdown</p>
+      <div id="breakdown"></div>
+    </div>
+
+    <div class="card" id="features-card" style="display:none">
+      <p class="sect-title">全局特征 · Features</p>
+      <table class="kv" id="features"></table>
+    </div>
+
+    <div class="card" id="defects-card" style="display:none">
+      <p class="sect-title">缺陷清单 · Defects <span id="def-count" class="faint"></span></p>
+      <div id="defect-list"></div>
+    </div>
+
+    <div id="empty-right">
+      <div class="ic">◌</div>
+      <div>等待上料…</div>
+      <div class="faint" style="font-size:11px">结果与判定将在此展示</div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== 底部评测报告抽屉 ===== -->
+<div id="drawer">
+  <div id="drawer-head">
+    <span class="ttl">评测报告 · Benchmark Report</span>
+    <span class="badge" id="bench-meta">—</span>
+    <span style="flex:1"></span>
+    <button class="btn ghost" id="drawer-close" style="width:auto;padding:5px 14px">收起 ▾</button>
+  </div>
+  <div id="drawer-body">
+    <div class="rgrid">
+      <div class="rblock"><h4>图像级指标</h4><div id="img-metrics"></div></div>
+      <div class="rblock"><h4>混淆矩阵 2×2</h4><div id="cm"></div></div>
+      <div class="rblock"><h4>缺陷级指标</h4><div id="def-metrics"></div></div>
+      <div class="rblock"><h4>逐类别 P/R/F1</h4><table class="grid-t" id="per-class"></table></div>
+      <div class="rblock"><h4>推理延迟 ms</h4><div id="latency"></div></div>
+      <div class="rblock"><h4>得分分离度</h4><div id="separation"></div></div>
+      <div class="rblock" style="grid-column:1/-1"><h4>失败样本 Failures</h4><div id="failures"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="errbar"></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ===== 分区 A · 全局状态与小工具 ===== */
+const $ = (id) => document.getElementById(id);
+
+const session = { n: 0, blocked: 0, msTotal: 0 };
+let lastInspect = null;   // { result, ground_truth }
+let cfg = null;           // /config 响应
+let tab = "orig";
+let demoHasDefect = false;
+let imgOrigSrc = "", imgOvSrc = "";
+
+/** 数值渲染防护：null/undefined/NaN → 占位符。 */
+function fmt(v, digits = 2, dash = "—") {
+  if (v === null || v === undefined || v === "" || Number.isNaN(Number(v))) return dash;
+  return Number(v).toFixed(digits);
+}
+/** 百分比渲染防护。 */
+function pct(v, digits = 1) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+  return (Number(v) * 100).toFixed(digits) + "%";
+}
+/** 整型渲染防护。 */
+function int(v) {
+  if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+  return String(Math.round(Number(v)));
+}
+/** 转义 HTML，防止后端字符串破坏结构。 */
+function esc(s) {
+  return String(s === null || s === undefined ? "" : s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function sevColor(sev) {
+  const s = String(sev || "").toLowerCase();
+  if (s === "high") return "var(--red)";
+  if (s === "medium") return "var(--amber)";
+  return "var(--cyan)";
+}
+function decColor(d) {
+  return d === "fail" ? "var(--red)" : d === "review" ? "var(--amber)" : d === "pass" ? "var(--green)" : "var(--txt-faint)";
+}
+
+let errTimer = null;
+function showError(msg) {
+  const el = $("errbar");
+  el.textContent = "⚠ " + msg;
+  el.classList.add("on");
+  clearTimeout(errTimer);
+  errTimer = setTimeout(() => el.classList.remove("on"), 7000);
+}
+let toastTimer = null;
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
+
+/** 统一 fetch：自动解 JSON，4xx/5xx 抽取 detail 为中文可读错误。 */
+async function api(path, opts = {}) {
+  let res;
+  try { res = await fetch(path, opts); }
+  catch (e) { throw new Error("无法连接后端服务，请确认服务已启动"); }
+  const ct = res.headers.get("content-type") || "";
+  let body = null;
+  if (ct.includes("json")) { try { body = await res.json(); } catch (e) { body = null; } }
+  else { try { body = await res.text(); } catch (e) { body = null; } }
+  if (!res.ok) {
+    let detail = body && typeof body === "object" ? (body.detail ?? body.message) : body;
+    if (detail && typeof detail === "object") detail = JSON.stringify(detail);
+    if (Array.isArray(detail)) detail = detail.map((d) => d.msg || JSON.stringify(d)).join("; ");
+    throw new Error(`HTTP ${res.status} · ${detail || res.statusText || "请求失败"}`);
+  }
+  return body;
+}
+
+/* ===== 分区 B · 初始化：health / config 填充顶部栏与场景下拉 ===== */
+async function boot() {
+  try {
+    const [health, config] = await Promise.all([api("/api/v1/health"), api("/api/v1/config")]);
+    cfg = config;
+    const ver = health?.contract_version ?? config?.contract_version ?? "—";
+    $("badge-version").innerHTML = `<i></i>契约 v${esc(ver)}`;
+    $("badge-model").textContent = "模型 " + (health?.model ?? "—");
+    $("thr-dec").textContent = fmt(config?.decision_threshold, 3);
+    $("thr-rev").textContent = fmt(config?.review_threshold, 3);
+    $("leg-dec").textContent = fmt(config?.decision_threshold, 2);
+    $("leg-rev").textContent = fmt(config?.review_threshold, 2);
+    const scenes = (config && config.scenes) || (health && health.scenes) || [];
+    $("scene").innerHTML = '<option value="auto">自动识别</option>' +
+      scenes.map((s) => `<option value="${esc(s.id)}">${esc(s.label_cn ?? s.id)}</option>`).join("");
+    toast(`后端就绪 · 契约 v${ver} · ${scenes.length} 个场景`);
+  } catch (e) {
+    showError("初始化失败：" + e.message);
+    $("badge-version").innerHTML = '<i style="background:var(--red)"></i>后端离线';
+  }
+}
+boot();
+
+/* ===== 分区 C · 左侧 · 上传（点击 / 拖拽 / 粘贴） ===== */
+const drop = $("drop");
+
+drop.addEventListener("click", () => pickInput().click());
+function pickInput() {
+  let inp = $("__file");
+  if (!inp) {
+    inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*"; inp.id = "__file"; inp.style.display = "none";
+    inp.addEventListener("change", () => { if (inp.files[0]) setFile(inp.files[0]); });
+    document.body.appendChild(inp);
+  }
+  return inp;
+}
+["dragenter", "dragover"].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("hot"); }));
+["dragleave", "drop"].forEach((ev) =>
+  drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("hot"); }));
+drop.addEventListener("drop", (e) => {
+  const f = e.dataTransfer?.files?.[0];
+  if (f) setFile(f);
+});
+window.addEventListener("paste", (e) => {
+  for (const it of (e.clipboardData?.items || [])) {
+    if (it.type && it.type.startsWith("image/")) {
+      const f = it.getAsFile();
+      if (f) { setFile(f); toast("已从剪贴板载入图像"); }
+      break;
+    }
+  }
+});
+
+function setFile(file) {
+  const meta = $("file-meta");
+  meta.style.display = "block";
+  meta.innerHTML = `<b>${esc(file.name || "clipboard.png")}</b> · ${(file.size / 1024).toFixed(1)} KB`;
+  const url = URL.createObjectURL(file);
+  const im = new Image();
+  im.onload = () => { meta.innerHTML += ` · <b>${im.width}×${im.height}</b>`; URL.revokeObjectURL(url); };
+  im.onerror = () => URL.revokeObjectURL(url);
+  im.src = url;
+  runUploadInspect(file);
+}
+
+/** 上传图像 → /inspect（form-data: file, scene_id, include_overlay）。 */
+async function runUploadInspect(file) {
+  const fd = new FormData();
+  fd.append("file", file, file.name || "clipboard.png");
+  const sceneSel = $("scene").value;
+  fd.append("scene_id", sceneSel === "auto" ? "" : sceneSel);
+  fd.append("include_overlay", "true");
+  await withSkeleton("上传图像推理中", () => api("/api/v1/inspect", { method: "POST", body: fd }), file, false);
+}
+
+/* ===== 分区 D · 左侧 · 合成样本检测 ===== */
+$("gt-switch").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  [...$("gt-switch").children].forEach((x) => x.classList.remove("on", "ng"));
+  b.classList.add("on");
+  if (b.dataset.ng === "1") b.classList.add("ng");
+  demoHasDefect = b.dataset.ng === "1";
+});
+$("btn-demo").addEventListener("click", () => runDemo());
+
+/** 合成样本 → /inspect/demo（JSON）。 */
+async function runDemo() {
+  const sceneSel = $("scene").value;
+  const scene = sceneSel === "auto" ? "gear_surface" : sceneSel;
+  const nDef = Math.max(1, Math.min(3, parseInt($("n-def").value, 10) || 1));
+  const seedRaw = $("seed").value.trim();
+  let seed;
+  if (seedRaw !== "") {
+    seed = parseInt(seedRaw, 10);
+    if (Number.isNaN(seed)) { showError("随机种子必须是整数，或留空表示随机"); return; }
+  } else {
+    seed = (Math.random() * 1e9) | 0;
+  }
+  const payload = { scene_id: scene, has_defect: demoHasDefect, n_defects: nDef, seed };
+  await withSkeleton("合成样本生成与推理中", () => api("/api/v1/inspect/demo", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  }), null, true);
+}
+
+/* ===== 分区 E · 一键基准评测 ===== */
+$("btn-bench").addEventListener("click", () => runBench());
+async function runBench() {
+  const nOk = Math.max(1, parseInt($("n-ok").value, 10) || 20);
+  const nNg = Math.max(1, parseInt($("n-ng").value, 10) || 20);
+  const scenes = (cfg && cfg.scenes ? cfg.scenes.map((s) => s.id) : []);
+  $("btn-bench").disabled = true;
+  $("btn-bench").innerHTML = '<span class="spin"></span> 评测中…';
+  $("skeleton").classList.add("on");
+  $("sk-sub").textContent = `生成 ${(nOk + nNg) * (scenes.length || 1)} 张样本并批量推理`;
+  try {
+    const data = await api("/api/v1/dataset/benchmark", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ n_ok: nOk, n_ng: nNg, scenes, iou_threshold: 0.5 }),
+    });
+    renderBench(data);
+    $("drawer").classList.add("open");
+    toast("基准评测完成");
+  } catch (e) {
+    showError("基准评测失败：" + e.message);
+  } finally {
+    $("btn-bench").disabled = false;
+    $("btn-bench").textContent = "运行基准评测（全场景）";
+    $("skeleton").classList.remove("on");
+  }
+}
+
+/* ===== 分区 F · 画布：骨架屏 / 图像源 / 标签切换 ===== */
+async function withSkeleton(label, run, fileHint, isDemo) {
+  const sk = $("skeleton");
+  sk.classList.add("on");
+  $("sk-sub").textContent = label + " · 图像推理与缺陷热力图计算";
+  const t0 = performance.now();
+  try {
+    renderInspectResponse(await run(), fileHint, isDemo);
+  } catch (e) {
+    showError((isDemo ? "合成检测失败：" : "检测失败：") + e.message);
+  } finally {
+    const dt = performance.now() - t0;
+    if (dt < 260) await new Promise((r) => setTimeout(r, 260 - dt)); // 防骨架屏闪烁
+    sk.classList.remove("on");
+  }
+}
+
+$("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-tab]");
+  if (!b) return;
+  tab = b.dataset.tab;
+  [...$("tabs").querySelectorAll("button[data-tab]")].forEach((x) => x.classList.toggle("active", x === b));
+  applyTab();
+});
+
+function applyTab() {
+  const side = tab === "side";
+  $("stage").style.display = side ? "none" : "flex";
+  $("side-stage").style.display = side ? "flex" : "none";
+  const im = $("main-img");
+  im.src = tab === "orig" ? imgOrigSrc : imgOvSrc;
+  // 缺陷框只绘制在叠加标签页
+  $("overlay-layer").style.display = tab === "overlay" ? "" : "none";
+  $("iou-chip").style.display = (tab === "overlay" && lastInspect && lastInspect.gtCount) ? "block" : "none";
+  if (!side) drawBoxes();
+}
+
+const B64 = "data:image/png;base64,";
+/** 渲染一次 /inspect 或 /inspect/demo 响应。bbox 坐标系见分区 G。 */
+function renderInspectResponse(data, fileHint, isDemo) {
+  if (!data) { showError("后端返回空响应"); return; }
+  const result = data.result || data;
+  const gt = data.ground_truth || null;
+  lastInspect = { result, ground_truth: gt, gtCount: gt && (gt.defects || gt.items || []).length };
+  session.n += 1;
+  if (result.decision === "fail") session.blocked += 1;
+  session.msTotal += Number(result.processing_ms) || 0;
+  renderStats();
+  const ov = result.overlay_png_b64 ? B64 + result.overlay_png_b64 : "";
+  let orig = "";
+  if (isDemo && data.image_png_b64) orig = B64 + data.image_png_b64;
+  else if (fileHint) orig = URL.createObjectURL(fileHint);
+  imgOrigSrc = orig || ov;
+  imgOvSrc = ov || imgOrigSrc;
+  $("side-a").src = imgOrigSrc;
+  $("side-b").src = imgOvSrc;
+  $("canvas-meta").textContent =
+    `${int(result.width)}×${int(result.height)} px · heatmap ${int(result.heatmap_shape?.[0])}×${int(result.heatmap_shape?.[1])} · ${fmt(result.processing_ms, 1)} ms`;
+  $("empty-canvas").style.display = "none";
+  $("imgbox").style.display = "block";
+  applyTab();
+  renderVerdict(result);
+  renderGauge(result);
+  renderBreakdown(result);
+  renderFeatures(result);
+  renderDefectList(result);
+  renderGroundTruthChip();
+}
+
+/* ===== 分区 G · 缺陷框绘制（按 getBoundingClientRect 等比换算，不假设 1:1） =====
+   契约约定：DefectItem.bbox 由 region_stats 在底分辨率特征图上产出，坐标空间 = heatmap_shape；
+   ground_truth 由样本生成器产出，坐标空间 = 原图 width/height。两者分别换算，勿混用。 */
+let boxIndex = new Map(); // defect_id -> 画布框 DOM；"card:"+id -> 右侧卡片
+
+function drawBoxes() {
+  const layer = $("overlay-layer");
+  const img = $("main-img");
+  layer.innerHTML = "";
+  boxIndex = new Map();
+  if (tab !== "overlay" || !lastInspect || !img.naturalWidth) return;
+  const rect = img.getBoundingClientRect();
+  const res = lastInspect.result;
+  const hm = res.heatmap_shape || [];
+  const kx = rect.width / (hm[1] || res.width || 1);
+  const ky = rect.height / (hm[0] || res.height || 1);
+  layer.style.width = rect.width + "px";
+  layer.style.height = rect.height + "px";
+
+  (res.defects || []).forEach((d) => {
+    const bb = d.bbox || [];
+    if (bb.length < 4) return;
+    const el = mkBox(bb, kx, ky,
+      String(d.severity).toLowerCase() === "high" ? "sev-high" : String(d.severity).toLowerCase() === "low" ? "sev-low" : "");
+    el.title = `${d.defect_id} · ${d.label_cn} · score ${fmt(d.score, 3)}`;
+    el.innerHTML = `<span class="tag">${esc(d.defect_id)} ${esc(d.label_cn ?? "")}</span>`;
+    el.addEventListener("mouseenter", () => highlightDefect(String(d.defect_id), true));
+    el.addEventListener("mouseleave", () => highlightDefect(String(d.defect_id), false));
+    el.addEventListener("click", () => {
+      const card = boxIndex.get("card:" + String(d.defect_id));
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    layer.appendChild(el);
+    boxIndex.set(String(d.defect_id), el);
+  });
+  // 合成样本真值：虚线框，坐标空间为原图像素
+  const gtDefs = lastInspect.ground_truth && (lastInspect.ground_truth.defects || lastInspect.ground_truth.items || []);
+  const gkx = rect.width / (res.width || 1), gky = rect.height / (res.height || 1);
+  (gtDefs || []).forEach((g, i) => {
+    const bb = g.bbox || g.bbox_xyxy || [];
+    if (bb.length < 4) return;
+    const el = mkBox(bb, gkx, gky, "gt");
+    el.innerHTML = `<span class="tag">GT-${String(i + 1).padStart(2, "0")}</span>`;
+    layer.appendChild(el);
+  });
+}
+function mkBox(bb, kx, ky, cls) {
+  const el = document.createElement("div");
+  el.className = "dbox " + cls;
+  el.style.left = Number(bb[0]) * kx + "px";
+  el.style.top = Number(bb[1]) * ky + "px";
+  el.style.width = Math.max(6, (Number(bb[2]) - Number(bb[0])) * kx) + "px";
+  el.style.height = Math.max(6, (Number(bb[3]) - Number(bb[1])) * ky) + "px";
+  return el;
+}
+$("main-img").addEventListener("load", drawBoxes);
+window.addEventListener("resize", drawBoxes);
+
+/** 高亮联动：画布框 ↔ 右侧卡片。 */
+function highlightDefect(id, on) {
+  const box = boxIndex.get(id);
+  const card = boxIndex.get("card:" + id);
+  if (box) box.classList.toggle("hl", on);
+  if (card) card.classList.toggle("hl", on);
+}
+
+/* ===== 分区 H · 真值 IoU 概览（统一到相对坐标后计算） ===== */
+function relBox(bb, w, h) {
+  return [Number(bb[0]) / w, Number(bb[1]) / h, Number(bb[2]) / w, Number(bb[3]) / h];
+}
+function boxIou(a, b) {
+  const x1 = Math.max(a[0], b[0]), y1 = Math.max(a[1], b[1]);
+  const x2 = Math.min(a[2], b[2]), y2 = Math.min(a[3], b[3]);
+  const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+  const areaA = Math.max(0, a[2] - a[0]) * Math.max(0, a[3] - a[1]);
+  const areaB = Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
+  const union = areaA + areaB - inter;
+  return union <= 0 ? 0 : inter / union;
+}
+function renderGroundTruthChip() {
+  const chip = $("iou-chip");
+  if (!lastInspect || !lastInspect.gtCount) { chip.style.display = "none"; return; }
+  const res = lastInspect.result;
+  const hm = res.heatmap_shape || [res.height, res.width];
+  const preds = (res.defects || []).filter((d) => d.bbox && d.bbox.length >= 4)
+    .map((d) => relBox(d.bbox, hm[1] || res.width, hm[0] || res.height));
+  const gts = (lastInspect.ground_truth.defects || lastInspect.ground_truth.items || [])
+    .map((g) => g.bbox || g.bbox_xyxy || []).filter((bb) => bb.length >= 4)
+    .map((bb) => relBox(bb, res.width, res.height));
+  const ious = gts.map((g) => preds.reduce((best, p) => Math.max(best, boxIou(g, p)), 0));
+  const mean = ious.length ? ious.reduce((a, b) => a + b, 0) / ious.length : 0;
+  const c = mean >= 0.5 ? "var(--green)" : mean >= 0.25 ? "var(--amber)" : "var(--red)";
+  chip.style.display = tab === "overlay" ? "block" : "none";
+  chip.innerHTML = `真值 ${gts.length} · 预测 ${preds.length} · <b style="color:${c}">IoU 均值 ${fmt(mean, 3)}</b>`;
+}
+
+/* ===== 分区 I · 右侧 · 判定徽章与得分仪表 ===== */
+function renderVerdict(result) {
+  const v = $("verdict");
+  const d = result.decision || "pass";
+  v.className = d;
+  v.querySelector(".v-label").textContent =
+    result.label_cn ?? (d === "pass" ? "合格 · 放行" : d === "review" ? "可疑 · 人工复检" : "不合格 · 拦截");
+  const sub = $("verdict-sub");
+  sub.textContent = `score ${fmt(result.score, 3)} / DIV ${fmt(result.threshold ?? cfg?.decision_threshold, 3)} · ${fmt(result.processing_ms, 1)} ms · 缺陷 ${int(result.defect_count ?? (result.defects || []).length)} 个`;
+  sub.style.color = decColor(d);
+}
+
+function renderGauge(result) {
+  $("gauge-card").style.display = "";
+  const rev = Number(cfg?.review_threshold ?? 0.42);
+  const dec = Number(cfg?.decision_threshold ?? 0.62);
+  const score = Math.max(0, Math.min(1, Number(result.score) || 0));
+  const R = 64, CX = 90, CY = 90, START = 135, SWEEP = 270;
+  const pol = (r, deg) => {
+    const a = (deg * Math.PI) / 180;
+    return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+  };
+  const arcPath = (fromScore, toScore) => {
+    const a0 = START + SWEEP * fromScore, a1 = START + SWEEP * Math.max(toScore, 0.0001);
+    const [x0, y0] = pol(R, a0), [x1, y1] = pol(R, a1);
+    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  };
+  const arcLen = (SWEEP / 360) * 2 * Math.PI * R;
+  let tick = "";
+  [[rev, "var(--amber)"], [dec, "var(--red)"]].forEach(([t, c]) => {
+    const [px, py] = pol(R + 3, START + SWEEP * t);
+    const [qx, qy] = pol(R - 13, START + SWEEP * t);
+    tick += `<line x1="${qx.toFixed(1)}" y1="${qy.toFixed(1)}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>`;
+  });
+  $("gauge").innerHTML = `
+    <path d="${arcPath(0, 1)}" fill="none" stroke="#26333f" stroke-width="13" stroke-linecap="round"/>
+    <path d="${arcPath(0, score)}" fill="none" stroke="${decColor(result.decision)}" stroke-width="13"
+          stroke-linecap="round" stroke-dasharray="${(arcLen * score).toFixed(1)} ${arcLen.toFixed(1)}"/>
+    ${tick}
+    <text x="90" y="86" text-anchor="middle" fill="${decColor(result.decision)}" font-size="30" font-weight="700" style="font-family:var(--mono)">${fmt(score, 3)}</text>
+    <text x="90" y="108" text-anchor="middle" fill="#5b6b7c" font-size="11">融合得分 SCORE</text>`;
+}
+
+/* ===== 分区 J · 右侧 · 归因条 / 特征表 / 缺陷列表 ===== */
+const BREAK_LABEL = { coverage: "覆盖度", severity: "严重度", count: "数量", max_area: "最大面积", clutter: "杂波" };
+function renderBreakdown(result) {
+  const bd = result.breakdown || {};
+  const fw = (cfg && cfg.feature_weights) || {};
+  const keys = Object.keys(BREAK_LABEL).filter((k) => k in bd || k in fw);
+  if (!keys.length) { $("breakdown-card").style.display = "none"; return; }
+  $("breakdown-card").style.display = "";
+  $("breakdown").innerHTML = keys.map((k) => {
+    const v = Math.max(0, Math.min(1, Number(bd[k]) || 0));
+    const w = fw[k];
+    return `<div class="bar-row">
+      <div class="n">${BREAK_LABEL[k]} <small>${w !== undefined ? "w" + fmt(w, 2) : ""}</small></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(v * 100).toFixed(1)}%"></div></div>
+      <div class="v">${fmt(bd[k], 3)}</div></div>`;
+  }).join("");
+}
+function renderFeatures(result) {
+  const f = result.features || {};
+  const keys = Object.keys(f);
+  if (!keys.length) { $("features-card").style.display = "none"; return; }
+  $("features-card").style.display = "";
+  $("features").innerHTML = keys.map((k) => `<tr><td>${esc(k)}</td><td>${fmt(f[k], 4)}</td></tr>`).join("");
+}
+function renderDefectList(result) {
+  const list = result.defects || [];
+  $("def-count").textContent = list.length ? `(${list.length})` : "";
+  if (!list.length) { $("defects-card").style.display = "none"; return; }
+  $("defects-card").style.display = "";
+  const wrap = $("defect-list");
+  wrap.innerHTML = "";
+  list.forEach((d) => {
+    const id = String(d.defect_id ?? "");
+    const feat = d.features || {};
+    const featRows = Object.keys(feat).length
+      ? Object.keys(feat).map((k) => `<tr><td>${esc(k)}</td><td>${fmt(feat[k], 3)}</td></tr>`).join("")
+      : '<tr><td>无特征</td><td>—</td></tr>';
+    const sc = Number(d.score) || 0;
+    const scCol = decColor(sc >= (cfg?.decision_threshold ?? 0.62) ? "fail" : sc >= (cfg?.review_threshold ?? 0.42) ? "review" : "pass");
+    const card = document.createElement("div");
+    card.className = "dcard";
+    card.innerHTML = `
+      <div class="h">
+        <span class="dot" style="background:${sevColor(d.severity)}"></span>
+        <span class="id">${esc(id)}</span>
+        <span class="cls">${esc(d.label_cn ?? "未分类缺陷")}</span>
+        <span class="sc" style="color:${scCol}">${fmt(d.score, 3)}</span>
+      </div>
+      <div class="m">
+        <span>置信 ${fmt(d.class_confidence, 3)}</span>
+        <span>面积 ${int(d.area_px)} px</span>
+        <span>严重度 ${esc(d.severity ?? "—")}</span>
+      </div>
+      <div class="feat"><table class="kv">${featRows}</table></div>`;
+    card.addEventListener("click", () => card.classList.toggle("open"));
+    card.addEventListener("mouseenter", () => highlightDefect(id, true));
+    card.addEventListener("mouseleave", () => highlightDefect(id, false));
+    boxIndex.set("card:" + id, card);
+    wrap.appendChild(card);
+  });
+}
+function renderStats() {
+  $("st-n").textContent = int(session.n);
+  $("st-m").textContent = int(session.blocked);
+  $("st-t").textContent = session.n ? fmt(session.msTotal / session.n, 1) : "—";
+}
+
+/* ===== 分区 K · 底部评测报告渲染（全部防御式读键，缺失显示 —） ===== */
+function pick(obj, ...keys) {
+  for (const k of keys) if (obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
+  return undefined;
+}
+function metricsHtml(pairs) {
+  return pairs.map(([k, v]) => `<div class="metric"><span>${k}</span><span>${v}</span></div>`).join("");
+}
+function renderBench(data) {
+  const r = data.report || data;
+  const lat = pick(data, "latency_ms") ?? pick(r, "latency_ms", "latency") ?? {};
+  $("bench-meta").textContent =
+    `生成 ${int(data.generated ?? r.n_images)} 张 · mean ${fmt(typeof lat === "object" ? lat.mean : lat, 1)} ms`;
+  const il = r.image_level || r.image || r;
+  $("img-metrics").innerHTML = metricsHtml([
+    ["Precision", pct(pick(il, "precision"))], ["Recall", pct(pick(il, "recall"))],
+    ["F1", pct(pick(il, "f1", "f1_score"))], ["Accuracy", pct(pick(il, "accuracy"))],
+    ["样本数", int(pick(il, "n", "total", "n_images"))]]);
+  renderConfusion(pick(r, "confusion", "confusion_matrix", "cm") || il || {}, il);
+  const dl = r.defect_level || r.defect_metrics || {};
+  $("def-metrics").innerHTML = metricsHtml([
+    ["Precision", pct(pick(dl, "precision"))], ["Recall", pct(pick(dl, "recall"))],
+    ["F1", pct(pick(dl, "f1", "f1_score"))], ["TP", int(pick(dl, "tp"))],
+    ["FP", int(pick(dl, "fp"))], ["FN", int(pick(dl, "fn"))]]);
+  renderPerClass(pick(r, "per_class", "per_class_metrics") || {});
+  renderLatency(typeof lat === "object" ? lat : {});
+  renderSeparation(pick(r, "score_separation", "separation") || {});
+  renderFailures(r.failures || []);
+}
+function renderConfusion(cm, fallback) {
+  const num = (v) => (v === undefined || v === null ? 0 : Number(v) || 0);
+  const tp = num(pick(cm, "tp", "TP") ?? pick(fallback, "tp"));
+  const fp = num(pick(cm, "fp", "FP") ?? pick(fallback, "fp"));
+  const tn = num(pick(cm, "tn", "TN") ?? pick(fallback, "tn"));
+  const fn = num(pick(cm, "fn", "FN") ?? pick(fallback, "fn"));
+  const maxV = Math.max(1, tp, fp, tn, fn);
+  const shade = (v, good) => {
+    const t = v / maxV;
+    const base = good ? "34,197,94" : "239,68,68";
+    return `background:rgba(${base},${(0.12 + 0.62 * t).toFixed(3)});`;
+  };
+  $("cm").innerHTML = `
+    <div class="hd"></div><div class="hd">预测 OK</div><div class="hd">预测 NG</div>
+    <div class="hd">真值 OK</div>
+    <div class="cx cell" style="${shade(tn, true)}"><span class="big">${tn}</span><span class="sm">TN</span></div>
+    <div class="cx cell" style="${shade(fp, false)}"><span class="big">${fp}</span><span class="sm">FP</span></div>
+    <div class="hd">真值 NG</div>
+    <div class="cx cell" style="${shade(fn, false)}"><span class="big">${fn}</span><span class="sm">FN</span></div>
+    <div class="cx cell" style="${shade(tp, true)}"><span class="big">${tp}</span><span class="sm">TP</span></div>`;
+}
+function renderPerClass(pc) {
+  const classes = (cfg && cfg.defect_classes) || [];
+  const rows = classes.length
+    ? classes.map((c) => ({ label: c.label_cn ?? c.id, m: pc[c.id] || pc[String(c.id).toLowerCase()] || {} }))
+    : Object.keys(pc).map((k) => ({ label: k, m: pc[k] || {} }));
+  if (!rows.length) { $("per-class").innerHTML = '<tr><td class="muted">无数据</td></tr>'; return; }
+  $("per-class").innerHTML = "<tr><th>类别</th><th>P</th><th>R</th><th>F1</th><th>N</th></tr>" +
+    rows.map(({ label, m }) => `<tr><td>${esc(label)}</td><td>${pct(pick(m, "precision"))}</td>
+      <td>${pct(pick(m, "recall"))}</td><td>${pct(pick(m, "f1", "f1_score"))}</td>
+      <td>${int(pick(m, "support", "n"))}</td></tr>`).join("");
+}
+function renderLatency(lat) {
+  $("latency").innerHTML = metricsHtml([
+    ["mean", fmt(pick(lat, "mean", "avg"), 1) + " ms"], ["p50", fmt(pick(lat, "p50", "median"), 1) + " ms"],
+    ["p95", fmt(pick(lat, "p95"), 1) + " ms"], ["max", fmt(pick(lat, "max"), 1) + " ms"]]);
+}
+function renderSeparation(sep) {
+  const okMax = Number(pick(sep, "ok_max") ?? NaN);
+  const dfMin = Number(pick(sep, "defective_min") ?? NaN);
+  const gap = Number(pick(sep, "gap") ?? (dfMin - okMax));
+  const col = gap > 0.2 ? "var(--green)" : gap > 0.05 ? "var(--amber)" : "var(--red)";
+  $("separation").innerHTML = metricsHtml([
+    ["合格上限 ok_max", fmt(okMax, 3)], ["缺陷下限 defective_min", fmt(dfMin, 3)]]) +
+    `<div class="metric"><span>分离度 gap</span><span style="color:${col}">${fmt(gap, 3)}</span></div>
+    <div class="sep-track"><div class="sep-fill" style="width:${(Math.max(0, Math.min(1, gap)) * 100).toFixed(1)}%;background:${col}"></div></div>
+    <div class="faint" style="font-size:10.5px;margin-top:5px">gap ≥0.20 良好 · ≥0.05 一般 · 否则不可分</div>`;
+}
+function renderFailures(list) {
+  if (!list.length) { $("failures").innerHTML = '<span class="faint">无失败样本 ✓</span>'; return; }
+  $("failures").innerHTML = list.map((f) =>
+    `<div><b style="color:var(--amber)">${esc(f.image_id ?? f.id ?? "—")}</b> · ${esc(f.kind ?? "—")} · <span class="muted">${esc(f.detail ?? "")}</span></div>`).join("");
+}
+$("drawer-close").addEventListener("click", () => $("drawer").classList.remove("open"));
+
+/* ===== 分区 L · 键盘快捷键（Enter 触发当前主操作） ===== */
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  const t = e.target;
+  if (t && t.id && ["n-ok", "n-ng"].includes(t.id)) { runBench(); return; }
+  if ($("drawer").classList.contains("open")) { $("drawer").classList.remove("open"); return; }
+  runDemo();
+});
+
+/* ===== 分区 M · 窗口级拖放拦截（防止拖放其它区域时浏览器直接打开文件） ===== */
+["dragover", "drop"].forEach((ev) =>
+  window.addEventListener(ev, (e) => { if (!drop.contains(e.target)) e.preventDefault(); }));
+</script>
+</body>
+</html>

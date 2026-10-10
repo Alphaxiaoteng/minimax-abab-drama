@@ -1,0 +1,27 @@
+{
+  "source": "github",
+  "generatedAt": "2026-10-10T00:00:00.000Z",
+  "entries": [
+    {
+      "key": "_default",
+      "query": null,
+      "limit": null,
+      "since": null,
+      "note": "Fallback feed: 10 curated MCP/agent repositories in raw GitHub search shape."
+    },
+    {
+      "key": "github|d94ab8f2706e8315",
+      "query": "mcp",
+      "limit": 10,
+      "since": null,
+      "note": "Recording for ResponseCache.key([\"github\", \"mcp\", 10, undefined, \"\"])."
+    },
+    {
+      "key": "github|6ea845c444a2ec3e",
+      "query": "agent framework",
+      "limit": 10,
+      "since": null,
+      "note": "Recording for ResponseCache.key([\"github\", \"agent framework\", 10, undefined, \"\"])."
+    }
+  ]
+}

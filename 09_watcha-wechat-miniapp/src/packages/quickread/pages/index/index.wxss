@@ -1,0 +1,54 @@
+.action-row {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+}
+
+.action-sample {
+  flex: none;
+  width: 176rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  padding: 20rpx 0;
+}
+
+.action-clear {
+  flex: none;
+  width: 132rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  padding: 20rpx 0;
+}
+
+.action-run {
+  flex: 1;
+}
+
+.btn-danger {
+  background: var(--error);
+}
+
+.card-title-row {
+  margin-bottom: 16rpx;
+}
+
+.card-result {
+  margin-bottom: 20rpx;
+}
+
+.result-meta {
+  margin-bottom: 14rpx;
+}
+
+.result-actions {
+  display: flex;
+  margin-top: 20rpx;
+}
+
+.result-btn {
+  flex: 1;
+}
+
+.result-btn + .result-btn {
+  margin-left: 16rpx;
+}

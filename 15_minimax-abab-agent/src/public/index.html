@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沉浸式互动推理剧 Agent — 入口</title>
+<style>
+  body {
+    margin: 0; min-height: 100dvh; display: grid; place-items: center;
+    background: #0b0a12; color: #e9e5f5;
+    font-family: "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+  }
+  main { max-width: 28rem; padding: 2rem; text-align: center; }
+  h1 { font-size: 1.3rem; letter-spacing: 0.08em; }
+  p { color: #9c94b8; line-height: 1.9; font-size: 0.9rem; }
+  code { background: #1a1728; padding: 0.1rem 0.4rem; border-radius: 6px; }
+  a { color: #e8b45a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>沉浸式互动推理剧 Agent</h1>
+  <p>本页面仅是静态托管的转发入口。H5 剧场产物位于 <code>src/ui/</code>，
+     需由 <code>src/server/</code>（或把 <code>src/ui/</code> 设为根目录的静态服务器）提供服务，
+     因为前端依赖 <code>/api/*</code> 后端接口。</p>
+  <p><a href="/src/ui/index.html">进入剧场 → /src/ui/index.html</a></p>
+  <p>一键启动：<code>npx tsx src/server/index.ts</code></p>
+</main>
+</body>
+</html>

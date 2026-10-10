@@ -1,0 +1,36 @@
+.sl-wrap {
+  padding: 4rpx 0;
+}
+
+.sl-line {
+  font-size: 28rpx;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sl-truncated {
+  font-size: 22rpx;
+  margin-bottom: 8rpx;
+}
+
+.sl-cursor {
+  display: inline-block;
+  width: 16rpx;
+  height: 30rpx;
+  background: var(--accent);
+  border-radius: 3rpx;
+  margin-top: 6rpx;
+  animation: sl-blink 1s steps(2, start) infinite;
+}
+
+.sl-idle {
+  font-size: 26rpx;
+  padding: 8rpx 0;
+}
+
+@keyframes sl-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}

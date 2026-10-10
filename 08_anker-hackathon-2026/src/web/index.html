@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anker 智能用电管家</title>
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <h1>Anker 智能用电管家</h1>
+    <div id="status-badge"><span>状态:</span><strong id="status_text">就绪</strong></div>
+  </header>
+
+  <main class="dashboard">
+    <!-- Control Bar -->
+    <section class="control-bar">
+      <div class="form-row">
+        <label for="city">城市</label>
+        <select id="city"></select>
+        <label for="model">设备型号</label>
+        <select id="model"></select>
+        <label for="mode">模式</label>
+        <select id="mode">
+          <option value="arbitrage">分时套利</option>
+          <option value="self_consumption">光伏自消纳</option>
+          <option value="resilience">供电保障</option>
+          <option value="balanced">综合平衡</option>
+        </select>
+        <label for="weather">天象</label>
+        <select id="weather">
+          <option value="clear">晴</option>
+          <option value="cloudy">多云</option>
+          <option value="overcast">阴</option>
+          <option value="rain">雨</option>
+          <option value="heatwave">热浪</option>
+        </select>
+        <label for="risk_slider">风险偏好</label>
+        <input type="range" id="risk_slider" min="0" max="10" step="1" value="5">
+        <span id="risk_val">中</span>
+        <label class="switch">
+          <input type="checkbox" id="use_llm">
+          <span>AI 策略</span>
+        </label>
+        <button id="replan_btn">重新调度</button>
+      </div>
+    </section>
+
+    <!-- KPI Row -->
+    <section class="kpi-row">
+      <div class="kpi-card"><div class="kpi-label">预计节省</div><div id="kpi_savings_cny" class="kpi-val kpi-green">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">节省比例</div><div id="kpi_savings_pct" class="kpi-val kpi-green">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">基准电费</div><div id="kpi_baseline" class="kpi-val">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">优化后电费</div><div id="kpi_optimized" class="kpi-val">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">光伏自消纳率</div><div id="kpi_selfcons" class="kpi-val">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">循环次数</div><div id="kpi_cycles" class="kpi-val">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">求解状态</div><div id="kpi_status" class="kpi-val">—</div></div>
+    </section>
+
+    <!-- Main Chart -->
+    <section class="chart-section">
+      <h2 class="section-title">24h 调度总览</h2>
+      <div id="chart_wrap">
+        <svg id="main_svg" viewBox="0 0 960 380" preserveAspectRatio="none"></svg>
+        <div id="tooltip" class="tooltip" style="display:none"></div>
+      </div>
+      <div id="legend" class="legend"></div>
+    </section>
+
+    <!-- Schedule Table -->
+    <section class="table-section">
+      <h2 class="section-title">调度明细</h2>
+      <table id="schedule_table">
+        <thead>
+          <tr><th>时段</th><th>电价档</th><th>电价</th><th>负荷</th><th>PV</th><th>电池</th><th>电网</th><th>SOC</th><th>动作</th><th>电费</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <div class="two-col">
+      <!-- AI Strategy Panel -->
+      <section class="panel-section">
+        <h2 class="section-title">AI 策略面板</h2>
+        <div id="ai_panel" class="ai-panel">
+          <div class="info-row"><span class="label">来源:</span><span id="ai_source">—</span></div>
+          <div class="info-row"><span class="label">模型:</span><span id="ai_model">—</span></div>
+          <div id="llm_note_area"></div>
+          <ul id="ai_rationale" class="rationale-list"></ul>
+        </div>
+      </section>
+
+      <!-- Live Operation Panel -->
+      <section class="panel-section">
+        <h2 class="section-title">实时运行面板</h2>
+        <div id="live_panel" class="live-panel">
+          <div class="live-col">
+            <div id="live_soc_gauge">
+              <svg width="150" height="90" viewBox="0 0 150 90">
+                <path id="soc_arc_bg" d="M15 80 A60 60 0 0 1 135 80" stroke="#2a3550" stroke-width="14" fill="none"/>
+                <path id="soc_arc_fg" d="M15 80 A60 60 0 0 1 135 80" stroke="#38bdf8" stroke-width="14" fill="none" stroke-dasharray="0 999"/>
+              </svg>
+              <div id="live_soc_text" class="soc-text">—%</div>
+            </div>
+          </div>
+          <div class="live-readings">
+            <div><span class="label">当前档/价:</span><span id="live_tier_price">—</span></div>
+            <div><span class="label">PV:</span><span id="live_pv">—</span></div>
+            <div><span class="label">负荷:</span><span id="live_load">—</span></div>
+            <div><span class="label">电网:</span><span id="live_grid">—</span></div>
+            <div><span class="label">温度:</span><span id="live_temp">—</span></div>
+          </div>
+        </div>
+        <canvas id="live_chart" width="640" height="160"></canvas>
+      </section>
+    </div>
+
+    <div id="error_box" class="error-box" style="display:none"></div>
+  </main>
+
+  <footer class="footer">Anker 智能用电管家 · hackathon 原型 v1.0 · 仅供演示</footer>
+  <script src="/web/app.js"></script>
+</body>
+</html>
