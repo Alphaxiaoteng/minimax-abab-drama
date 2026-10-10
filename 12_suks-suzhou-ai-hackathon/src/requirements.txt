@@ -1,10 +1,11 @@
 # InspectAI 长三角工业质检服务（S3）运行时依赖，全部锁定版本保证可复现构建。
 # opencv 用 headless 版：容器/服务器无 GUI，避免拖入 libGL 之外的显示依赖。
 numpy==2.0.2
-opencv-python-headless==4.13.0.88
+opencv-python-headless>=4.10.0
 Pillow==11.3.0
 fastapi==0.128.8
 uvicorn[standard]==0.39.0
 pydantic==2.13.4
 python-multipart==0.0.20
 pytest==8.4.2
+httpx>=0.27.0
