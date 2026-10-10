@@ -232,10 +232,25 @@ def default_scenarios() -> List[Scenario]:
         Scenario(
             name="extreme_peak",
             seed=2026,
-            description="极端峰值日：单个大模型任务满发 ~1.5h，叠加背景波动，逼近变压器容量。",
+            # 峰值 12161.6 kW − 电网限额 8000 kW = 4161.6 kW 最小放电需求；
+            # 取 5500 kW（~24% 裕度）+ 22000 kWh（≈4h@5500kW）覆盖尖峰与 SOC/终端约束。
+            description="极端峰值日：单个大模型任务满发 ~1.5h，叠加背景波动；钠电储能替代变压器扩容。",
             spike_count=3,
             spike_scale=0.40,
             extreme_spike=True,
+            battery=BatteryParams(
+                capacity_kwh=22000.0,
+                p_charge_max_kw=5500.0,
+                p_discharge_max_kw=5500.0,
+                soc_min=0.10,
+                soc_max=0.90,
+                soc_init=0.50,
+                eta_charge=0.95,
+                eta_discharge=0.95,
+                cycle_life=4000.0,
+                capex_per_kwh=900.0,
+                om_cost_per_kwh=0.02,
+            ),
         ),
     ]
 

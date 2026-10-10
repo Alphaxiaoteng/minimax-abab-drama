@@ -60,11 +60,15 @@ def test_price_levels_monotone_ordered():
 # energy_cost
 # --------------------------------------------------------------------------
 def test_energy_cost_flat_load():
-    """平稳 1000 kW 负荷：电费 == 1000 * step_hours * mean(price)。"""
+    """平稳 1000 kW 负荷：整日电费 == 1000 * N_STEPS * STEP_HOURS * mean(price)。"""
     prices = price_series(default_tariff())
     power = np.full(N_STEPS, 1000.0)
-    expected = 1000.0 * STEP_HOURS * float(prices.sum())
+    expected = 1000.0 * N_STEPS * STEP_HOURS * float(prices.mean())
     assert energy_cost(power, prices, STEP_HOURS) == pytest.approx(expected, abs=1e-6)
+    unit_price = 0.8
+    assert energy_cost([1.0], [unit_price], STEP_HOURS) == pytest.approx(
+        unit_price * STEP_HOURS
+    )
 
 
 def test_energy_cost_manual_dot_product():

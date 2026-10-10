@@ -81,6 +81,7 @@ def test_pue_zero_it_guarded_no_nan_inf():
     cool = np.array([50.0, 0.0, 320.0])
     pue = instantaneous_pue(it, cool, 0.03)
     assert np.isfinite(pue).all()
+    assert np.all(pue >= 1.0)
     assert pue[0] == 1.0
     assert pue[1] == 1.0
     assert pue[2] == pytest.approx((1000.0 + 320.0) * 1.03 / 1000.0)
