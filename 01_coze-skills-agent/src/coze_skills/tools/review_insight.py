@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Set, Tuple
 
 from coze_skills.core.spec import Param, ToolError, ToolResult, ToolSpec
 
@@ -97,6 +97,8 @@ MARKETPLACE_CHECKLIST: Dict[str, str] = {
 
 _CJK_RUN_RE = re.compile(r"[\u4e00-\u9fff]+")
 _LATIN_SPLIT_RE = re.compile(r"[^A-Za-z0-9]+")
+#: ASCII 开头的关键词走词边界匹配 (避免 fit 命中 benefit), 其余按归一化子串匹配
+_ASCII_RE = re.compile(r"^[A-Za-z0-9]")
 
 # ---------------------------------------------------------------------------
 # 分词与匹配
@@ -127,59 +129,71 @@ def _normalized(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower())
 
 
+def _scan(text: str) -> Tuple[str, Set[str]]:
+    """对评论做一次归一化与分词, 避免每个词表重复切分同一文本."""
+    return _normalized(text), set(tokenize(text))
+
+
+def _keyword_matches(norm: str, latin: Set[str], kw: str) -> bool:
+    """单个关键词是否命中.
+
+    :param norm: :func:`_normalized` 的结果.
+    :param latin: 评论 token 集合.
+    :param kw: 词表关键词.
+    :returns: 英文单词要求整词命中 (避免 ``fit`` 命中 ``benefit``),
+        含空格的词组与其它中文词按归一化子串命中.
+    """
+    if _ASCII_RE.match(kw):
+        if " " in kw:
+            return kw in norm
+        return kw in latin
+    return kw in norm
+
+
 def _keyword_hits(text: str) -> List[str]:
     """返回文本命中的全部关键词 (原样, 按主题名+关键词序, 确定性输出).
 
     :param text: 原始评论.
     :returns: 命中的关键词列表 (同词只记一次).
     """
-    norm = _normalized(text)
-    latin = set(tokenize(text))
+    norm, latin = _scan(text)
     hits: List[str] = []
     for theme in sorted(THEME_KEYWORDS):
         for kw in THEME_KEYWORDS[theme]:
             if kw in hits:
                 continue
-            if _ASCII_RE.match(kw):
-                if " " in kw:
-                    matched = kw in norm
-                else:
-                    matched = kw in latin
-            else:
-                matched = kw in norm
-            if matched:
+            if _keyword_matches(norm, latin, kw):
                 hits.append(kw)
     return hits
 
 
-def _theme_of(text: str) -> str:
-    """评论主题归因: 命中关键词最多的主题; 平局取主题名排序靠前者; 无命中返回「其他」."""
+def _theme_counts(norm: str, latin: Set[str]) -> Dict[str, int]:
+    """按主题统计命中的关键词个数 (多标签: 一条评论可同时计入多个主题).
+
+    :param norm: 归一化文本.
+    :param latin: token 集合.
+    :returns: 主题 -> 命中关键词数; 无命中时为 ``{}``.
+    """
     counts: Dict[str, int] = {}
     for theme, kws in THEME_KEYWORDS.items():
-        for kw in kws:
-            if _keyword_matches(text, kw):
-                counts[theme] = counts.get(theme, 0) + 1
+        hit = sum(1 for kw in kws if _keyword_matches(norm, latin, kw))
+        if hit:
+            counts[theme] = hit
+    return counts
+
+
+def _theme_of(text: str) -> str:
+    """评论主主题: 命中关键词最多的主题; 平局按主题名排序; 无命中返回「其他」."""
+    counts = _theme_counts(*_scan(text))
     if not counts:
         return "其他"
     return sorted(counts, key=lambda t: (-counts[t], t))[0]
 
 
-_ASCII_RE = re.compile(r"^[A-Za-z0-9]")
-
-
-def _keyword_matches(text: str, kw: str) -> bool:
-    """单个关键词是否命中评论 (英文单词走词边界, 词组/中文走归一化子串)."""
-    norm = _normalized(text)
-    if _ASCII_RE.match(kw):
-        if " " in kw:
-            return kw in norm
-        return kw in set(tokenize(text))
-    return kw in norm
-
-
 def _is_negative(text: str) -> bool:
     """评论是否带明显负面情绪 (词表命中, 英文单词走词边界)."""
-    return any(_keyword_matches(text, w) for w in NEGATIVE_WORDS)
+    norm, latin = _scan(text)
+    return any(_keyword_matches(norm, latin, w) for w in NEGATIVE_WORDS)
 
 
 def _truncate(text: str, limit: int = 80) -> str:
@@ -260,11 +274,12 @@ def analyze_reviews(
     theme_count: Dict[str, int] = {}
     theme_quotes: Dict[str, List[str]] = {}
     for r in items:
-        theme = _theme_of(r)
-        theme_count[theme] = theme_count.get(theme, 0) + 1
-        quotes = theme_quotes.setdefault(theme, [])
-        if len(quotes) < 2:
-            quotes.append(_truncate(r))
+        hit_themes = sorted(_theme_counts(*_scan(r))) or ["其他"]
+        for theme in hit_themes:
+            theme_count[theme] = theme_count.get(theme, 0) + 1
+            quotes = theme_quotes.setdefault(theme, [])
+            if len(quotes) < 2:
+                quotes.append(_truncate(r))
 
     ranked = sorted(theme_count, key=lambda t: (-theme_count[t], t))[:top_n]
     themes: List[Dict[str, Any]] = []
