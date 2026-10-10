@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import cv2
 import numpy as np
 
-from inspectai.contracts import SCENE_IDS, SCENE_CN, DECISION_PASS, DECISION_FAIL
+from inspectai.contracts import SCENE_IDS, SCENE_CN, DECISION_PASS, DECISION_REVIEW, DECISION_FAIL
 from inspectai.domain.generator import SyntheticPartGenerator
 from inspectai.detectors.core import get_detector
 
@@ -44,8 +44,18 @@ def main() -> int:
             result = detector.inspect(img, image_id=f"{scene_id}_{kind}", scene_id=scene_id)
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
-            decision_str = "PASS (良品)" if result.decision == DECISION_PASS else "FAIL (缺陷)"
-            is_match = (result.decision == expected_decision)
+            if result.decision == DECISION_PASS:
+                decision_str = "PASS (良品)"
+            elif result.decision == DECISION_FAIL:
+                decision_str = "FAIL (报废)"
+            else:
+                decision_str = "REVIEW (复检)"
+
+            if has_defect:
+                is_match = (result.decision in (DECISION_FAIL, DECISION_REVIEW))
+            else:
+                is_match = (result.decision == DECISION_PASS)
+
             if is_match:
                 correct_decisions += 1
 
