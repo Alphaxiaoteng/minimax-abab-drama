@@ -1,0 +1,269 @@
+/* 雾醒山城 · CSS 阵营专属样式（类名一律 cssc- 前缀，避免与 src/styles.css 冲突） */
+
+.cssc-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 100%, #101a30 0%, #070b16 62%, #04060d 100%);
+  pointer-events: none;
+  contain: strict;
+}
+
+.cssc-root > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── dawn：夜 → 日出 → 暖橙，三层色温迁移 ── */
+.cssc-dawn {
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.cssc-dawn-mid {
+  background: linear-gradient(180deg, #3b2150 0%, #5c3168 45%, transparent 80%);
+}
+.cssc-dawn-warm {
+  background: linear-gradient(180deg, transparent 30%, rgba(255, 138, 76, 0.35) 68%, rgba(255, 210, 127, 0.55) 100%);
+  mix-blend-mode: plus-lighter;
+}
+
+/* ── skyline：≥90 楼体 + 楼顶霓虹灯带 + 呼吸辉光 ── */
+.cssc-sky {
+  z-index: 2;
+}
+.cssc-building {
+  position: absolute;
+  bottom: 12%;
+  background: linear-gradient(180deg, #131a2e 0%, #0a0f1e 100%);
+  border: 1px solid rgba(120, 160, 220, 0.12);
+  box-shadow: inset 0 0 18px rgba(10, 20, 40, 0.9);
+  will-change: transform, opacity;
+}
+.cssc-band {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  right: -2px;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--c-neon, #00e5ff), transparent);
+  box-shadow: 0 0 10px var(--c-neon, #00e5ff), 0 0 22px var(--c-neon, #00e5ff);
+  animation: cssc-breathe 2s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes cssc-breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+.cssc-sky-glow {
+  position: absolute;
+  bottom: 8%;
+  top: auto;
+  height: 42%;
+  background: radial-gradient(80% 100% at 50% 100%, rgba(0, 229, 255, 0.35) 0%, rgba(124, 77, 255, 0.18) 45%, transparent 75%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* ── fog：两层平流雾 Canvas（CSS blur 制造柔和边缘） ── */
+.cssc-fog {
+  mix-blend-mode: screen;
+  filter: blur(18px);
+  will-change: opacity;
+}
+.cssc-fog-a { z-index: 3; }
+.cssc-fog-b { z-index: 4; filter: blur(28px); }
+
+/* ── laser：拉长渐变锥面斜射 ── */
+.cssc-laser {
+  z-index: 5;
+  mix-blend-mode: screen;
+  opacity: 0;
+  will-change: opacity;
+}
+.cssc-beam {
+  position: absolute;
+  top: -6%;
+  left: var(--c-ox, 10%);
+  width: 3px;
+  height: 78%;
+  transform-origin: 50% 0%;
+  background: linear-gradient(180deg, var(--c-neon, #00e5ff) 0%, rgba(255, 255, 255, 0.65) 8%, transparent 100%);
+  border-radius: 50% 50% 8% 8% / 60% 60% 3% 3%;
+  box-shadow: 0 0 18px var(--c-neon, #00e5ff);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* ── drone：72 点阵 ── */
+.cssc-drone {
+  z-index: 6;
+  opacity: 0;
+}
+.cssc-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #eaf6ff;
+  box-shadow: 0 0 8px #00e5ff, 0 0 18px rgba(124, 77, 255, 0.8);
+  will-change: transform, opacity;
+}
+
+/* ── mascot：火锅 ── */
+.cssc-pot {
+  z-index: 7;
+  opacity: 0;
+}
+.cssc-pot-body {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 26%;
+  height: 22%;
+  transform: translateX(-50%);
+  background: radial-gradient(90% 80% at 50% 20%, #8a4a2b 0%, #4d2416 70%, #2a130b 100%);
+  border-radius: 12% 12% 46% 46% / 8% 8% 60% 60%;
+  box-shadow: 0 0 30px rgba(255, 138, 76, 0.45), inset 0 6px 14px rgba(0, 0, 0, 0.6);
+}
+.cssc-pot-rim {
+  position: absolute;
+  left: 50%;
+  bottom: 26.5%;
+  width: 28%;
+  height: 5%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #d99a4e 0%, #8a5a2b 100%);
+  box-shadow: 0 0 16px rgba(255, 179, 0, 0.7);
+}
+.cssc-pot-grid {
+  position: absolute;
+  left: 50%;
+  bottom: 27.2%;
+  width: 25%;
+  height: 3.6%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 3px, rgba(30, 10, 5, 0.9) 3px 5px),
+    repeating-linear-gradient(180deg, transparent 0 2px, rgba(30, 10, 5, 0.85) 2px 4px),
+    radial-gradient(60% 80% at 50% 50%, #d63a1f 0%, #7a1608 100%);
+}
+.cssc-steam {
+  position: absolute;
+  left: 50%;
+  bottom: 31%;
+  width: 16%;
+  height: 30%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.95) 100%);
+  filter: blur(14px);
+  border-radius: 50% 50% 20% 20%;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.cssc-bubbles {
+  z-index: 1;
+}
+
+/* ── spotlight：追光锥 + 地面亮斑 ── */
+.cssc-spot {
+  z-index: 8;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+.cssc-spot-cone {
+  top: -10%;
+  left: 50%;
+  width: 14%;
+  margin-left: -7%;
+  height: 85%;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  transform-origin: 50% 0%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 229, 255, 0.4) 45%, rgba(0, 229, 255, 0.06) 100%);
+  filter: blur(3px);
+  will-change: transform;
+}
+.cssc-spot-patch {
+  top: auto;
+  bottom: 9%;
+  left: 50%;
+  width: 22%;
+  margin-left: -11%;
+  height: 6%;
+  border-radius: 50%;
+  transform-origin: 50% 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 255, 255, 0.95) 0%, rgba(0, 229, 255, 0.35) 45%, transparent 75%);
+  filter: blur(6px);
+  will-change: transform;
+}
+
+/* ── fireworks：加色粒子 Canvas ── */
+.cssc-fw {
+  z-index: 9;
+  mix-blend-mode: screen;
+}
+
+/* ── confetti：340 片彩纸 ── */
+.cssc-confetti {
+  z-index: 10;
+}
+.cssc-bit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 12px;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ── glitch：撕裂条 + RGB 分离 ── */
+.cssc-glitch {
+  z-index: 11;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.cssc-glitch-band {
+  position: absolute;
+  top: var(--c-top, 20%);
+  left: 0;
+  right: 0;
+  height: 7%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 32, 121, 0.22) 50%, rgba(0, 229, 255, 0.18) 100%);
+  backdrop-filter: blur(2px);
+  will-change: transform;
+}
+.cssc-glitch-rgb {
+  top: 34%;
+  height: 8%;
+  background: rgba(233, 245, 255, 0.5);
+  mix-blend-mode: screen;
+  will-change: filter;
+}
+
+/* ── shatter：白闪 + 冲击波 ── */
+.cssc-flash {
+  z-index: 12;
+  background: #eaf6ff;
+  opacity: 0;
+  mix-blend-mode: screen;
+  will-change: opacity;
+}
+.cssc-shock {
+  z-index: 13;
+  top: 50%;
+  left: 50%;
+  inset: auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 0 24px 8px rgba(0, 229, 255, 0.7), 0 0 60px 20px rgba(124, 77, 255, 0.45);
+  transform: translate(-50%, -50%) scale(0.15);
+  opacity: 0;
+  will-change: transform, opacity;
+}
