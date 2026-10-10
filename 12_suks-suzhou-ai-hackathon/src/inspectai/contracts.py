@@ -547,33 +547,36 @@ def classify_region(
     local_std = clamp01(local_std)
     darkness = clamp01(darkness)
 
-    # 1) 线状划伤：强主方向 + 细长 + 低圆度，且局部对比度较高
+    # 1) 线状划伤：细长是**决定性**证据，形状够强时不再依赖对比度；
+    #    长划伤的峰值/均值都偏向中部（mean 被稀释），若把对比度乘进去会把它压低。
     scratch = clamp01(
-        0.55 * principal_ratio
-        + 0.30 * min(1.0, (elongation - 1.4) / 6.0)
+        0.45 * principal_ratio
+        + 0.40 * min(1.0, (elongation - 1.4) / 5.0)
         + 0.15 * (1.0 - circularity)
-    ) * (0.6 + 0.4 * darkness)
-
-    # 2) 气孔砂眼：高圆度、面积中等、局部灰度方差大（多孔）
-    pore = clamp01(
-        0.45 * circularity
-        + 0.30 * min(1.0, local_std / 0.22)
-        + 0.25 * (1.0 - min(1.0, (elongation - 1.4) / 4.0))
     )
 
-    # 3) 压痕磕碰：大而弥散、低峰值、中低圆度、低局部方差
+    # 2) 气孔砂眼：圆度高 + 局部方差大（多孔）→ 但长划伤同样方差大、圆度中高，
+    #    故用**长宽比**做硬性抑制：细长形状不能是气孔。
+    pore = clamp01(
+        0.50 * circularity
+        + 0.35 * min(1.0, local_std / 0.30)
+        + 0.15 * clamp01(1.0 - (elongation - 1.0) / 2.0)
+    ) * clamp01(1.0 - (elongation - 1.6) / 1.2)
+
+    # 3) 压痕磕碰：大而弥散、低峰值、低局部方差。
     dent = clamp01(
         0.40 * (1.0 - peak) * min(1.0, elongation / 2.0)
         + 0.35 * (1.0 - min(1.0, local_std / 0.20))
         + 0.25 * (0.5 * (1.0 - principal_ratio) + 0.5 * (1.0 - circularity))
     )
 
-    # 4) 油污异物：高对比但低结构、形状不规则
+    # 4) 油污异物：**高亮**（darkness 低）+ 无主方向 + 形状不规则。
+    #    高对比但没结构的区域是油污，不是气孔——用暗度把油污与气孔彻底分开。
     smear = clamp01(
-        0.45 * (1.0 - principal_ratio)
-        + 0.30 * (1.0 - circularity)
-        + 0.25 * peak
-    ) * (0.7 + 0.3 * (1.0 - darkness))
+        0.40 * (1.0 - principal_ratio)
+        + 0.25 * (1.0 - circularity)
+        + 0.35 * (1.0 - darkness)
+    ) * (0.7 + 0.3 * peak)
 
     raw = {
         CLASS_SCRATCH: scratch,

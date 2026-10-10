@@ -1,0 +1,28 @@
+{
+  "permissionMode": "bypass_permissions",
+  "permissions": {
+    "trustDirectories": [
+      "/Users/albert/Documents/project",
+      "/Users/albert/Documents",
+      "/Users/albert/orca",
+      "/Users/albert/orca/workspaces",
+      "/Users/albert/orca/workspaces/bisai",
+      "/Users/albert"
+    ],
+    "allow": [
+      "Bash",
+      "Edit",
+      "Read",
+      "Glob",
+      "Grep",
+      "NotebookCell",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "Write",
+      "View",
+      "present_files",
+      "mcp",
+      "*"
+    ]
+  }
+}

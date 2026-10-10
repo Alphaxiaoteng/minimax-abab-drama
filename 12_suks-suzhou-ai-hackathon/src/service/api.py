@@ -444,12 +444,22 @@ def dataset_benchmark(req: BenchmarkRequest) -> dict[str, Any]:
                 truth.scene_id = scene
                 truth.image_path = f"data/benchmark/{image_id}.png"
                 result, ms = _run_inspection(image, image_id, scene)
+                # 契约规定缺陷 bbox 落在底分辨率热力图坐标系（heatmap_shape），
+                # 而真值 bbox 是原图像素坐标；直接比对会让 IoU 恒≈0（跨尺度）。
+                # 这里按 原图/热力图 的边长比把预测框升采样回原图坐标再交给评测器。
+                bh, bw = result.heatmap_shape
+                sx = result.width / float(max(1, bw))
+                sy = result.height / float(max(1, bh))
                 preds: list[dict[str, Any]] = []
                 for d in result.defects:
                     x1, y1, x2, y2 = d.bbox
+                    ox1 = int(round(x1 * sx))
+                    oy1 = int(round(y1 * sy))
+                    ox2 = min(result.width - 1, int(round((x2 + 1) * sx)) - 1)
+                    oy2 = min(result.height - 1, int(round((y2 + 1) * sy)) - 1)
                     preds.append(
                         {
-                            "bbox": [int(x1), int(y1), int(x2 - x1 + 1), int(y2 - y1 + 1)],
+                            "bbox": [ox1, oy1, max(1, ox2 - ox1 + 1), max(1, oy2 - oy1 + 1)],
                             "defect_class": d.defect_class,
                             "score": round(float(d.score), 4),
                             "processing_ms": round(ms, 3),

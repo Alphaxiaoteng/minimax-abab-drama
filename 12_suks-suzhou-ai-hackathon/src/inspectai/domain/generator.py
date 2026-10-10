@@ -103,6 +103,8 @@ def _tight_bbox(patch: np.ndarray, rel: float = 0.2) -> tuple[int, int, int, int
     if len(ys) == 0 or len(xs) == 0:
         h, w = patch.shape
         return 0, 0, int(w), int(h)
+    y0, y1 = int(ys[0]), int(ys[-1])
+    x0, x1 = int(xs[0]), int(xs[-1])
     return x0, y0, x1 - x0 + 1, y1 - y0 + 1
 
 
@@ -140,8 +142,8 @@ def _render_scratch(rng: np.random.Generator, scale: float) -> tuple[np.ndarray,
         py = cy0 - st * length * s + ct * wob
         end = min(t, 1.0 - t)
         fade = math.exp(-(end * end) / (2.0 * 0.05 * 0.05))
-        g = np.exp(-((X - px) ** 2 + (Y - py) ** 2) / sigma2)
-        delta -= (g * (depth * fade)).astype(np.float32)
+        g = np.exp(-((X - px) ** 2 + (Y - py) ** 2) / sigma2).astype(np.float32)
+        delta -= (g * np.float32(depth * fade)).astype(np.float32)
 
     x, y, w, h = _tight_bbox(delta)
     patch = delta[y:y + h, x:x + w]
@@ -167,8 +169,8 @@ def _render_porosity(rng: np.random.Generator, scale: float) -> tuple[np.ndarray
         sy = core + float(rng.uniform(-5.0, 5.0))
         rad = float(rng.uniform(2.0, 6.0))
         depth = float(rng.uniform(35.0, 70.0))
-        g = np.exp(-((X - sx) ** 2 + (Y - sy) ** 2) / (2.0 * rad * rad))
-        delta -= (g * depth).astype(np.float32)
+        g = np.exp(-((X - sx) ** 2 + (Y - sy) ** 2) / (2.0 * rad * rad)).astype(np.float32)
+        delta -= (g * np.float32(depth)).astype(np.float32)
         depths.append(depth)
     dmax = max(depths)
     x, y, w, h = _tight_bbox(delta)
@@ -198,8 +200,8 @@ def _render_indentation(rng: np.random.Generator, scale: float) -> tuple[np.ndar
     body = (ellipse <= 1.0).astype(np.float32)
     mag = float(rng.uniform(15.0, 25.0))
     sign = 1.0 if rng.random() < 0.5 else -1.0
-    soft = cv2.GaussianBlur(body * mag, (0, 0), sig)
-    delta = (soft * sign).astype(np.float32)
+    soft = cv2.GaussianBlur(body * np.float32(mag), (0, 0), sig).astype(np.float32)
+    delta = (soft * np.float32(sign)).astype(np.float32)
     x, y, w, h = _tight_bbox(delta)
     patch = delta[y:y + h, x:x + w]
     feats = {
@@ -234,7 +236,7 @@ def _render_contamination(rng: np.random.Generator, scale: float) -> tuple[np.nd
         ry = -dx * math.sin(th) + dy * math.cos(th)
         one = (((rx / ea) ** 2 + (ry / eb) ** 2) <= 1.0).astype(np.float32)
         mask = np.maximum(mask, one)
-    delta = cv2.GaussianBlur(mask * depth, (0, 0), sig).astype(np.float32)
+    delta = cv2.GaussianBlur(mask * np.float32(depth), (0, 0), sig).astype(np.float32)
     x, y, w, h = _tight_bbox(delta)
     patch = delta[y:y + h, x:x + w]
     feats = {
@@ -291,8 +293,8 @@ class SyntheticPartGenerator:
     def _base(self, rng: np.random.Generator) -> np.ndarray:
         ys, xs = np.mgrid[0:self.h, 0:self.w].astype(np.float32)
         builder = _TEXTURE_BUILDERS.get(self.scene_id, _tex_gear)
-        texture = builder(self.profile, xs, ys, rng).astype(np.float32)
-        return float(self.profile.background) + texture
+        texture = np.asarray(builder(self.profile, xs, ys, rng), dtype=np.float32)
+        return np.float32(self.profile.background) + texture
 
     def _place_defects(self, rng: np.random.Generator, n: int) -> tuple[np.ndarray, list[Annotation]]:
         scale = float(self.profile.defect_scale)
