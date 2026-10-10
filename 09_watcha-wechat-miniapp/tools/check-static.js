@@ -224,6 +224,116 @@ function ruleI(app) {
   ruleReports.push([r, ok, bad]);
 }
 
+// ===================== 规则 (j) tabBar 页必须在主包 pages 中定义 + preloadRule 引用合法 =====================
+// 官方约束：tabBar.list[].pagePath「必须在 pages 中先定义」，即 tabBar 页面只能是主包页面；
+// 指向分包页面时微信开发者工具直接报错、真机无法启动。
+function ruleJ(app) {
+  const r = '(j) tabBar 页在主包 pages 中定义 + preloadRule 指向存在的分包';
+  if (!app) { fail(r, 'app.json 缺失'); ruleReports.push([r, 0, 1]); return; }
+  let ok = 0, bad = 0;
+  const mainPages = new Set(app.pages || []);
+  for (const it of (app.tabBar && app.tabBar.list) || []) {
+    if (mainPages.has(it.pagePath)) ok++;
+    else { fail(r, `tabBar pagePath "${it.pagePath}" 未在主包 pages 中定义（tabBar 页面必须放主包）`); bad++; }
+  }
+  const pkgNames = new Map();
+  (app.subPackages || []).forEach(sp => pkgNames.set(sp.name || sp.root, sp.root));
+  for (const [page, rule] of Object.entries(app.preloadRule || {})) {
+    if (!mainPages.has(page)) { fail(r, `preloadRule 键 "${page}" 不是主包页面`); bad++; continue; }
+    for (const pkg of rule.packages || []) {
+      if (pkgNames.has(pkg)) ok++;
+      else { fail(r, `preloadRule "${page}" 引用不存在的分包 "${pkg}"`); bad++; }
+    }
+  }
+  ruleReports.push([r, ok, bad]);
+}
+
+// ===================== 规则 (k) wxml 自定义标签必须已在 usingComponents 声明 =====================
+const BUILTIN_TAGS = new Set([
+  'view','text','image','button','input','textarea','navigator','scroll-view','swiper','swiper-item',
+  'cover-view','cover-image','icon','progress','picker','picker-view','picker-view-column',
+  'radio','radio-group','checkbox','checkbox-group','form','label','switch','slider','video',
+  'camera','map','canvas','open-data','web-view','rich-text','movable-view','movable-area',
+  'block','template','slot','import','include','page-meta','page-container','navigation-bar',
+  'match-media','keyboard-accessory','share-element','page-ws','official-account','follow',
+  'like','comment','gallery','live','live-player','live-pusher'
+]);
+function collectUsingComponents(jsonFile, app) {
+  const set = new Set(Object.keys((app && app.usingComponents) || {}));
+  Object.keys(readJsonSafe(jsonFile)).forEach(k => set.add(k));
+  return set;
+}
+function ruleK(app) {
+  const r = '(k) wxml 自定义标签均已声明（无未声明组件）';
+  let ok = 0, bad = 0;
+  for (const wf of byExt['.wxml'] || []) {
+    const jsonFile = wf.replace(/\.wxml$/, '.json');
+    const declared = fs.existsSync(jsonFile)
+      ? collectUsingComponents(jsonFile, app)
+      : new Set(Object.keys((app && app.usingComponents) || {}));
+    const wxml = fs.readFileSync(wf, 'utf8');
+    const tagRe = /<([a-z][a-z0-9-]*)[\s/>]/g;
+    let m;
+    while ((m = tagRe.exec(wxml))) {
+      const tag = m[1];
+      if (BUILTIN_TAGS.has(tag) || tag.startsWith('wx:')) { ok++; continue; }
+      if (declared.has(tag)) ok++;
+      else { fail(r, `${rel(wf)} 使用未声明组件 <${tag}>（usingComponents 缺失）`); bad++; }
+    }
+  }
+  ruleReports.push([r, ok, bad]);
+}
+function readJsonSafe(p) {
+  try { return (readJson(p).usingComponents) || {}; } catch { return {}; }
+}
+
+// ===================== 规则 (l) window 配置键与取值合法 =====================
+const WINDOW_KEYS = new Set([
+  'backgroundTextStyle','backgroundColor','backgroundColorTop','backgroundColorBottom',
+  'navigationBarBackgroundColor','navigationBarTextStyle','navigationBarTitleText',
+  'navigationStyle','enablePullDownRefresh','onReachBottomDistance','pageScrollMode',
+  'restartOnRefresh','transparentTitle','titleBarColor'
+]);
+function ruleL(app) {
+  const r = '(l) window 配置键值合法';
+  if (!app) { fail(r, 'app.json 缺失'); ruleReports.push([r, 0, 1]); return; }
+  let ok = 0, bad = 0;
+  const win = app.window || {};
+  for (const [k, v] of Object.entries(win)) {
+    if (!WINDOW_KEYS.has(k)) { fail(r, `window.${k} 不是官方支持的键`); bad++; continue; }
+    if (k === 'backgroundTextStyle' && !['light','dark'].includes(v)) { fail(r, `window.backgroundTextStyle=${JSON.stringify(v)} 需 light|dark`); bad++; continue; }
+    if (k === 'navigationBarTextStyle' && !['black','white'].includes(v)) { fail(r, `window.navigationBarTextStyle=${JSON.stringify(v)} 需 black|white`); bad++; continue; }
+    if (/Color$/.test(k) && !/^#[0-9a-fA-F]{6}$/.test(String(v))) { fail(r, `window.${k}=${JSON.stringify(v)} 需 #RRGGBB`); bad++; continue; }
+    ok++;
+  }
+  if (!ok) { fail(r, 'window 配置为空'); bad++; }
+  ruleReports.push([r, ok, bad]);
+}
+
+// ===================== 规则 (m) js 内绝对页面路径无死链 =====================
+function ruleM(app) {
+  const r = '(m) js navigate/switchTab/share 页面路径均已声明';
+  if (!app) { fail(r, 'app.json 缺失'); ruleReports.push([r, 0, 1]); return; }
+  const declared = new Set(app.pages || []);
+  (app.subPackages || []).forEach(sp => (sp.pages || []).forEach(p => declared.add(sp.root.replace(/\/$/, '') + '/' + p)));
+  let ok = 0, bad = 0;
+  const seen = new Set();
+  for (const jf of byExt['.js'] || []) {
+    const txt = fs.readFileSync(jf, 'utf8');
+    const re = /(?:url|path)\s*:\s*'(\/[^']*)'/g;
+    let m;
+    while ((m = re.exec(txt))) {
+      const page = m[1].split('?')[0].replace(/^\//, '');
+      const key = rel(jf) + '#' + m[1];
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (declared.has(page)) ok++;
+      else { fail(r, `${rel(jf)} 引用未声明页面 '${m[1]}'`); bad++; }
+    }
+  }
+  ruleReports.push([r, ok, bad]);
+}
+
 // --- 执行 ---
 const app = ruleA();
 ruleB();
@@ -234,6 +344,10 @@ ruleF();
 ruleG();
 ruleH();
 ruleI(app);
+ruleJ(app);
+ruleK(app);
+ruleL(app);
+ruleM(app);
 
 // --- 输出 ---
 console.log('===== 静态校验报告（赛事交付物）=====');

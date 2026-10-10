@@ -126,12 +126,7 @@ Page({
   },
 
   onBackToInput() {
-    wx.switchTab({
-      url: '/packages/triage/pages/index/index',
-      fail() {
-        wx.navigateTo({ url: '/packages/triage/pages/index/index' });
-      }
-    });
+    wx.switchTab({ url: '/pages/triage/index' });
   },
 
   onShareAppMessage() {
@@ -141,7 +136,7 @@ Page({
       : null;
     return {
       title: card ? card.title + ' · ' + card.subtitle : '今日断舍离安排',
-      path: '/packages/triage/pages/index/index'
+      path: '/pages/triage/index'
     };
   }
 });

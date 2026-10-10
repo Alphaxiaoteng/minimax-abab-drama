@@ -28,14 +28,14 @@ Page({
         title: 'AI 一页纸快读',
         desc: '论文 / 财报 / 长文 → 一句话结论 + 关键数据 + 风险点 + 原文依据',
         action: '去快读',
-        path: '/packages/quickread/pages/index/index'
+        path: '/pages/quickread/index'
       },
       {
         key: 'triage',
         title: '日程断舍离',
         desc: '杂乱待办 → 今日必做 Top3 + 可延后 + 建议删除（附理由）+ 时间块',
         action: '去整理',
-        path: '/packages/triage/pages/index/index'
+        path: '/pages/triage/index'
       }
     ]
   },
@@ -93,27 +93,16 @@ Page({
     }
   },
 
-  // 跳转场景（分包页面，首次进入由微信按需下载分包；preloadRule 已提前预热 quickread）
+  // 跳转场景（两个场景入口均为 tabBar 页，必须用 switchTab；详情/历史仍在分包，按需加载）
   onOpenScene(e) {
     const path = e.currentTarget.dataset.path;
     if (!path) return;
-    wx.navigateTo({
-      url: path,
-      fail() {
-        // navigateTo 不能跳 tabBar 页，回退到 switchTab
-        wx.switchTab({ url: path });
-      }
-    });
+    wx.switchTab({ url: path });
   },
 
   // 空态里的行动按钮：直达一页纸快读
   onOpenFirstScene() {
-    wx.navigateTo({
-      url: '/packages/quickread/pages/index/index',
-      fail() {
-        wx.switchTab({ url: '/packages/quickread/pages/index/index' });
-      }
-    });
+    wx.switchTab({ url: '/pages/quickread/index' });
   },
 
   // 点击最近记录：跳到详情页并带上记录 id
@@ -127,7 +116,7 @@ Page({
     wx.navigateTo({
       url: url,
       fail() {
-        wx.switchTab({ url: '/packages/quickread/pages/index/index' });
+        wx.switchTab({ url: scene === 'triage' ? '/pages/triage/index' : '/pages/quickread/index' });
       }
     });
   },

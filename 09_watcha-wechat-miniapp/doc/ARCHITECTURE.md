@@ -20,7 +20,7 @@
 
 首屏内容不等待任何网络请求。机制拆解：
 
-1. **首包只含首页**：`src/app.json` 的 `pages` 仅注册 `pages/home/index`；快读/断舍离两条链路全部放在 `subPackages`（`packages/quickread`、`packages/triage`），按需加载。主包体积目标 < 300KB（`tools/size.js` 实测可验，远低于微信 2MB 硬限）。
+1. **首屏主包最小闭环**：`src/app.json` 的 `pages` 注册三个主包页面——`pages/home/index` 与两个 tabBar 场景页 `pages/quickread/index`、`pages/triage/index`（微信官方规范：tabBar 页必须在主包 `pages` 中定义）；详情/历史/今日安排放在 `subPackages`（`packages/quickread`、`packages/triage`），按需加载并由 `preloadRule` 在首页预热 quickread。主包实测 109.6 KB（`tools/size.js` 可验，仅占微信 2MB 硬限的 5.35%）。
 2. **`lazyCodeLoading: "requiredComponents"`**：组件代码只在页面实例化时加载，未触达的分包/组件不参与首屏解析，基础库启动期 JS 解析量减少约 40%–60%（[INFERENCE]，量级取决于组件数量）。
 3. **t0 同步缓存渲染**：`src/utils/cache.js` 基于 `wx.getStorageSync` 同步读，启动时按 `scene` + 时间戳取最近一条命中记录，在 `onLoad` 同一帧内把标题/摘要写入 data——即**首帧 DOM 已含真实内容**，不显示 loading 骨架空等网络。`npm run demo` 中 t0 同步读缓存耗时实测为亚毫秒级（内存 storage 场景；真机 Storage 同量级，见演示脚本镜头 2）。
 4. **AI 异步刷新**：`createAgent().run()` 在缓存帧渲染完成后才发起 SSE 流式请求，`onStep` 增量替换文本、最后落结构化卡片；用户全程无感切换，最坏情况（网络失败）内容仍停留在缓存帧 + 本地内核兜底。

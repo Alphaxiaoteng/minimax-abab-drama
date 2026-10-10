@@ -7,11 +7,11 @@
     },
     {
       "action": "allow",
-      "page": "packages/quickread/pages/index/index"
+      "page": "pages/quickread/index"
     },
     {
       "action": "allow",
-      "page": "packages/triage/pages/index/index"
+      "page": "pages/triage/index"
     },
     {
       "action": "disallow",
