@@ -1,0 +1,68 @@
+<view class="page-root">
+  <block wx:if="{{hasRecord}}">
+    <!-- 概览条：今日必做 / 可延后 / 建议删除，本地即时统计 -->
+    <view class="today-hero">
+      <view class="today-hero-title">{{title}}</view>
+      <view class="today-hero-metrics">
+        <view class="thm">
+          <text class="thm-value mono">{{mustCount}}</text>
+          <text class="thm-label">今日必做</text>
+        </view>
+        <view class="thm">
+          <text class="thm-value mono">{{deferCount}}</text>
+          <text class="thm-label">可延后</text>
+        </view>
+        <view class="thm">
+          <text class="thm-value mono">{{dropCount}}</text>
+          <text class="thm-label">建议删除</text>
+        </view>
+      </view>
+      <view class="today-hero-tags">
+        <text class="tag {{offline ? 'tag-offline' : 'tag-ok'}}">{{offline ? '离线分析' : '云端 AI'}}</text>
+      </view>
+    </view>
+
+    <markdown-card scene="triage" structured="{{structured}}" offline="{{offline}}"></markdown-card>
+
+    <!-- 追问：为什么这么排 -->
+    <view class="card ask-card">
+      <view class="card-title">追问这份安排</view>
+      <view class="ask-hints">
+        <text class="ask-hint" bindtap="onAskHint" data-q="建议删除哪些？">建议删除哪些？</text>
+        <text class="ask-hint" bindtap="onAskHint" data-q="今日必做是什么？">今日必做是什么？</text>
+        <text class="ask-hint" bindtap="onAskHint" data-q="时间块怎么排？">时间块怎么排？</text>
+      </view>
+      <view class="ask-input-row">
+        <input
+          class="ask-input"
+          value="{{question}}"
+          placeholder="例如：为什么要删掉这条"
+          bindinput="onQuestionInput"
+          confirm-type="send"
+          bindconfirm="onAsk"
+        />
+        <view class="btn ask-send {{asking ? 'ask-send-disabled' : ''}}" bindtap="onAsk">{{asking ? '思考中' : '提问'}}</view>
+      </view>
+      <block wx:for="{{answers}}" wx:key="index">
+        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}}">
+          <text class="qa-role">{{item.role === 'user' ? '我' : 'AI'}}</text>
+          <text class="qa-text">{{item.text}}</text>
+        </view>
+      </block>
+    </view>
+
+    <view class="result-actions">
+      <view class="btn btn-ghost result-btn" bindtap="onBackToInput">再整理一批</view>
+      <view class="btn result-btn" bindtap="onCopyPlan">复制今日安排</view>
+    </view>
+  </block>
+
+  <empty-state
+    wx:else
+    icon="◌"
+    title="还没有今日安排"
+    desc="回到断舍离页粘贴待办，即可生成今日安排"
+    actionText="去整理"
+    bind:action="onBackToInput"
+  ></empty-state>
+</view>

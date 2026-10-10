@@ -1,0 +1,157 @@
+{
+  "version": "0.2",
+  "note": "雾醒山城 · 演示与健壮性评测用例。window 为相对大秀开始的毫秒区间；plan 为 0-based 幕号（该幕内采样）。",
+  "scenarios": [
+    {
+      "id": "show-full-arc",
+      "title": "全流程 12 幕：从灯火到谢幕",
+      "category": "show",
+      "speed": 20,
+      "durationMs": 9000,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "skyline", "minPeak": 0.4, "note": "开场必须有灯火脉冲" },
+        { "action": "fog", "minPeak": 0.4, "note": "平流雾必须出现" },
+        { "action": "laser", "minPeak": 0.4, "note": "洪崖流光需要激光扇面" },
+        { "action": "drone", "minPeak": 0.4, "note": "无人机矩阵必须升空" },
+        { "action": "mascot", "minPeak": 0.4, "note": "火锅图腾必须出现" },
+        { "action": "spotlight", "minPeak": 0.4, "note": "倒数阶段需要追光" },
+        { "action": "fireworks", "minPeak": 0.6, "note": "零点必须引爆" },
+        { "action": "shatter", "minPeak": 0.4, "note": "零点需要冲击帧" },
+        { "action": "dawn", "minPeak": 0.5, "note": "WAKE UP 必须完成色温迁移" },
+        { "action": "confetti", "minPeak": 0.3, "note": "谢幕需要彩纸" },
+        { "action": "glitch", "minPeak": 0.3, "note": "晨光篇章需要故障质感" }
+      ]
+    },
+    {
+      "id": "opening-lamplight",
+      "title": "第 1 幕：灯火初上，雾未起",
+      "category": "show",
+      "plan": 0,
+      "speed": 1,
+      "durationMs": 3200,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "skyline", "minPeak": 0.5, "note": "开场能量必须落在天际线上" },
+        { "action": "fireworks", "minPeak": 0, "note": "开场不得提前放烟花", "window": [0, 1500] },
+        { "notAction": "dawn", "window": [0, 1500], "note": "入夜阶段不得出现日出色温" }
+      ]
+    },
+    {
+      "id": "fog-river",
+      "title": "第 2 幕：平流雾漫过解放碑",
+      "category": "show",
+      "plan": 1,
+      "speed": 1,
+      "durationMs": 3000,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "fog", "minPeak": 0.5, "minMean": 0.2, "note": "雾必须持续在场，而非一闪" },
+        { "action": "laser", "minPeak": 0.05, "note": "雾里仍要保留光束/霓虹可读性", "window": [0, 1500] }
+      ]
+    },
+    {
+      "id": "zero-peak",
+      "title": "第 9 幕：零点引爆峰值帧",
+      "category": "show",
+      "plan": 8,
+      "speed": 1,
+      "durationMs": 3000,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "fireworks", "minPeak": 0.75, "minMean": 0.25, "note": "零点烟花必须满能量" },
+        { "action": "shatter", "minPeak": 0.6, "note": "必须有冲击帧" },
+        { "action": "laser", "minPeak": 0.4, "note": "激光要与烟花并发" }
+      ]
+    },
+    {
+      "id": "dawn-shift",
+      "title": "第 10 幕：雾散，晨光爬上南山",
+      "category": "show",
+      "plan": 9,
+      "speed": 1,
+      "durationMs": 3200,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "dawn", "minPeak": 0.8, "minMean": 0.4, "note": "色温迁移必须完成" },
+        { "action": "fireworks", "minPeak": 0, "note": "黎明阶段烟花应基本退场", "window": [1200, 3000] }
+      ]
+    },
+    {
+      "id": "finale",
+      "title": "第 12 幕：谢幕双响",
+      "category": "show",
+      "plan": 11,
+      "speed": 1,
+      "durationMs": 3000,
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "confetti", "minPeak": 0.5, "note": "谢幕必须有彩纸" },
+        { "action": "fireworks", "minPeak": 0.5, "note": "谢幕尾焰" },
+        { "action": "mascot", "minPeak": 0.4, "note": "图腾收尾" }
+      ]
+    },
+    {
+      "id": "intent-fog-poetic",
+      "title": "意图：江雾再浓一点",
+      "category": "intent",
+      "durationMs": 4000,
+      "intents": ["江雾再浓一点", "雾"],
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "fog", "minPeak": 0.35, "note": "雾意图必须映射到 fog 命令" }
+      ]
+    },
+    {
+      "id": "intent-fireworks-hype",
+      "title": "意图：来一发洪崖洞烟花",
+      "category": "intent",
+      "durationMs": 4000,
+      "intents": ["来一发洪崖洞烟花"],
+      "requireRenderer": true,
+      "assertions": [{ "action": "fireworks", "minPeak": 0.5, "note": "烟花意图必须引爆" }]
+    },
+    {
+      "id": "intent-energy-cluster",
+      "title": "意图：把 2027 的黎明叫醒（复合）",
+      "category": "intent",
+      "durationMs": 5000,
+      "intents": ["把 2027 的黎明叫醒", "激光和无人机一起，全部拉满"],
+      "requireRenderer": true,
+      "assertions": [
+        { "action": "dawn", "minPeak": 0.5, "note": "黎明意图必须触发色温" },
+        { "action": "laser", "minPeak": 0.6, "note": "复合意图要拉起激光" },
+        { "action": "drone", "minPeak": 0.6, "note": "复合意图要拉起无人机" }
+      ]
+    },
+    {
+      "id": "engine-low-tier",
+      "title": "引擎：低配降级仍可演出",
+      "category": "engine",
+      "plan": 8,
+      "speed": 1,
+      "durationMs": 2500,
+      "requireRenderer": true,
+      "assertions": [{ "action": "fireworks", "minPeak": 0.5, "note": "降级后烟花能量不得丢失" }]
+    },
+    {
+      "id": "robust-garbage",
+      "title": "健壮性：乱码 / 超长 / 空意图",
+      "category": "robust",
+      "durationMs": 4000,
+      "intents": ["", "???!!!", "asdfghjkl 辣椒炒辣椒", "雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾雾"],
+      "requireRenderer": true,
+      "assertions": [{ "action": "skyline", "minPeak": 0.3, "note": "兜底意图必须有可读的默认演出" }]
+    },
+    {
+      "id": "determinism-check",
+      "title": "确定度：同 dt 序列两次重放读数一致",
+      "category": "engine",
+      "plan": 8,
+      "speed": 1,
+      "durationMs": 2500,
+      "requireRenderer": true,
+      "assertions": [{ "action": "fireworks", "minPeak": 0.5, "note": "重放断言（同时比对两次读数差）" }]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "pages": [
+    "pages/home/index"
+  ],
+  "subPackages": [
+    {
+      "root": "packages/quickread",
+      "name": "quickread",
+      "pages": [
+        "pages/index/index",
+        "pages/detail/index",
+        "pages/history/index"
+      ]
+    },
+    {
+      "root": "packages/triage",
+      "name": "triage",
+      "pages": [
+        "pages/index/index",
+        "pages/today/index"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/home/index": {
+      "network": "all",
+      "packages": [
+        "quickread"
+      ]
+    }
+  },
+  "tabBar": {
+    "color": "#8A8F99",
+    "selectedColor": "#1F6FEB",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "packages/quickread/pages/index/index",
+        "text": "一页纸"
+      },
+      {
+        "pagePath": "packages/triage/pages/index/index",
+        "text": "断舍离"
+      }
+    ]
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "秒开 AI",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F6F8"
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "networkTimeout": {
+    "request": 600000,
+    "uploadFile": 600000,
+    "downloadFile": 600000,
+    "connectSocket": 600000
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

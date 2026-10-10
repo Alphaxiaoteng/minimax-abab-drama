@@ -1,0 +1,1 @@
+{"name":"health","version":"1.0.0","description":"云开发环境连通性探针：无外部依赖、无数据库读取、无副作用，返回 { ok, ts, sdk, version }，供评审与 CI 冒烟检测","main":"index.js","dependencies":{"wx-server-sdk":"~2.6.3"}}

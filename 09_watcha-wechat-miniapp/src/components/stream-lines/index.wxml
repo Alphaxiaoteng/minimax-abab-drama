@@ -1,0 +1,7 @@
+<!-- 流式文本：只渲染最后一次节流合并后的快照 + 一个光标 -->
+<view class="sl-wrap">
+  <view wx:if="{{truncated}}" class="sl-truncated muted">仅显示最近 {{maxLines}} 行</view>
+  <view wx:for="{{lines}}" wx:key="index" class="sl-line">{{item}}</view>
+  <view wx:if="{{streaming}}" class="sl-cursor"></view>
+  <view wx:if="{{!streaming && lines.length === 0}}" class="sl-idle muted">等待模型输出…</view>
+</view>
