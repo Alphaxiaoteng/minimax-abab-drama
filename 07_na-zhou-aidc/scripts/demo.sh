@@ -1,33 +1,41 @@
 #!/usr/bin/env bash
+# 一键演示：依赖检查 → 110 项单测 → 三情景端到端 LP 仿真 → 报告落盘。
+# 用法：bash scripts/demo.sh   （任一环节失败即以非零退出码终止）
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-cd "${PROJECT_ROOT}"
+cd "$(dirname "$0")/.."
+echo "==> 工作目录: $(pwd)"
 
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-echo -e "${CYAN}================================================================${NC}"
-echo -e "${CYAN}  07_na-zhou-aidc · 初焰钠电 × AIDC 瞬态算力削峰填谷仿真演示${NC}"
-echo -e "${CYAN}  基于线性规划 (PuLP) 的智算中心钠电储能充放电协同优化与 PUE 分析${NC}"
-echo -e "${CYAN}================================================================${NC}"
-
-echo -e "\n${BLUE}[1/3] 验证可用仿真情景清单...${NC}"
-uv run --python 3.12 --with-requirements requirements.txt python -m src.main --list
-
-echo -e "\n${BLUE}[2/3] 执行 24 小时瞬态大模型训练负荷仿真与 LP 优化求解...${NC}"
-uv run --python 3.12 --with-requirements requirements.txt python -m src.main --all --no-charts
-
-echo -e "\n${BLUE}[3/3] 检查生成的分析报告与量化指标...${NC}"
-if [ -f "reports/pue_report.md" ]; then
-  head -n 25 reports/pue_report.md
-  echo -e "${GREEN}✓ 评测报告 reports/pue_report.md 已成功生成${NC}"
+if command -v uv >/dev/null 2>&1; then
+  echo "==> 运行器: uv (Python 3.12, requirements.txt 锁定依赖)"
+else
+  if [ ! -x .venv/bin/python ]; then
+    echo "==> 未检测到 uv，创建 .venv 并安装依赖"
+    python3 -m venv .venv
+    ./.venv/bin/pip install -q -r requirements.txt
+  fi
+  export PATH="$PWD/.venv/bin:$PATH"
+  echo "==> 运行器: .venv ($(python3 --version))"
 fi
 
-echo -e "\n${GREEN}================================================================${NC}"
-echo -e "${GREEN}  07_na-zhou-aidc 演示完成！全部链路 Exit Code 0${NC}"
-echo -e "${GREEN}================================================================${NC}"
+echo ""
+echo "==> [1/3] 运行单元测试（预期 110 项全部通过）"
+if command -v uv >/dev/null 2>&1; then
+  uv run --python 3.12 --with-requirements requirements.txt pytest tests/
+else
+  pytest tests/
+fi
+
+echo ""
+echo "==> [2/3] 端到端仿真：baseline_day / transient_spike / extreme_peak"
+if command -v uv >/dev/null 2>&1; then
+  uv run --python 3.12 --with-requirements requirements.txt python -m src.main --all
+else
+  python3 -m src.main --all
+fi
+
+echo ""
+echo "==> [3/3] 产出物"
+ls -1 reports/
+echo ""
+echo "✅ 演示完成：单测通过、三情景 Optimal、报告与图表见 reports/"

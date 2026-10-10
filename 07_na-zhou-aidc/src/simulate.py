@@ -251,10 +251,30 @@ def optimal_schedule(scenario: Scenario, it_power: np.ndarray,
 # --------------------------------------------------------------------------
 def _pue_block(scenario: Scenario, res_it: np.ndarray, res_cool: np.ndarray,
                sched_base: Any, sched_opt: Any) -> Dict[str, Any]:
-    """PUE 分析汇总。"""
+    """PUE 分析汇总。
+
+    口径与 ``optimizer.compute_kpis`` 严格一致：
+    基线设施功率 = IT + 制冷 + UPS 损耗（储能损耗为 0）；
+    优化设施功率 = IT + 制冷 + UPS 损耗 + 储能往返损耗
+    （损耗按 ``scenario.battery`` 的 eta_charge/eta_discharge 折算，
+    充电侧 ``charge·(1−η_c)``、放电侧 ``discharge·(1/η_d−1)``）。
+    """
     dc = scenario.datacenter
+    bat = scenario.battery
     pue_base = instantaneous_pue(res_it, res_cool, dc.ups_loss_ratio)
-    pue_opt = instantaneous_pue(res_it, res_cool, dc.ups_loss_ratio)
+
+    it = np.asarray(res_it, dtype=float)
+    cool = np.asarray(res_cool, dtype=float)
+    ups_kw = float(dc.ups_loss_ratio) * (it + cool)
+    bat_loss_kw = (
+        np.asarray(sched_opt.charge_kw, dtype=float) * (1.0 - float(bat.eta_charge))
+        + np.asarray(sched_opt.discharge_kw, dtype=float) * (1.0 / float(bat.eta_discharge) - 1.0)
+    )
+    facility_opt = it + cool + ups_kw + bat_loss_kw
+    with np.errstate(divide="ignore", invalid="ignore"):
+        pue_opt = np.where(it > 0.0, facility_opt / it, 1.0 + float(dc.ups_loss_ratio))
+    pue_opt = np.maximum(pue_opt, 1.0)
+
     return {
         "baseline": {
             "series": pue_base,
