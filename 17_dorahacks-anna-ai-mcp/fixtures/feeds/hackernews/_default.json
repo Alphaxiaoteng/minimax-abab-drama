@@ -1,0 +1,153 @@
+{
+  "hits": [
+    {
+      "objectID": "42000101",
+      "title": "Show HN: I built an MCP server for my homelab",
+      "url": "https://github.com/tuxdev99/homelab-mcp",
+      "author": "tuxdev99",
+      "created_at": "2026-10-09T06:12:00.000Z",
+      "points": 412,
+      "num_comments": 87,
+      "_tags": [
+        "story",
+        "show_hn"
+      ]
+    },
+    {
+      "objectID": "42000134",
+      "title": "The agent framework wars: LangGraph vs CrewAI vs the rest",
+      "url": "https://dev.to/kenm/the-agent-framework-wars-2026",
+      "author": "patternmatch",
+      "created_at": "2026-10-09T09:31:00.000Z",
+      "story_text": "Written after watching three teams rewrite the same orchestrator twice this quarter.",
+      "points": 271,
+      "num_comments": 164,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000177",
+      "title": "Model Context Protocol reaches 1,000 community servers",
+      "url": "https://modelcontextprotocol.info/blog/community-servers-1000",
+      "author": "annaweb",
+      "created_at": "2026-10-08T14:05:00.000Z",
+      "points": 388,
+      "num_comments": 95,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000201",
+      "title": "We replaced RAG with an MCP knowledge server",
+      "url": "https://blog.knowlabs.dev/mcp-replaces-rag",
+      "author": "vectorqueen",
+      "created_at": "2026-10-07T11:47:00.000Z",
+      "points": 174,
+      "num_comments": 58,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000244",
+      "title": "Ask HN: What does your AI coding agent setup look like?",
+      "url": "https://news.ycombinator.com/item?id=42000244",
+      "author": "queryloop",
+      "created_at": "2026-10-06T18:22:00.000Z",
+      "story_text": "Curious what terminal + editor + MCP combo people actually keep running daily.",
+      "points": 96,
+      "num_comments": 213,
+      "_tags": [
+        "story",
+        "ask_hn"
+      ]
+    },
+    {
+      "objectID": "42000287",
+      "title": "Show HN: An open-source browser agent that never leaks your cookies",
+      "url": "https://github.com/opencloak/opencloak",
+      "author": "seccomp",
+      "created_at": "2026-10-05T08:03:00.000Z",
+      "points": 259,
+      "num_comments": 71,
+      "_tags": [
+        "story",
+        "show_hn"
+      ]
+    },
+    {
+      "objectID": "42000331",
+      "title": "ArXiv: MCP-Bench, a benchmark for tool-using agents",
+      "url": "https://arxiv.org/abs/2610.00112",
+      "author": "paperbot",
+      "created_at": "2026-10-04T22:56:00.000Z",
+      "points": 133,
+      "num_comments": 24,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000374",
+      "title": "Why we killed our internal GPT wrapper and used the API",
+      "url": "https://eng.internalpost.dev/gpt-wrapper-postmortem",
+      "author": "costaware",
+      "created_at": "2026-10-03T13:18:00.000Z",
+      "points": 205,
+      "num_comments": 112,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000418",
+      "title": "GitHub Copilot agents now speak MCP in preview",
+      "url": "https://github.blog/ai-and-ml/copilot-agents-mcp-preview",
+      "author": "redmonk",
+      "created_at": "2026-10-02T16:44:00.000Z",
+      "points": 348,
+      "num_comments": 147,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000461",
+      "title": "SQLite-backed vector search for agent memory",
+      "url": "https://morsmachine.dev/agent-memory-sqlite",
+      "author": "indexingfails",
+      "created_at": "2026-10-01T07:29:00.000Z",
+      "points": 121,
+      "num_comments": 39,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000505",
+      "title": "The boring architecture behind reliable agent pipelines",
+      "url": "https://queue.computer/boring-agent-architecture",
+      "author": "durablepet",
+      "created_at": "2026-09-30T12:02:00.000Z",
+      "points": 287,
+      "num_comments": 66,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000548",
+      "title": "DoraHacks launches the Anna AI App Builder Program",
+      "url": "https://dorahacks.io/announcements/anna-ai-app-builder",
+      "author": "hackathonhost",
+      "created_at": "2026-09-29T19:14:00.000Z",
+      "points": 88,
+      "num_comments": 31,
+      "_tags": [
+        "story"
+      ]
+    }
+  ]
+}

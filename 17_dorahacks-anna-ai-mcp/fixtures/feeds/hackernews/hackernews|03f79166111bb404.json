@@ -1,0 +1,55 @@
+{
+  "hits": [
+    {
+      "objectID": "42000134",
+      "title": "The agent framework wars: LangGraph vs CrewAI vs the rest",
+      "url": "https://dev.to/kenm/the-agent-framework-wars-2026",
+      "author": "patternmatch",
+      "created_at": "2026-10-09T09:31:00.000Z",
+      "story_text": "Written after watching three teams rewrite the same orchestrator twice this quarter.",
+      "points": 271,
+      "num_comments": 164,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000244",
+      "title": "Ask HN: What does your AI coding agent setup look like?",
+      "url": "https://news.ycombinator.com/item?id=42000244",
+      "author": "queryloop",
+      "created_at": "2026-10-06T18:22:00.000Z",
+      "story_text": "Curious what terminal + editor + MCP combo people actually keep running daily.",
+      "points": 96,
+      "num_comments": 213,
+      "_tags": [
+        "story",
+        "ask_hn"
+      ]
+    },
+    {
+      "objectID": "42000331",
+      "title": "ArXiv: MCP-Bench, a benchmark for tool-using agents",
+      "url": "https://arxiv.org/abs/2610.00112",
+      "author": "paperbot",
+      "created_at": "2026-10-04T22:56:00.000Z",
+      "points": 133,
+      "num_comments": 24,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000461",
+      "title": "SQLite-backed vector search for agent memory",
+      "url": "https://morsmachine.dev/agent-memory-sqlite",
+      "author": "indexingfails",
+      "created_at": "2026-10-01T07:29:00.000Z",
+      "points": 121,
+      "num_comments": 39,
+      "_tags": [
+        "story"
+      ]
+    }
+  ]
+}

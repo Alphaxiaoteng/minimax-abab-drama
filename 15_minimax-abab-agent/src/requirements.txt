@@ -1,0 +1,3 @@
+# 本项目为 Node/TypeScript 实现，无任何 Python 依赖。
+# 此文件仅为满足赛事交付物清单（要求提供 requirements.txt）而存在，内容必须为空注释。
+# 依赖管理见 package.json（零运行时依赖，仅 devDependencies：typescript / vitest / tsx）。

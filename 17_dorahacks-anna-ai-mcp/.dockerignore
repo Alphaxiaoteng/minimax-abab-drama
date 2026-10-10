@@ -1,0 +1,14 @@
+.git
+.gitignore
+.github
+node_modules
+dist
+docs
+*.md
+!fixtures/README.md
+.qoder
+.DS_Store
+*.log
+*.tsbuildinfo
+coverage
+.nyc_output
