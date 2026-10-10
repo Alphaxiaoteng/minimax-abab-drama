@@ -1,0 +1,12 @@
+<!-- 骨架模式：灰块占位，保证首屏无网络也有可见内容 -->
+<view wx:if="{{skeleton}}" class="es-skeleton">
+  <view wx:for="{{placeholders}}" wx:key="index" class="es-line es-line-{{index % 3}}"></view>
+</view>
+
+<!-- 常规空态 -->
+<view wx:else class="es-empty">
+  <view class="es-icon">{{icon}}</view>
+  <view class="es-title">{{title}}</view>
+  <view wx:if="{{desc}}" class="es-desc muted">{{desc}}</view>
+  <view wx:if="{{actionText}}" class="es-action" bindtap="onAction">{{actionText}}</view>
+</view>

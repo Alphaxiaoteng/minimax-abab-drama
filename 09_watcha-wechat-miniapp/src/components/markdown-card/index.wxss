@@ -1,0 +1,149 @@
+.md-card {
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 28rpx;
+}
+
+.md-head {
+  margin-bottom: 20rpx;
+}
+
+.md-head-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.md-section {
+  position: relative;
+  padding-left: 20rpx;
+  margin-bottom: 26rpx;
+}
+
+.md-section-bar {
+  position: absolute;
+  left: 0;
+  top: 8rpx;
+  bottom: 8rpx;
+  width: 6rpx;
+  border-radius: 4rpx;
+  background: var(--accent);
+}
+
+.md-section-title {
+  font-size: 26rpx;
+  color: var(--muted);
+  margin-bottom: 10rpx;
+}
+
+.md-plain {
+  font-size: 30rpx;
+  line-height: 1.55;
+  margin-bottom: 8rpx;
+}
+
+.md-quote {
+  font-size: 26rpx;
+  color: var(--muted);
+  border-left: 4rpx solid var(--border);
+  padding-left: 16rpx;
+  margin-bottom: 10rpx;
+}
+
+.md-ordered {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.md-index {
+  flex: none;
+  width: 36rpx;
+  height: 36rpx;
+  line-height: 36rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #FFFFFF;
+  font-size: 22rpx;
+  margin-right: 14rpx;
+  margin-top: 6rpx;
+}
+
+.md-ordered-text {
+  flex: 1;
+  font-size: 30rpx;
+}
+
+.md-kv {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 10rpx;
+}
+
+.md-kv-value {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--accent);
+  margin-right: 14rpx;
+}
+
+.md-kv-label {
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.md-reason {
+  margin-bottom: 14rpx;
+}
+
+.md-reason-item {
+  display: block;
+  font-size: 30rpx;
+  text-decoration: line-through;
+  color: var(--error);
+}
+
+.md-reason-why {
+  display: block;
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-top: 4rpx;
+}
+
+.md-block {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 18rpx;
+  border-radius: 14rpx;
+  margin-bottom: 10rpx;
+  background: rgba(31, 111, 235, 0.08);
+}
+
+.md-block-break {
+  background: rgba(138, 143, 153, 0.12);
+}
+
+.md-block-defer {
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.md-block-time {
+  width: 170rpx;
+  flex: none;
+  color: var(--accent);
+}
+
+.md-block-break .md-block-time {
+  color: var(--muted);
+}
+
+.md-block-label {
+  flex: 1;
+  font-size: 26rpx;
+}
+
+.md-foot {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+}

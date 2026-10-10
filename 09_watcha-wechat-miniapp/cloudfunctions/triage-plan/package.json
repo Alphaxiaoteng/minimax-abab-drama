@@ -1,0 +1,1 @@
+{"name":"triage-plan","version":"1.0.0","description":"日程断舍离决策：调用 wx-server-sdk AI（cloudbase / deepseek-v4.1-flash）返回 { top3, later, drop, blocks }，全异常捕获、绝不抛出","main":"index.js","dependencies":{"wx-server-sdk":"~2.6.3"}}
