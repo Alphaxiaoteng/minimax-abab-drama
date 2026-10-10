@@ -4,7 +4,7 @@
  "mode": "chaos",
  "chaos": true,
  "drift_px": 20,
- "generated_at": "2026-10-11 02:10:45",
+ "generated_at": "2026-10-11 02:28:52",
  "settings": {
   "retry_backoff_base": 0.6,
   "action_max_verify": 2,
@@ -331,7 +331,7 @@
    "events": [
     {
      "i": 0,
-     "t_ms": 0.1,
+     "t_ms": 0.0,
      "lane": "action",
      "kind": "launch",
      "screen": "ad_popup",
@@ -340,7 +340,7 @@
     },
     {
      "i": 1,
-     "t_ms": 406.1,
+     "t_ms": 402.0,
      "lane": "action",
      "kind": "dismiss",
      "screen": "a_search",
@@ -358,7 +358,7 @@
     },
     {
      "i": 2,
-     "t_ms": 712.8,
+     "t_ms": 708.4,
      "lane": "action",
      "kind": "tap",
      "screen": "a_search",
@@ -376,7 +376,7 @@
     },
     {
      "i": 3,
-     "t_ms": 915.5,
+     "t_ms": 909.0,
      "lane": "action",
      "kind": "clear",
      "screen": "a_search",
@@ -385,7 +385,7 @@
     },
     {
      "i": 4,
-     "t_ms": 915.8,
+     "t_ms": 909.1,
      "lane": "action",
      "kind": "type",
      "screen": "a_search",
@@ -404,7 +404,7 @@
     },
     {
      "i": 5,
-     "t_ms": 1520.6,
+     "t_ms": 1514.4,
      "lane": "action",
      "kind": "tap",
      "screen": "a_search",
@@ -422,7 +422,7 @@
     },
     {
      "i": 6,
-     "t_ms": 1721.2,
+     "t_ms": 1719.5,
      "lane": "action",
      "kind": "clear",
      "screen": "a_search",
@@ -431,7 +431,7 @@
     },
     {
      "i": 7,
-     "t_ms": 1721.7,
+     "t_ms": 1719.6,
      "lane": "action",
      "kind": "type",
      "screen": "a_search",
@@ -450,7 +450,7 @@
     },
     {
      "i": 8,
-     "t_ms": 1976.4,
+     "t_ms": 1972.2,
      "lane": "recovery",
      "kind": "type_retry",
      "screen": "a_search",
@@ -466,7 +466,7 @@
     },
     {
      "i": 9,
-     "t_ms": 1982.2,
+     "t_ms": 1972.7,
      "lane": "action",
      "kind": "tap",
      "screen": "a_results",
@@ -484,7 +484,7 @@
     },
     {
      "i": 10,
-     "t_ms": 2744.2,
+     "t_ms": 2737.7,
      "lane": "action",
      "kind": "launch",
      "screen": "b_search",
@@ -493,7 +493,7 @@
     },
     {
      "i": 11,
-     "t_ms": 3149.5,
+     "t_ms": 3140.0,
      "lane": "action",
      "kind": "tap",
      "screen": "b_search",
@@ -511,7 +511,7 @@
     },
     {
      "i": 12,
-     "t_ms": 3350.7,
+     "t_ms": 3343.0,
      "lane": "action",
      "kind": "clear",
      "screen": "b_search",
@@ -520,7 +520,7 @@
     },
     {
      "i": 13,
-     "t_ms": 3350.8,
+     "t_ms": 3343.3,
      "lane": "action",
      "kind": "type",
      "screen": "b_search",
@@ -539,7 +539,7 @@
     },
     {
      "i": 14,
-     "t_ms": 3603.6,
+     "t_ms": 3596.3,
      "lane": "action",
      "kind": "tap",
      "screen": "b_results",
@@ -557,7 +557,7 @@
     },
     {
      "i": 15,
-     "t_ms": 4198.3,
+     "t_ms": 4160.4,
      "lane": "action",
      "kind": "launch",
      "screen": "perm_popup",
@@ -566,7 +566,7 @@
     },
     {
      "i": 16,
-     "t_ms": 4601.5,
+     "t_ms": 4563.4,
      "lane": "action",
      "kind": "dismiss",
      "screen": "c_home",
@@ -584,7 +584,7 @@
     },
     {
      "i": 17,
-     "t_ms": 4904.6,
+     "t_ms": 4879.9,
      "lane": "action",
      "kind": "tap",
      "screen": "c_after_claim",
@@ -664,7 +664,7 @@
     "popups": 2,
     "type_retries": 1,
     "health": 0,
-    "elapsed_s": 5.47
+    "elapsed_s": 5.44
    },
    "highlights": {
     "比价结果": {
@@ -926,7 +926,7 @@
     },
     {
      "i": 1,
-     "t_ms": 404.5,
+     "t_ms": 403.1,
      "lane": "action",
      "kind": "dismiss",
      "screen": "mail_inbox",
@@ -944,7 +944,7 @@
     },
     {
      "i": 2,
-     "t_ms": 714.0,
+     "t_ms": 712.3,
      "lane": "action",
      "kind": "launch",
      "screen": "expense_form",
@@ -953,7 +953,7 @@
     },
     {
      "i": 3,
-     "t_ms": 1121.6,
+     "t_ms": 1124.0,
      "lane": "action",
      "kind": "tap",
      "screen": "expense_form",
@@ -971,7 +971,7 @@
     },
     {
      "i": 4,
-     "t_ms": 1323.1,
+     "t_ms": 1327.9,
      "lane": "action",
      "kind": "clear",
      "screen": "expense_form",
@@ -980,7 +980,7 @@
     },
     {
      "i": 5,
-     "t_ms": 1323.2,
+     "t_ms": 1328.3,
      "lane": "action",
      "kind": "type",
      "screen": "expense_form",
@@ -999,7 +999,7 @@
     },
     {
      "i": 6,
-     "t_ms": 1579.6,
+     "t_ms": 1582.6,
      "lane": "action",
      "kind": "tap",
      "screen": "expense_form",
@@ -1017,7 +1017,7 @@
     },
     {
      "i": 7,
-     "t_ms": 1782.7,
+     "t_ms": 1785.0,
      "lane": "action",
      "kind": "clear",
      "screen": "expense_form",
@@ -1026,7 +1026,7 @@
     },
     {
      "i": 8,
-     "t_ms": 1782.8,
+     "t_ms": 1785.2,
      "lane": "action",
      "kind": "type",
      "screen": "expense_form",
@@ -1045,7 +1045,7 @@
     },
     {
      "i": 9,
-     "t_ms": 2044.6,
+     "t_ms": 2040.6,
      "lane": "action",
      "kind": "tap",
      "screen": "expense_form",
@@ -1063,7 +1063,7 @@
     },
     {
      "i": 10,
-     "t_ms": 2244.7,
+     "t_ms": 2245.7,
      "lane": "action",
      "kind": "clear",
      "screen": "expense_form",
@@ -1072,7 +1072,7 @@
     },
     {
      "i": 11,
-     "t_ms": 2245.0,
+     "t_ms": 2245.8,
      "lane": "action",
      "kind": "type",
      "screen": "expense_form",
@@ -1091,7 +1091,7 @@
     },
     {
      "i": 12,
-     "t_ms": 2502.6,
+     "t_ms": 2505.2,
      "lane": "action",
      "kind": "tap",
      "screen": "expense_form",
@@ -1109,7 +1109,7 @@
     },
     {
      "i": 13,
-     "t_ms": 2863.1,
+     "t_ms": 2865.7,
      "lane": "action",
      "kind": "tap",
      "screen": "expense_done",
@@ -1489,7 +1489,7 @@
    "events": [
     {
      "i": 0,
-     "t_ms": 0.3,
+     "t_ms": 0.0,
      "lane": "action",
      "kind": "launch",
      "screen": "ad_popup",
@@ -1498,7 +1498,7 @@
     },
     {
      "i": 1,
-     "t_ms": 402.0,
+     "t_ms": 405.2,
      "lane": "action",
      "kind": "dismiss",
      "screen": "login_page",
@@ -1516,7 +1516,7 @@
     },
     {
      "i": 2,
-     "t_ms": 710.6,
+     "t_ms": 711.4,
      "lane": "action",
      "kind": "tap",
      "screen": "login_page",
@@ -1534,7 +1534,7 @@
     },
     {
      "i": 3,
-     "t_ms": 915.2,
+     "t_ms": 913.6,
      "lane": "action",
      "kind": "clear",
      "screen": "login_page",
@@ -1543,7 +1543,7 @@
     },
     {
      "i": 4,
-     "t_ms": 915.3,
+     "t_ms": 914.5,
      "lane": "action",
      "kind": "type",
      "screen": "login_page",
@@ -1562,7 +1562,7 @@
     },
     {
      "i": 5,
-     "t_ms": 1169.8,
+     "t_ms": 1167.5,
      "lane": "action",
      "kind": "tap",
      "screen": "otp_page",
@@ -1580,7 +1580,7 @@
     },
     {
      "i": 6,
-     "t_ms": 1538.6,
+     "t_ms": 1524.7,
      "lane": "action",
      "kind": "tap",
      "screen": "otp_page",
@@ -1598,7 +1598,7 @@
     },
     {
      "i": 7,
-     "t_ms": 1740.7,
+     "t_ms": 1729.7,
      "lane": "action",
      "kind": "clear",
      "screen": "otp_page",
@@ -1607,7 +1607,7 @@
     },
     {
      "i": 8,
-     "t_ms": 1741.2,
+     "t_ms": 1729.9,
      "lane": "action",
      "kind": "type",
      "screen": "otp_page",
@@ -1626,7 +1626,7 @@
     },
     {
      "i": 9,
-     "t_ms": 1994.2,
+     "t_ms": 1982.9,
      "lane": "action",
      "kind": "tap",
      "screen": "home_page",
@@ -1644,7 +1644,7 @@
     },
     {
      "i": 10,
-     "t_ms": 2298.9,
+     "t_ms": 2287.9,
      "lane": "action",
      "kind": "tap",
      "screen": "balance_page",
@@ -1694,7 +1694,7 @@
     "popups": 1,
     "type_retries": 0,
     "health": 0,
-    "elapsed_s": 2.66
+    "elapsed_s": 2.65
    },
    "highlights": {
     "登录路径": "otp-submitted",
