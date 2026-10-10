@@ -1,0 +1,25 @@
+{
+  "name": "immersive-drama-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "原生富媒体沉浸式互动推理剧 Agent — MiniMax abab 文本 + 拟真语音 TTS，含离线确定性 mock 降级与端到端评测验证系统",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "tsx src/cli/demo.ts",
+    "serve": "tsx src/server/index.ts",
+    "eval": "tsx src/cli/evaluate.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

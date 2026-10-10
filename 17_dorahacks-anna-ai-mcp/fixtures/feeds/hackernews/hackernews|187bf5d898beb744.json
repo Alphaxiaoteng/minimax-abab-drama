@@ -1,0 +1,53 @@
+{
+  "hits": [
+    {
+      "objectID": "42000101",
+      "title": "Show HN: I built an MCP server for my homelab",
+      "url": "https://github.com/tuxdev99/homelab-mcp",
+      "author": "tuxdev99",
+      "created_at": "2026-10-09T06:12:00.000Z",
+      "points": 412,
+      "num_comments": 87,
+      "_tags": [
+        "story",
+        "show_hn"
+      ]
+    },
+    {
+      "objectID": "42000177",
+      "title": "Model Context Protocol reaches 1,000 community servers",
+      "url": "https://modelcontextprotocol.info/blog/community-servers-1000",
+      "author": "annaweb",
+      "created_at": "2026-10-08T14:05:00.000Z",
+      "points": 388,
+      "num_comments": 95,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000331",
+      "title": "ArXiv: MCP-Bench, a benchmark for tool-using agents",
+      "url": "https://arxiv.org/abs/2610.00112",
+      "author": "paperbot",
+      "created_at": "2026-10-04T22:56:00.000Z",
+      "points": 133,
+      "num_comments": 24,
+      "_tags": [
+        "story"
+      ]
+    },
+    {
+      "objectID": "42000505",
+      "title": "The boring architecture behind reliable agent pipelines",
+      "url": "https://queue.computer/boring-agent-architecture",
+      "author": "durablepet",
+      "created_at": "2026-09-30T12:02:00.000Z",
+      "points": 287,
+      "num_comments": 66,
+      "_tags": [
+        "story"
+      ]
+    }
+  ]
+}
