@@ -70,7 +70,7 @@ reports/          # 运行后生成的报告与图表（.gitignore 已忽略）
 - 并网点硬约束：`grid_import[t] <= grid_connection_kw`（储能须在变压器/并网容量内削峰）。
 - SOC 递归：`soc[t] = soc[t-1] + (eta_charge·charge[t] − discharge[t]/eta_discharge) · STEP_HOURS / capacity_kwh`，`soc[-1]` 取 `soc_init`。
 - SOC 与功率上下界：`soc_min ≤ soc[t] ≤ soc_max`，`0 ≤ charge[t] ≤ p_charge_max_kw`，`0 ≤ discharge[t] ≤ p_discharge_max_kw`。
-- 老化成本（线性吞吐）：等效全循环摊薄 `cycle_cost = capex_per_kwh · capacity_kwh / (2 · cycle_life)`（元/kWh 吞吐）；充放电各按吞吐 kWh 计。
+- 老化成本（线性吞吐）：按放电侧等效全循环计量，单位吞吐老化成本 $c_{\mathrm{deg}} = \mathrm{capex\_per\_kwh} / \mathrm{cycle\_life}$（元/kWh 放电吞吐）；避免充电损耗重复计费，叠加运维成本得到总度电衰减成本。
 - 目标（元，严格线性）：电度电费 + 最大需量电费（LP 内以标量上界变量线性化峰值 `grid_import`）+ 储能老化成本。
 
 > 完整推导与实现以 `src/optimizer.py` 为准。

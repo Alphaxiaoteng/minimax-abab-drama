@@ -135,7 +135,8 @@ class KPIs:
             ("负荷率", "{:.3f}".format(self.load_factor)),
             ("平均 PUE", "{:.4f}".format(self.avg_pue)),
             ("最大 PUE", "{:.4f}".format(self.max_pue)),
-            ("CO2 减排 (kg/日)", "{:.1f}".format(self.co2_saved_kg)),
+            ("购电量变化 (kWh/日)", "{:.1f}".format(self.saved_energy_kwh)),
+            ("对应 CO2 变化 (kg/日)", "{:.1f}".format(self.co2_saved_kg)),
         ]
 
 

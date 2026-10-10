@@ -16,8 +16,6 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import pulp  # noqa: E402
-
 from src.battery import simulate_soc  # noqa: E402
 from src.config import (  # noqa: E402
     N_STEPS,
@@ -336,3 +334,11 @@ class TestScenarios:
         effective_limit = sc.datacenter.grid_connection_kw - reserve
         assert "步骤" in msg
         assert "{:.1f}".format(effective_limit) in msg
+
+    def test_solver_seconds_populated(self):
+        """solve() 写入 LAST_SOLVE_SECONDS 遥测，compute_kpis 读出 solver_seconds > 0。"""
+        sc = scenario_by_name("transient_spike")
+        it = generate_it_power(sc)
+        sched = solve(sc, it)
+        kpis = compute_kpis(sched, sc)
+        assert kpis.solver_seconds > 0.0

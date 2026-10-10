@@ -310,6 +310,7 @@ def compute_kpis(
     grid = schedule.grid_import_kw
     it = schedule.it_power_kw
     cool = schedule.cooling_kw
+    charge = schedule.charge_kw
     discharge = schedule.discharge_kw
 
     dc = scenario.datacenter
@@ -350,9 +351,14 @@ def compute_kpis(
 
     saved_energy_kwh = throughput_kwh
 
-    # PUE
+    # PUE：设施侧总功率必须计入储能往返损耗，否则会低估储能对 PUE 的影响。
+    # 口径：facility = IT + 制冷 + UPS 损耗 + 储能损耗（充电与放电两侧的转换损失）
     ups_kw = float(dc.ups_loss_ratio) * (it + cool)
-    facility = it + cool + ups_kw
+    bat_loss_kw = (
+        charge * (1.0 - float(bat.eta_charge))
+        + discharge * (1.0 / float(bat.eta_discharge) - 1.0)
+    )
+    facility = it + cool + ups_kw + bat_loss_kw
     with np.errstate(divide="ignore", invalid="ignore"):
         pue_instant = np.where(it > 0.0, facility / it, 1.0 + float(dc.ups_loss_ratio))
     avg_pue = float(np.mean(pue_instant))

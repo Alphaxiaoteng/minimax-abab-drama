@@ -23,6 +23,7 @@ import numpy as np
 
 from src.battery import simulate_soc, throughput_cost_per_kwh
 from src.config import (
+    GRID_CO2_FACTOR,
     N_STEPS,
     STEP_HOURS,
     Scenario,
@@ -148,20 +149,31 @@ def greedy_schedule(scenario: Scenario, it_power: np.ndarray,
     soc = np.empty(N_STEPS, dtype=float)
     prev = float(bat.soc_init)
 
+    # 规则策略的公平性要求：必须与 LP 一样受日循环约束，否则它会"卖掉"初始电量
+    # 制造虚假收益。因此中途一旦为下一尖峰预留了 SOC，最后必须把能量补回来。
+    level_of = [price_level(t * STEP_HOURS) for t in range(N_STEPS)]
+    last_peak_step = max(
+        (t for t in range(N_STEPS) if level_of[t] in ("peak", "sharp")),
+        default=-1,
+    )
+
     for t in range(N_STEPS):
-        level = price_level(t * STEP_HOURS)
+        level = level_of[t]
+        # 规则策略的铁律：充电只能在并网点"有富余"时进行。
+        # 若当前负荷已经贴着或超过限额，任何充电都会把峰值顶得更高——
+        # 这正是规则策略相对 LP 的典型缺陷来源，必须如实保留而不能偷偷放宽。
+        headroom_kw = max(0.0, dc.facility_limit_kw - load[t])
         if level == "valley":
-            # 谷段：在「不越 SOC 上限」前提下尽量满功率充电
             usable_kw = max(
                 0.0,
                 (bat.soc_max - prev) * bat.capacity_kwh
                 / (bat.eta_charge * STEP_HOURS),
             )
-            p = min(bat.p_charge_max_kw, usable_kw)
+            p = min(bat.p_charge_max_kw, usable_kw, headroom_kw)
             charge[t] = p
             prev += bat.eta_charge * p * STEP_HOURS / bat.capacity_kwh
         elif level in ("peak", "sharp"):
-            # 峰段：放掉能放的全部（受 SOC 下限与功率上限约束）
+            # 峰段放掉可放的（受 SOC 下限与功率上限约束）
             usable_kw = max(
                 0.0,
                 (prev - bat.soc_min) * bat.capacity_kwh * bat.eta_discharge
@@ -171,7 +183,7 @@ def greedy_schedule(scenario: Scenario, it_power: np.ndarray,
             discharge[t] = p
             prev -= p * STEP_HOURS / (bat.eta_discharge * bat.capacity_kwh)
         else:
-            # 平段：提高 SOC 利用率 —— 若 SOC 偏低则小幅补电，为下一尖峰做准备
+            # 平段：SOC 偏低则补到 50%，为后续尖峰预留裕度
             target = 0.5
             if prev < target:
                 want = min(
@@ -179,10 +191,39 @@ def greedy_schedule(scenario: Scenario, it_power: np.ndarray,
                     max(0.0, (target - prev) * bat.capacity_kwh
                         / (bat.eta_charge * STEP_HOURS)),
                 )
-                p = min(want, max(0.0, dc.facility_limit_kw - load[t]))
+                p = min(want, headroom_kw)
                 charge[t] = p
                 prev += bat.eta_charge * p * STEP_HOURS / bat.capacity_kwh
         soc[t] = prev
+
+    # 日循环收尾：最后一次峰段之后，把 SOC 回补到初始值（与 LP 终端约束同口径）。
+    # 只在平/谷段补电，且不超过并网点限额，保证规则策略不会靠"吃掉"起始电量获利。
+    if last_peak_step >= 0:
+        deficit_kwh = (bat.soc_init - prev) * bat.capacity_kwh
+        for t in range(last_peak_step + 1, N_STEPS):
+            if deficit_kwh <= 1e-9:
+                break
+            if level_of[t] in ("peak", "sharp"):
+                continue
+            p = min(
+                bat.p_charge_max_kw,
+                max(0.0, dc.facility_limit_kw - load[t]),
+                deficit_kwh / (bat.eta_charge * STEP_HOURS),
+                max(0.0, (bat.soc_max - prev) * bat.capacity_kwh
+                    / (bat.eta_charge * STEP_HOURS)),
+            )
+            if p <= 1e-9:
+                continue
+            charge[t] += p
+            prev += bat.eta_charge * p * STEP_HOURS / bat.capacity_kwh
+            deficit_kwh -= bat.eta_charge * p * STEP_HOURS
+            soc[t] = prev
+        # 收尾段的 SOC 轨迹需要向后传递，避免数组里残留旧值
+        for t in range(last_peak_step + 1, N_STEPS):
+            if t == 0:
+                continue
+            if soc[t] == 0.0:
+                soc[t] = soc[t - 1]
 
     grid = load + charge - discharge
     return Schedule(
@@ -254,16 +295,28 @@ def run_scenario(scenario: Scenario,
     schedules["optimal"] = opt
     kpis["optimal"] = _finalize_kpis(scenario, opt, prices, is_baseline=False)
 
-    # 削峰比例与套利节省统一相对基线口径，避免各模块各算一套
+    # 削峰比例 / 套利节省 / 碳减排统一相对基线口径，避免各模块各算一套、口径漂移
     base_peak = kpis["baseline"]["peak_grid_kw"]
     base_cost = kpis["baseline"]["total_cost"]
+    base_grid_kwh = kpis["baseline"]["extra"]["grid_energy_kwh"]
+    base_discharge_kwh = kpis["baseline"]["extra"]["discharge_throughput_kwh"]
+
     for name in schedules:
         k = kpis[name]
         k["peak_shaved_ratio"] = (
             1.0 - k["peak_grid_kw"] / base_peak if base_peak > 0 else 0.0
         )
         k["arbitrage_saving"] = base_cost - k["electricity_cost"] - k["demand_cost"]
-        k["co2_saved_kg"] = k["extra"].get("grid_energy_kwh_saved", 0.0) * 0.581
+        saved_kwh = base_grid_kwh - k["extra"]["grid_energy_kwh"]
+        k["saved_energy_kwh"] = saved_kwh
+        # 诚实口径：储能往返损耗存在，绝大部分情况下"购电量"反而上升，
+        # 因此 saved_kwh 常为负。这里不粉饰：CO2 只在真正少买电时才算减排，
+        # 少买电为负则记为负（= 多排），由报告显式解释。
+        k["co2_saved_kg"] = saved_kwh * GRID_CO2_FACTOR
+        # 本轮放电吞吐与基线（0）之差，用于报告中的电池利用率
+        k["extra"]["discharge_delta_kwh"] = (
+            k["extra"]["discharge_throughput_kwh"] - base_discharge_kwh
+        )
 
     pue_block = _pue_block(scenario, it, cool, base, opt)
 
