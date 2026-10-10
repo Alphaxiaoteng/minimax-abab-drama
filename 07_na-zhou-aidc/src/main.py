@@ -1,107 +1,135 @@
-# -*- coding: utf-8 -*-
-"""
-main.py
-=======
-初焰·钠宙｜钠电 × AIDC 线上黑客松 核心算法与仿真入口。
-执行 24 小时微电网调度仿真，输出关键经济性指标与高清矢量分析图。
-"""
+"""CLI 入口 —— 运行仿真并生成报告。
 
+用法
+----
+    python -m src.main --all                      # 全部情景 + 报告
+    python -m src.main --scenario transient_spike # 单个情景
+    python -m src.main --all --no-charts          # 跳过绘图（无 matplotlib 环境）
+    python -m src.main --all --reserve 200        # 预留 200 kW 并网点容量（N-1）
+    python -m src.main --list                     # 列出可用情景
+"""
+from __future__ import annotations
+
+import argparse
 import os
 import sys
+import time
+from typing import List, Optional
+
 import numpy as np
 
-# 确保包路径正确
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from src.config import default_scenarios, scenario_by_name
+from src.report import write_report
+from src.simulate import SimulationResult, run_scenario
 
-from src.models.sodium_battery import SodiumBatterySystem, SodiumBatteryConfig
-from src.models.aidc_workload import AIDCWorkloadGenerator, AIDCProfileConfig
-from src.optimizer.peak_shaving_solver import MicrogridPeakShavingSolver
-from src.visualizer.chart_generator import SVGChartGenerator
+_DEFAULT_OUTDIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reports")
 
-def run_aidc_simulation(output_dir: str = None) -> dict:
-    if output_dir is None:
-        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
 
-    os.makedirs(output_dir, exist_ok=True)
+def _print_result(res: SimulationResult) -> None:
+    """控制台摘要表。"""
+    cmp_ = res.comparison()
+    print("")
+    print("=" * 78)
+    print("情景: {}  —— {}".format(res.scenario.name, res.scenario.description))
+    print("=" * 78)
+    print("{:<16}{:>14}{:>14}{:>14}{:>10}".format(
+        "策略", "综合成本(元)", "电网峰值(kW)", "削峰比例", "负荷率"))
+    print("-" * 78)
+    for name in ("baseline", "greedy", "optimal"):
+        if name not in res.kpis:
+            continue
+        k = res.kpis[name]
+        label = {"baseline": "无储能", "greedy": "规则定时充放", "optimal": "LP 最优"}[name]
+        print("{:<16}{:>14,.1f}{:>14,.1f}{:>13.2%}{:>10.3f}".format(
+            label, k["total_cost"], k["peak_grid_kw"], k["peak_shaved_ratio"], k["load_factor"]))
+    print("-" * 78)
+    print("节省: {:,.1f} 元/日 ({:.2f}%)   LP vs 规则: {:,.1f} 元/日 ({:.2f}%)".format(
+        cmp_["cost_saving_yuan"], cmp_["cost_saving_pct"],
+        cmp_["lp_vs_greedy_yuan"], cmp_["lp_vs_greedy_pct"]))
+    print("削峰: {:,.1f} kW ({:.2f}%)    购电量变化: {:,.1f} kWh/日 (储能损耗所致)".format(
+        cmp_["peak_shaved_kw"], cmp_["peak_shaved_pct"],
+        res.kpis["optimal"]["saved_energy_kwh"]))
+    print("PUE: 均值 {:.4f} / P95 {:.4f} / 最大 {:.4f}".format(
+        res.pue_stats["baseline"]["avg"],
+        res.pue_stats["baseline"]["quantiles"].get("p95", float("nan")),
+        res.pue_stats["baseline"]["max"]))
+    print("IT 峰值 {:.0f} kW（基线 {:.0f} kW），瞬态尖峰 {} 次，"
+          "尖峰能量 {:,.0f} kWh，尖峰占空比 {:.1%}".format(
+              float(np.max(res.it_power)),
+              res.scenario.datacenter.it_base_kw,
+              int(res.load_stats.get("spike_events", 0)),
+              float(res.load_stats.get("transient_energy_kwh", 0.0)),
+              float(res.load_stats.get("duty", 0.0))))
 
-    print("=" * 70)
-    print("🚀 初焰·钠宙｜钠电 × AIDC 线上黑客松 · 智能微电网削峰填谷仿真系统")
-    print("=" * 70)
 
-    # 1. 初始化负载生成器与配置
-    workload_gen = AIDCWorkloadGenerator(AIDCProfileConfig(
-        baseline_it_kw=3500.0,
-        peak_training_kw=2800.0,
-        inference_burst_kw=1200.0
-    ))
-
-    profile = workload_gen.generate_24h_profile(seed=2026)
-    hours = profile["hours"]
-    facility_load = profile["facility_total_kw"]
-    tou_tariff = workload_gen.get_tou_tariff(hours)
-
-    print(f"[*] 设施 24H 算力负荷生成完成 (96 个 15-min 时间片):")
-    print(f"    - 平均设施功耗: {np.mean(facility_load):.1f} kW")
-    print(f"    - 峰值受电负荷: {np.max(facility_load):.1f} kW (冲击出现在突发训练与高温重合期)")
-    print(f"    - 平均动态 PUE: {np.mean(profile['dynamic_pue']):.3f}")
-
-    # 2. 储能系统配置 (2MW / 4MWh 钠离子储能站)
-    battery_config = SodiumBatteryConfig(
-        nominal_capacity_kwh=4000.0,
-        max_charge_power_kw=2000.0,
-        max_discharge_power_kw=2500.0,
-        round_trip_efficiency=0.92,
-        cycle_degradation_cost_per_kwh=0.12
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="python -m src.main",
+        description="钠电储能 × AIDC 瞬态算力削峰填谷 —— 线性规划仿真与 PUE 分析",
     )
+    p.add_argument("--scenario", default=None,
+                   help="只跑指定情景（见 --list）")
+    p.add_argument("--all", action="store_true",
+                   help="跑全部默认情景（默认行为）")
+    p.add_argument("--list", action="store_true", help="列出可用情景后退出")
+    p.add_argument("--seed", type=int, default=None, help="覆盖情景随机种子")
+    p.add_argument("--reserve", type=float, default=0.0,
+                   help="并网点预留容量 (kW)，用于 N-1 校验")
+    p.add_argument("--outdir", default=_DEFAULT_OUTDIR, help="报告输出目录")
+    p.add_argument("--no-charts", action="store_true", help="跳过 PNG 绘图")
+    p.add_argument("--no-greedy", action="store_true", help="不做规则策略对照")
+    return p
 
-    print(f"\n[*] 接入钠离子储能电站 (BESS):")
-    print(f"    - 标称容量: {battery_config.nominal_capacity_kwh / 1000:.1f} MWh")
-    print(f"    - 最大放电倍率: {battery_config.max_discharge_power_kw / 1000:.1f} MW (0.625C / 瞬态支撑)")
-    print(f"    - 循环效率 RTE: {battery_config.round_trip_efficiency * 100:.1f}%")
 
-    # 3. 运行优化求解器
-    solver = MicrogridPeakShavingSolver(battery_config=battery_config)
-    res = solver.solve(facility_load, hours, tou_tariff)
+def main(argv: Optional[List[str]] = None) -> int:
+    args = build_parser().parse_args(argv)
 
-    print("\n" + "-" * 70)
-    print("📊 仿真优化核心指标汇总：")
-    print("-" * 70)
-    print(f"  [1] 削峰效果评估:")
-    print(f"      - 原电网最高负荷: {res.peak_without_kw:.1f} kW")
-    print(f"      - 削峰后最高负荷: {res.peak_with_kw:.1f} kW")
-    print(f"      - 绝对削峰功率:   {res.peak_reduction_kw:.1f} kW")
-    print(f"      - 削峰率 (Reduction Rate): {res.peak_reduction_percent:.2f}%")
+    if args.list:
+        for s in default_scenarios():
+            print("{:<18} 电池 {:>8.0f} kWh / {:>6.0f} kW   {}".format(
+                s.name, s.battery.capacity_kwh, s.battery.p_discharge_max_kw, s.description))
+        return 0
 
-    print(f"\n  [2] 经济效益测算 (单日):")
-    print(f"      - 无储能日用电成本: ¥{res.cost_without_bess:,.2f} 元/天")
-    print(f"      - 储能优化后总成本: ¥{res.cost_with_bess:,.2f} 元/天 (含 ¥{res.battery_cycle_cost:,.2f} 元电池损耗折旧)")
-    print(f"      - 单日净节约金额:   ¥{res.net_savings:,.2f} 元/天")
-    print(f"      - 综合电费降幅:     {res.savings_percent:.2f}%")
+    if args.scenario:
+        scenarios = [scenario_by_name(args.scenario)]
+    else:
+        scenarios = default_scenarios()
 
-    annual_savings = res.net_savings * 365
-    print(f"\n  [3] 全年经济收益推演:")
-    print(f"      - 年度电费净节约:   ¥{annual_savings:,.2f} 元/年 (约合 ¥{annual_savings/10000:.1f} 万元)")
-    print(f"      - 预计静态投资回收期: 2.8 年 (基于钠电包系统造价 0.58元/Wh 测算)")
-    print("-" * 70)
+    if args.seed is not None:
+        for s in scenarios:
+            s.seed = args.seed
 
-    # 4. 渲染可视化图表
-    svg_path = os.path.join(output_dir, "aidc_load_shaving_chart.svg")
-    SVGChartGenerator.render_load_shaving_svg(
-        hours=hours,
-        original_kw=facility_load,
-        grid_kw=res.grid_power_kw,
-        battery_kw=res.battery_power_kw,
-        output_path=svg_path
-    )
-    print(f"\n[✓] 高清矢量分析图已输出至: {svg_path}")
+    results: List[SimulationResult] = []
+    t0 = time.time()
+    for sc in scenarios:
+        try:
+            res = run_scenario(sc, include_greedy=not args.no_greedy,
+                               reserve_margin_kw=args.reserve)
+        except Exception as exc:
+            print("[ERROR] 情景 {} 求解失败：{}".format(sc.name, exc), file=sys.stderr)
+            print("        该情景的储能容量不足以在并网点限额内承接峰值负荷。"
+                  "请增大 battery capacity_kwh / p_discharge_max_kw，"
+                  "或降低 workload 峰值。", file=sys.stderr)
+            continue
+        results.append(res)
+        _print_result(res)
 
-    return {
-        "peak_reduction_kw": res.peak_reduction_kw,
-        "peak_reduction_percent": res.peak_reduction_percent,
-        "daily_savings": res.net_savings,
-        "annual_savings": annual_savings,
-        "chart_path": svg_path
-    }
+    if not results:
+        print("[ERROR] 没有任何情景成功求解。", file=sys.stderr)
+        return 1
+
+    paths = write_report(results, args.outdir, make_charts=not args.no_charts)
+    print("")
+    print("=" * 78)
+    print("总耗时 {:.2f}s".format(time.time() - t0))
+    print("报告: {}".format(paths["markdown"]))
+    print("数据: {}".format(paths["csv"]))
+    for name, files in paths["charts"].items():
+        for f in files:
+            print("图表: {}".format(f))
+    print("=" * 78)
+    return 0
+
 
 if __name__ == "__main__":
-    run_aidc_simulation()
+    raise SystemExit(main())

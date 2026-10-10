@@ -1,0 +1,20 @@
+{
+  "source": "arxiv",
+  "generatedAt": "2026-10-10T00:00:00.000Z",
+  "entries": [
+    {
+      "key": "_default",
+      "query": null,
+      "limit": null,
+      "since": null,
+      "note": "Fallback feed: 8 curated Atom entries (CDATA, self-closing link, entity, comment) in raw arXiv shape."
+    },
+    {
+      "key": "arxiv|08dd6d2434ed1262",
+      "query": "model context protocol",
+      "limit": 10,
+      "since": null,
+      "note": "Recording for ResponseCache.key([\"arxiv\", \"model context protocol\", 10, undefined, \"\"])."
+    }
+  ]
+}

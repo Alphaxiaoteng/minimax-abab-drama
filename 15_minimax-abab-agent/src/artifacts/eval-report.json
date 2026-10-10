@@ -1,0 +1,108 @@
+{
+  "suiteName": "MiniMax ABAB 沉浸式推理剧全量评测套件",
+  "startedAt": 1791641908265,
+  "durationMs": 1,
+  "overall": 0.921455,
+  "passed": true,
+  "dimensions": [
+    {
+      "id": "persona_fidelity",
+      "name": "人格一致性",
+      "weight": 0.22,
+      "score": 1,
+      "threshold": 0.72,
+      "detail": "口头禅命中 10/10 条回复，禁忌词违规 0 次"
+    },
+    {
+      "id": "emotion_accuracy",
+      "name": "情绪标注准确率",
+      "weight": 0.2,
+      "score": 0.9,
+      "threshold": 0.7,
+      "detail": "情绪匹配 9/10"
+    },
+    {
+      "id": "voice_expressiveness",
+      "name": "语音表现力",
+      "weight": 0.18,
+      "score": 0.674747,
+      "threshold": 0.5,
+      "detail": "参与统计的情绪语音样本 3 组"
+    },
+    {
+      "id": "fallback_robustness",
+      "name": "降级健壮性",
+      "weight": 0.15,
+      "score": 1,
+      "threshold": 0.9,
+      "detail": "降级调用 10 次，其中成功产出 10 次"
+    },
+    {
+      "id": "latency",
+      "name": "延迟达标率",
+      "weight": 0.13,
+      "score": 1,
+      "threshold": 0.8,
+      "detail": "延迟样本 5 个（阈值 2500ms）"
+    },
+    {
+      "id": "script_integrity",
+      "name": "剧本推进完整性",
+      "weight": 0.12,
+      "score": 1,
+      "threshold": 0.6,
+      "detail": "抵达阶段 5/5"
+    }
+  ],
+  "cases": [
+    {
+      "id": "persona_fidelity_case",
+      "passed": true,
+      "score": 1,
+      "expected": "得分 >= 0.72",
+      "actual": "口头禅命中 10/10 条回复，禁忌词违规 0 次",
+      "note": "人格一致性：回复是否稳定命中口头禅、避开禁忌词"
+    },
+    {
+      "id": "emotion_accuracy_case",
+      "passed": true,
+      "score": 0.9,
+      "expected": "得分 >= 0.7",
+      "actual": "情绪匹配 9/10",
+      "note": "情绪标注准确率：引擎输出的情绪标签与剧本期望逐位匹配的比例"
+    },
+    {
+      "id": "voice_expressiveness_case",
+      "passed": true,
+      "score": 0.674747,
+      "expected": "得分 >= 0.5",
+      "actual": "参与统计的情绪语音样本 3 组",
+      "note": "语音表现力：不同情绪在 speed/vol/pitch 上产生可量化差异的比例（归一极差）"
+    },
+    {
+      "id": "fallback_robustness_case",
+      "passed": true,
+      "score": 1,
+      "expected": "得分 >= 0.9",
+      "actual": "降级调用 10 次，其中成功产出 10 次",
+      "note": "降级健壮性：传输层失败触发降级后仍产出有效结果的比例"
+    },
+    {
+      "id": "latency_case",
+      "passed": true,
+      "score": 1,
+      "expected": "得分 >= 0.8",
+      "actual": "延迟样本 5 个（阈值 2500ms）",
+      "note": "延迟达标率：单轮耗时不超过 2500ms 的比例"
+    },
+    {
+      "id": "script_integrity_case",
+      "passed": true,
+      "score": 1,
+      "expected": "得分 >= 0.6",
+      "actual": "抵达阶段 5/5",
+      "note": "剧本推进完整性：会话阶段是否沿剧本方向推进到应有的深度"
+    }
+  ],
+  "degradations": []
+}

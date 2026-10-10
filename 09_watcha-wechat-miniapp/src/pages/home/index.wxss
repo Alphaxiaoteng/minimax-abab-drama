@@ -1,0 +1,123 @@
+.hero {
+  background: linear-gradient(135deg, #1F6FEB 0%, #3B82F6 55%, #60A5FA 100%);
+  border-radius: var(--radius);
+  padding: 40rpx 32rpx 32rpx;
+  color: #FFFFFF;
+  margin-bottom: 24rpx;
+}
+
+.hero-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+}
+
+.hero-sub {
+  font-size: 24rpx;
+  opacity: 0.85;
+  margin-top: 10rpx;
+}
+
+.hero-metrics {
+  display: flex;
+  margin-top: 32rpx;
+}
+
+.metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metric-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 20rpx;
+  opacity: 0.8;
+  margin-top: 6rpx;
+}
+
+.hero-tags {
+  display: flex;
+  margin-top: 28rpx;
+}
+
+.hero-tags .tag {
+  margin-right: 14rpx;
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+}
+
+.scene-card {
+  transition: transform 0.1s ease;
+}
+
+.scene-card:active {
+  transform: scale(0.985);
+}
+
+.scene-body {
+  flex: 1;
+  padding-right: 20rpx;
+}
+
+.scene-title {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.scene-desc {
+  font-size: 24rpx;
+  margin-top: 8rpx;
+  line-height: 1.5;
+}
+
+.scene-go {
+  flex: none;
+  font-size: 26rpx;
+  color: var(--accent);
+}
+
+.card-title-row {
+  margin-bottom: 16rpx;
+}
+
+.clear-link {
+  font-size: 24rpx;
+  text-decoration: underline;
+}
+
+.recent-item {
+  padding: 8rpx 0;
+}
+
+.recent-item:active {
+  opacity: 0.6;
+}
+
+.recent-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  flex: 1;
+  margin-right: 16rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.recent-summary {
+  font-size: 24rpx;
+  margin-top: 8rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stat-row {
+  padding: 10rpx 0;
+}

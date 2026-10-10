@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "netintel": {
+      "command": "node",
+      "args": ["/absolute/path/to/17_dorahacks-anna-ai-mcp/dist/src/cli.js", "--transport", "stdio"],
+      "env": {
+        "NETINTEL_OFFLINE": "0",
+        "NETINTEL_LOG_LEVEL": "info",
+        "NETINTEL_CACHE_TTL_MS": "300000",
+        "NETINTEL_TIMEOUT_MS": "8000"
+      }
+    },
+    "netintel-offline": {
+      "command": "node",
+      "args": ["/absolute/path/to/17_dorahacks-anna-ai-mcp/dist/src/cli.js", "--transport", "stdio", "--offline"],
+      "env": {
+        "NETINTEL_OFFLINE": "1",
+        "NETINTEL_LOG_LEVEL": "debug"
+      }
+    }
+  }
+}

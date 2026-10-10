@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+import { createServer } from "vite";
+const server = await createServer({ root: process.cwd(), server: { port: 5199, strictPort: false }, logLevel: "warn" });
+await server.listen();
+const url = server.resolvedUrls.local[0];
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+const errs = [];
+page.on("pageerror", e => errs.push("PAGEERROR: " + e.message));
+page.on("console", m => { if (m.type() === "error") errs.push("CONSOLE: " + m.text()); });
+await page.goto(url + "?eval=1", { waitUntil: "load" });
+await page.waitForTimeout(3000);
+const has = await page.evaluate(() => typeof window.__wakeEval);
+console.log("url:", url, "| __wakeEval:", has);
+console.log("errors:", errs.slice(0, 12).join("\n"));
+await browser.close(); await server.close();

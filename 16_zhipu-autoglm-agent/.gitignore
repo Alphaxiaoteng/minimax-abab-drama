@@ -1,0 +1,7 @@
+node_modules/
+__pycache__/
+*.pyc
+.autoglm_runtime/
+.venv/
+venv/
+.DS_Store

@@ -1,0 +1,27 @@
+{
+  "source": "hackernews",
+  "generatedAt": "2026-10-10T00:00:00.000Z",
+  "entries": [
+    {
+      "key": "_default",
+      "query": null,
+      "limit": null,
+      "since": null,
+      "note": "Fallback feed: 12 curated AI/agent/MCP stories in raw HN Algolia shape."
+    },
+    {
+      "key": "hackernews|187bf5d898beb744",
+      "query": "mcp server",
+      "limit": 10,
+      "since": null,
+      "note": "Recording for ResponseCache.key([\"hackernews\", \"mcp server\", 10, undefined, \"\"])."
+    },
+    {
+      "key": "hackernews|03f79166111bb404",
+      "query": "agent framework",
+      "limit": 10,
+      "since": null,
+      "note": "Recording for ResponseCache.key([\"hackernews\", \"agent framework\", 10, undefined, \"\"])."
+    }
+  ]
+}
