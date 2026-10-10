@@ -51,6 +51,7 @@ class Param:
     :param min_length / max_length: 字符串长度区间.
     :param items_type: ``type == "array"`` 时元素类型.
     :param pattern: 字符串正则约束 (完整匹配由调用方 ``re.fullmatch`` 决定).
+    :param example: 示例值; 仅用于 OpenAPI 导出 (Coze 调试面板/文档), 不参与运行时校验.
     """
 
     name: str
@@ -65,6 +66,7 @@ class Param:
     max_length: Optional[int] = None
     items_type: Optional[str] = None
     pattern: Optional[str] = None
+    example: Optional[Any] = None
 
     def __post_init__(self) -> None:
         if not _PARAM_NAME_RE.match(self.name):
@@ -89,6 +91,21 @@ class Param:
                 re.compile(self.pattern)
             except re.error as exc:  # pragma: no cover - 防御性
                 raise SpecError(f"参数 {self.name}: pattern 非法: {exc}") from exc
+        if self.example is not None:
+            expected = JSON_TYPE_TO_PYTHON[self.type]
+            if isinstance(self.example, bool) and self.type in ("integer", "number"):
+                raise SpecError(f"参数 {self.name}: example 类型与 {self.type} 不符")
+            if not isinstance(self.example, expected):
+                raise SpecError(
+                    f"参数 {self.name}: example 期望 {self.type}, 实际 {type(self.example).__name__}"
+                )
+            if self.type == "array":
+                item_types = JSON_TYPE_TO_PYTHON[self.items_type]
+                for idx, item in enumerate(self.example):
+                    if not isinstance(item, item_types):
+                        raise SpecError(
+                            f"参数 {self.name}: example 第 {idx} 个元素期望 {self.items_type}"
+                        )
 
     def coerce(self, raw: Any) -> Any:
         """把 LLM 常见「字符串化」入参收敛成声明类型.

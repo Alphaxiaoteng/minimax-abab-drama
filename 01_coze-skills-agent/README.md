@@ -9,7 +9,8 @@
 ## 🎯 交付目标
 - [x] 完成架构设计与需求拆解 → [docs/architecture.md](docs/architecture.md)
 - [x] 搭建 `src/` 核心功能代码（高复用性 Coze 插件 Schema + 垂类提效工具）
-- [x] 编写自动化单元测试与功能验证脚本（39 项全绿）
+- [x] 编写自动化单元测试与功能验证脚本（53 项全绿，含 14 项 OpenAPI 完整性测试）
+- [x] Coze 官方上架与评委体验指南 → [docs/COZE_BOT_SETUP.md](docs/COZE_BOT_SETUP.md)
 - [ ] 录制演示视频 (2-5 分钟清晰操作)
 - [ ] 提交材料归档至 `docs/` 并完成官方提审
 
@@ -28,11 +29,11 @@ src/
 │   │   ├── schema.py     # 生成层: ToolSpec → OpenAPI 3.0 + 本地结构自检
 │   │   ├── runner.py     # 执行层: 参数收敛/硬超时/异常兜底/调用日志
 │   │   ├── server.py     # 网关层: FastAPI 路由 + /healthz + /metrics
-│   │   └── cli.py        # 命令行: schema / list / selftest / invoke
+│   │   └── cli.py        # 命令行: export-openapi / schema / list / selftest / invoke
 │   └── tools/
 │       ├── text_compliance.py  # check_compliance / batch_check
 │       └── review_insight.py   # analyze_reviews / draft_reply
-├── tests/                # 39 个测试（契约 / 工具 / 网关端到端）
+├── tests/                # 53 个测试（契约 / 工具 / 网关端到端 / OpenAPI 完整性）
 ├── Dockerfile            # 一键容器化部署（HEALTHCHECK 就绪）
 ├── requirements.txt      # 运行时仅 2 个依赖: fastapi + uvicorn
 └── setup.py              # pip 安装与 coze-skills 命令入口
@@ -44,8 +45,8 @@ src/
 cd src
 pip install -r requirements.txt
 
-# 1) 生成可直接粘贴进 Coze 控制台的插件 OpenAPI Schema
-PYTHONPATH=. python3 -m coze_skills.cli schema --out ../docs/coze-plugin-openapi.json
+# 1) 导出完整 OpenAPI 3.0 Schema（含 info/servers/tags + 每个工具 example payload）
+PYTHONPATH=. python3 -m coze_skills.cli export-openapi --out ../docs/coze-plugin-openapi.json
 
 # 2) 启动插件网关（Coze 侧填 http://<host>:8000 与 /openapi.coze.json）
 PYTHONPATH=. python3 -m uvicorn coze_skills.core.server:create_app --factory --port 8000
@@ -81,4 +82,5 @@ pip install -r requirements-dev.txt && PYTHONPATH=. python3 -m pytest tests -q
 | POST | `/tools/{tool_name}` | 同上（与 Schema 中声明的 path 对齐） |
 | GET | `/metrics` | 调用量、成功率、平均耗时、最近失败 |
 
-> 进度日志：`2026-10-10` 完成契约层→生成层→执行层→网关层四层骨架，落地 4 个垂类工具；39 项测试全绿；真实 uvicorn 进程 curl 验收通过；Schema 产出 `docs/coze-plugin-openapi.json`。
+> 进度日志：`2026-10-10` 完成契约层→生成层→执行层→网关层四层骨架，落地 4 个垂类工具；真实 uvicorn 进程 curl 验收通过；Schema 产出 `docs/coze-plugin-openapi.json`。
+> `2026-10-11` 深度打磨上架链路：`export-openapi` 导出补齐 info/servers/tags 与 4 个工具 example payload（并通过 openapi-spec-validator 第三方严格校验），新增 `tests/test_openapi_spec.py`（14 项）后全量测试绿（53 项，最小环境 1 项可选依赖自动 skip）；发布《COZE_BOT_SETUP.md》零门槛导入指南。

@@ -21,9 +21,11 @@ export PYTHONPATH=src
 echo -e "\n${BLUE}[1/4] 列出已注册的智能体工具清单...${NC}"
 uv run --with fastapi --with pydantic python3 -m coze_skills.cli list
 
-echo -e "\n${BLUE}[2/4] 验证 OpenAPI 3.0 Schema 导出与规范校验...${NC}"
-uv run --with fastapi --with pydantic python3 -m coze_skills.cli schema --title "Coze电商智能体插件" --version "1.0.0" > /dev/null
-echo -e "${GREEN}✓ OpenAPI Schema 校验完全符合 Coze 平台标准${NC}"
+echo -e "\n${BLUE}[2/4] 导出完整 OpenAPI 3.0 Schema (info/servers/tags + 每个工具 example payload)...${NC}"
+EXPORTED="$(mktemp -t coze-openapi).json"
+uv run --with fastapi --with pydantic python3 -m coze_skills.cli export-openapi \
+  --out "${EXPORTED}" --title "Coze电商智能体插件" --version "1.0.0"
+echo -e "${GREEN}✓ OpenAPI Schema 严格校验通过, 已导出 ${EXPORTED} (扣子导入即用, 见 docs/COZE_BOT_SETUP.md)${NC}"
 
 echo -e "\n${BLUE}[3/4] 运行核心规则引擎自检 (缺参防御与类型安全)...${NC}"
 uv run --with fastapi --with pydantic python3 -m coze_skills.cli selftest

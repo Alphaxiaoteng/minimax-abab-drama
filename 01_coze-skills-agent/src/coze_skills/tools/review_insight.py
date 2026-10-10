@@ -427,6 +427,7 @@ _PARAM_MARKETPLACE = Param(
         "销售渠道标识。渠道不改变差评主题归因, 但决定运营口径: amazon 走站内信且严禁以补偿换好评, "
         "shopee/tiktok 走站内 IM, temu 由平台代客服, general 为通用兜底。默认 amazon。"
     ),
+    example="amazon",
 )
 
 TOOLS: Tuple[ToolSpec, ...] = (
@@ -447,6 +448,11 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 items_type="string",
                 max_length=500,
                 description="差评原文列表, 一行一条, 支持中英文, 最多 500 条。",
+                example=[
+                    "快递太慢了, 等了整整一周才到, 到手盒子都压烂了",
+                    "鞋子偏小两码根本穿不进去, 申请退款客服半天不回",
+                    "The dress is nice but the stitching came apart after one wash",
+                ],
             ),
             _PARAM_MARKETPLACE,
             Param(
@@ -457,6 +463,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 minimum=1,
                 maximum=20,
                 description="返回的主题数量上限 1-20, 按命中条数降序、主题名升序取, 默认 5。",
+                example=5,
             ),
         ),
         category="insight",
@@ -479,6 +486,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 min_length=1,
                 max_length=2000,
                 description="单条差评原文, 1-2000 字符, 支持中英文。",
+                example="Two stars. Delivery took three weeks and the package arrived damaged.",
             ),
             Param(
                 name="tone",
@@ -487,6 +495,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 default="professional",
                 enum=["professional", "friendly", "concise"],
                 description="回复语气: professional 正式 / friendly 亲和 / concise 极简, 默认 professional。",
+                example="professional",
             ),
             _PARAM_MARKETPLACE,
             Param(
@@ -495,6 +504,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 required=False,
                 default=False,
                 description="是否已准备好退款/补偿方案; true 时草稿写入补偿承诺并把道歉强度提升为 high。",
+                example=True,
             ),
         ),
         category="insight",

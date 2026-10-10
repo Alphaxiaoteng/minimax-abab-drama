@@ -358,6 +358,7 @@ _PARAMS_PLATFORM = Param(
         "投放平台标识, 不同平台词库宽松度不同: xhs/douyin/taobao 额外启用「平台软性词」"
         "(超值/爆款/亏本等易限流表达); amazon/general 仅查法定高危词与正则极限表述。默认 xhs。"
     ),
+    example="douyin",
 )
 
 TOOLS: Tuple[ToolSpec, ...] = (
@@ -377,6 +378,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 min_length=1,
                 max_length=5000,
                 description="待检测的商品文案/笔记正文, 1-5000 字符。",
+                example="这款面膜全网销量第一, 药效显著, 七天美白立竿见影, 绝对无效全额退款!",
             ),
             _PARAMS_PLATFORM,
             Param(
@@ -385,6 +387,7 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 required=False,
                 items_type="string",
                 description="品牌自定义补充禁词列表; 命中记为「品牌自定义词」且风险为 high。",
+                example=["旗舰店", "官方指定"],
             ),
         ),
         category="compliance",
@@ -407,6 +410,10 @@ TOOLS: Tuple[ToolSpec, ...] = (
                 items_type="string",
                 max_length=200,
                 description="批量待检文案列表, 最多 200 条; 空字符串条目跳过检测并记为 low。",
+                example=[
+                    "全网最低价, 错过再等一年!",
+                    "新中式缠花发簪, 手工绕线, 日常通勤也能戴",
+                ],
             ),
             _PARAMS_PLATFORM,
         ),
