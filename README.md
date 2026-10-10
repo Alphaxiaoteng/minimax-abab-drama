@@ -21,10 +21,7 @@
 | **P1 黄金** | [`11_genai-open-agent`](file:///Users/albert/Documents/project/apps/bisai/11_genai-open-agent/RULES.md) | Open Agent Hackathon 2026 全球智能体 | **10-22 (剩12天)**| 蓝海小众 | $20,000 美元奖池 |
 | **P1 黄金** | [`12_suks-suzhou`](file:///Users/albert/Documents/project/apps/bisai/12_suks-suzhou-ai-hackathon/RULES.md) | 苏客松 2026 苏州 AI 黑客松 | **10-26 (剩16天)**| 蓝海本地 | 50 万元总奖池 (冠军5万) |
 | **P2 充裕** | [`01_coze-skills`](file:///Users/albert/Documents/project/apps/bisai/01_coze-skills-agent/RULES.md) | 扣子 (Coze) AI 智能体与技能共创 | **10-31** | 极低竞争 | 21万+ 现金 + 苹果全家桶 |
-| **P2 充裕** | [`05_modelscope-256`](file:///Users/albert/Documents/project/apps/bisai/05_modelscope-act-256-wanxiang-video/RULES.md) | 魔搭 · 万相妙思+创意视频大赛 | **10-31** | 极低竞争 | 10万奖金池 + 算力 |
-| **P2 充裕** | [`06_modelscope-279`](file:///Users/albert/Documents/project/apps/bisai/06_modelscope-act-279-flowbench/RULES.md) | 魔搭 · FLowBench 云端工作流专区 | **10-31** | 极低竞争 | 社区流量 + 算力支持 |
 | **P2 充裕** | [`13_vultr-agent-rush`](file:///Users/albert/Documents/project/apps/bisai/13_vultr-agent-rush/RULES.md) | Vultr: Agent Rush 全球智能体黑客松 | **11-03** | 蓝海小众 | $25,000 奖金与算力 |
-| **P2 充裕** | [`14_vidu-video-director`](file:///Users/albert/Documents/project/apps/bisai/14_vidu-video-agent-creator/RULES.md) | 清华-生数科技 · Vidu 视频大模型与导演 Agent | **11-15** | 蓝海小众 | 30万现金 + 百万算力 |
 | **P2 充裕** | [`15_minimax-abab`](file:///Users/albert/Documents/project/apps/bisai/15_minimax-abab-agent/RULES.md) | MiniMax · 2026 abab 7 与智能体商业应用 | **11-22** | 蓝海小众 | 20万现金 + API + 创投 |
 | **P2 充裕** | [`16_zhipu-autoglm`](file:///Users/albert/Documents/project/apps/bisai/16_zhipu-autoglm-agent/RULES.md) | 智谱 AI · 2026 AutoGLM 端侧智能体共创 | **11-28** | 蓝海小众 | 30万现金 + GLM 算力 |
 | **P2 充裕** | [`17_dorahacks-anna`](file:///Users/albert/Documents/project/apps/bisai/17_dorahacks-anna-ai-mcp/RULES.md) | DoraHacks · Anna AI App Builder (MCP 专项) | **11-30** | 蓝海专项 | 每月 $80,000 Grant 资助 |
