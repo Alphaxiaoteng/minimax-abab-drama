@@ -1,0 +1,1707 @@
+{
+ "project": "AutoGLM Cross-Platform Device Agent",
+ "subtitle": "端侧执行回放看板 · Execution Replay Dashboard",
+ "mode": "chaos",
+ "chaos": true,
+ "drift_px": 20,
+ "generated_at": "2026-10-11 02:10:45",
+ "settings": {
+  "retry_backoff_base": 0.6,
+  "action_max_verify": 2,
+  "max_step_retries": 3
+ },
+ "scenes": [
+  {
+   "id": "price_coupon",
+   "name": "手机端·跨平台比价领券",
+   "device": {
+    "kind": "virtual",
+    "width": 1080,
+    "height": 2400
+   },
+   "layout": {
+    "home": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "hint",
+       "text": "请从入口启动应用",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.2,
+       "y": 0.4,
+       "w": 0.6,
+       "h": 0.05
+      }
+     ]
+    },
+    "a_search": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "a_tab_home",
+       "text": "首页",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "key": "a_search_input",
+       "text": "搜索商品",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.28,
+       "y": 0.02,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "a_search_go",
+       "text": "搜索",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.8,
+       "y": 0.02,
+       "w": 0.16,
+       "h": 0.05
+      }
+     ]
+    },
+    "a_results": {
+     "modal": false,
+     "content_height": 1.7,
+     "elements": [
+      {
+       "key": "a_card1",
+       "text": "聚海严选 无线蓝牙耳机 到手价¥249.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.12,
+       "w": 0.9,
+       "h": 0.18
+      },
+      {
+       "key": "a_card2",
+       "text": "聚海严选 无线蓝牙耳机Pro 到手价¥219.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.62,
+       "w": 0.9,
+       "h": 0.18
+      },
+      {
+       "key": "a_card3",
+       "text": "聚海严选 蓝牙耳机降噪款 到手价¥199.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 1.15,
+       "w": 0.9,
+       "h": 0.18
+      }
+     ]
+    },
+    "b_search": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "b_tab_home",
+       "text": "首页",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "key": "b_search_input",
+       "text": "搜索商品",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.28,
+       "y": 0.02,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "b_search_go",
+       "text": "搜索",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.8,
+       "y": 0.02,
+       "w": 0.16,
+       "h": 0.05
+      }
+     ]
+    },
+    "b_results": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "b_card1",
+       "text": "淘享岛 无线蓝牙耳机 券后价¥229.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.12,
+       "w": 0.9,
+       "h": 0.18
+      }
+     ]
+    },
+    "c_home": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "c_logo",
+       "text": "比邻红包中心",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.3,
+       "y": 0.02,
+       "w": 0.4,
+       "h": 0.06
+      },
+      {
+       "key": "c_item",
+       "text": "耳机品类 20 元无门槛券",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.08,
+       "y": 0.14,
+       "w": 0.84,
+       "h": 0.12
+      },
+      {
+       "key": "c_claim",
+       "text": "立即领取",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.62,
+       "y": 0.2,
+       "w": 0.28,
+       "h": 0.05
+      }
+     ]
+    },
+    "c_after_claim": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "c_done",
+       "text": "券已领取 放入卡包",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.1,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "c_final",
+       "text": "耳机券后价¥179.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.2,
+       "w": 0.8,
+       "h": 0.08
+      },
+      {
+       "key": "c_use",
+       "text": "去使用",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.62,
+       "y": 0.32,
+       "w": 0.28,
+       "h": 0.05
+      }
+     ]
+    },
+    "ad_popup": {
+     "modal": true,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "ad_title",
+       "text": "限时大促 全场五折",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.3,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "ad_desc",
+       "text": "推广位：爆款好物等你来",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.38,
+       "w": 0.8,
+       "h": 0.05
+      },
+      {
+       "key": "ad_skip",
+       "text": "跳过3",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.82,
+       "y": 0.24,
+       "w": 0.12,
+       "h": 0.045
+      }
+     ]
+    },
+    "perm_popup": {
+     "modal": true,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "perm_title",
+       "text": "比邻红包想要访问您的剪贴板",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.35,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "perm_deny",
+       "text": "拒绝",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.18,
+       "y": 0.5,
+       "w": 0.25,
+       "h": 0.05
+      },
+      {
+       "key": "perm_allow",
+       "text": "允许",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.58,
+       "y": 0.5,
+       "w": 0.25,
+       "h": 0.05
+      }
+     ]
+    }
+   },
+   "events": [
+    {
+     "i": 0,
+     "t_ms": 0.1,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "ad_popup",
+     "modal": true,
+     "target": "juhai"
+    },
+    {
+     "i": 1,
+     "t_ms": 406.1,
+     "lane": "action",
+     "kind": "dismiss",
+     "screen": "a_search",
+     "modal": false,
+     "x": 943,
+     "y": 621,
+     "text": "跳过3",
+     "key": "ad_skip",
+     "bounds": [
+      887,
+      595,
+      1010,
+      686
+     ]
+    },
+    {
+     "i": 2,
+     "t_ms": 712.8,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "a_search",
+     "modal": false,
+     "x": 569,
+     "y": 106,
+     "text": "搜索商品",
+     "key": "a_search_input",
+     "bounds": [
+      285,
+      53,
+      832,
+      184
+     ]
+    },
+    {
+     "i": 3,
+     "t_ms": 915.5,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "a_search",
+     "modal": false,
+     "field": "a_search_input"
+    },
+    {
+     "i": 4,
+     "t_ms": 915.8,
+     "lane": "action",
+     "kind": "type",
+     "screen": "a_search",
+     "modal": false,
+     "text": "无线蓝牙耳机",
+     "field": "a_search_input",
+     "key": "a_search_input",
+     "x": 578,
+     "y": 108,
+     "bounds": [
+      301,
+      59,
+      855,
+      156
+     ]
+    },
+    {
+     "i": 5,
+     "t_ms": 1520.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "a_search",
+     "modal": false,
+     "x": 583,
+     "y": 106,
+     "text": "搜索商品",
+     "key": "a_search_input",
+     "bounds": [
+      321,
+      51,
+      844,
+      178
+     ]
+    },
+    {
+     "i": 6,
+     "t_ms": 1721.2,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "a_search",
+     "modal": false,
+     "field": "a_search_input"
+    },
+    {
+     "i": 7,
+     "t_ms": 1721.7,
+     "lane": "action",
+     "kind": "type",
+     "screen": "a_search",
+     "modal": false,
+     "text": "无线蓝牙耳机",
+     "field": "a_search_input",
+     "key": "a_search_input",
+     "x": 569,
+     "y": 104,
+     "bounds": [
+      306,
+      55,
+      832,
+      153
+     ]
+    },
+    {
+     "i": 8,
+     "t_ms": 1976.4,
+     "lane": "recovery",
+     "kind": "type_retry",
+     "screen": "a_search",
+     "modal": false,
+     "spec": "search_box",
+     "attempt": 1,
+     "got": "",
+     "handled": null,
+     "fault": null,
+     "rnd": null,
+     "source": null,
+     "conf": null
+    },
+    {
+     "i": 9,
+     "t_ms": 1982.2,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "a_results",
+     "modal": false,
+     "x": 957,
+     "y": 108,
+     "text": "搜索",
+     "key": "a_search_go",
+     "bounds": [
+      875,
+      32,
+      1052,
+      182
+     ]
+    },
+    {
+     "i": 10,
+     "t_ms": 2744.2,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "b_search",
+     "modal": false,
+     "target": "taoxiang"
+    },
+    {
+     "i": 11,
+     "t_ms": 3149.5,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "b_search",
+     "modal": false,
+     "x": 585,
+     "y": 111,
+     "text": "搜索商品",
+     "key": "b_search_input",
+     "bounds": [
+      295,
+      55,
+      861,
+      164
+     ]
+    },
+    {
+     "i": 12,
+     "t_ms": 3350.7,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "b_search",
+     "modal": false,
+     "field": "b_search_input"
+    },
+    {
+     "i": 13,
+     "t_ms": 3350.8,
+     "lane": "action",
+     "kind": "type",
+     "screen": "b_search",
+     "modal": false,
+     "text": "无线蓝牙耳机",
+     "field": "b_search_input",
+     "key": "b_search_input",
+     "x": 570,
+     "y": 114,
+     "bounds": [
+      287,
+      67,
+      854,
+      162
+     ]
+    },
+    {
+     "i": 14,
+     "t_ms": 3603.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "b_results",
+     "modal": false,
+     "x": 946,
+     "y": 99,
+     "text": "搜索",
+     "key": "b_search_go",
+     "bounds": [
+      847,
+      53,
+      1019,
+      154
+     ]
+    },
+    {
+     "i": 15,
+     "t_ms": 4198.3,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "perm_popup",
+     "modal": true,
+     "target": "bilin"
+    },
+    {
+     "i": 16,
+     "t_ms": 4601.5,
+     "lane": "action",
+     "kind": "dismiss",
+     "screen": "c_home",
+     "modal": false,
+     "x": 750,
+     "y": 1264,
+     "text": "允许",
+     "key": "perm_allow",
+     "bounds": [
+      620,
+      1208,
+      888,
+      1338
+     ]
+    },
+    {
+     "i": 17,
+     "t_ms": 4904.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "c_after_claim",
+     "modal": false,
+     "x": 820,
+     "y": 533,
+     "text": "立即领取",
+     "key": "c_claim",
+     "bounds": [
+      672,
+      483,
+      992,
+      592
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "id": "launch_juhai",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "search_juhai",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "read_juhai",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "launch_taoxiang",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "read_taoxiang",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "launch_bilin",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "claim",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "read_final",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "report",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    }
+   ],
+   "summary": {
+    "steps": 9,
+    "ok": 9,
+    "success": true,
+    "popups": 2,
+    "type_retries": 1,
+    "health": 0,
+    "elapsed_s": 5.47
+   },
+   "highlights": {
+    "比价结果": {
+     "聚海严选": [
+      199.0,
+      219.0,
+      249.0
+     ],
+     "淘享岛": [
+      229.0
+     ],
+     "比邻券后价": [
+      179.0
+     ]
+    },
+    "购买建议": {
+     "platform": "比邻券后价",
+     "price": 179.0
+    }
+   },
+   "artifact": ".autoglm_runtime/artifacts/price_coupon_report.json"
+  },
+  {
+   "id": "invoice_expense",
+   "name": "桌面端·月度发票报销",
+   "device": {
+    "kind": "virtual",
+    "width": 1920,
+    "height": 1080
+   },
+   "layout": {
+    "home": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "hint",
+       "text": "桌面",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.2,
+       "y": 0.4,
+       "w": 0.6,
+       "h": 0.05
+      }
+     ]
+    },
+    "mail_inbox": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "m_title",
+       "text": "企业邮箱 - 收件箱",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.4,
+       "h": 0.05
+      },
+      {
+       "key": "m_mail1",
+       "text": "10月网约车发票 金额¥86.50",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.1,
+       "w": 0.9,
+       "h": 0.08
+      },
+      {
+       "key": "m_mail2",
+       "text": "10月餐饮发票 金额¥148.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.2,
+       "w": 0.9,
+       "h": 0.08
+      },
+      {
+       "key": "m_mail3",
+       "text": "10月差旅酒店发票 金额¥1015.50",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.3,
+       "w": 0.9,
+       "h": 0.08
+      },
+      {
+       "key": "m_summary",
+       "text": "本月待报销发票合计 ¥1250.00",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.42,
+       "w": 0.9,
+       "h": 0.05
+      }
+     ]
+    },
+    "expense_form": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "f_title",
+       "text": "差旅报销单",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "f_applicant",
+       "text": "申报人",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.25,
+       "y": 0.12,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "f_reason",
+       "text": "报销事由",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.25,
+       "y": 0.2,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "f_amount",
+       "text": "报销金额",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.25,
+       "y": 0.28,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "f_attach",
+       "text": "上传发票附件",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.25,
+       "y": 0.36,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "f_submit",
+       "text": "提交",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.72,
+       "y": 0.9,
+       "w": 0.22,
+       "h": 0.05
+      }
+     ]
+    },
+    "expense_done": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "d_ok",
+       "text": "提交成功 单号 BX-2026-1001",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.2,
+       "y": 0.3,
+       "w": 0.6,
+       "h": 0.06
+      },
+      {
+       "key": "d_back",
+       "text": "返回收件箱",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.4,
+       "y": 0.45,
+       "w": 0.2,
+       "h": 0.05
+      }
+     ]
+    },
+    "update_popup": {
+     "modal": true,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "up_title",
+       "text": "温馨提示 发现新版本 V8.2.1",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.2,
+       "y": 0.3,
+       "w": 0.6,
+       "h": 0.05
+      },
+      {
+       "key": "up_later",
+       "text": "以后再说",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.5,
+       "y": 0.42,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "key": "up_now",
+       "text": "立即更新",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.28,
+       "y": 0.42,
+       "w": 0.2,
+       "h": 0.05
+      }
+     ]
+    }
+   },
+   "events": [
+    {
+     "i": 0,
+     "t_ms": 0.1,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "update_popup",
+     "modal": true,
+     "target": "mail"
+    },
+    {
+     "i": 1,
+     "t_ms": 404.5,
+     "lane": "action",
+     "kind": "dismiss",
+     "screen": "mail_inbox",
+     "modal": false,
+     "x": 1144,
+     "y": 478,
+     "text": "以后再说",
+     "key": "up_later",
+     "bounds": [
+      947,
+      457,
+      1350,
+      502
+     ]
+    },
+    {
+     "i": 2,
+     "t_ms": 714.0,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "expense_form",
+     "modal": false,
+     "target": "finance"
+    },
+    {
+     "i": 3,
+     "t_ms": 1121.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "expense_form",
+     "modal": false,
+     "x": 961,
+     "y": 155,
+     "text": "申报人",
+     "key": "f_applicant",
+     "bounds": [
+      493,
+      138,
+      1441,
+      181
+     ]
+    },
+    {
+     "i": 4,
+     "t_ms": 1323.1,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "expense_form",
+     "modal": false,
+     "field": "f_applicant"
+    },
+    {
+     "i": 5,
+     "t_ms": 1323.2,
+     "lane": "action",
+     "kind": "type",
+     "screen": "expense_form",
+     "modal": false,
+     "text": "张伟",
+     "field": "f_applicant",
+     "key": "f_applicant",
+     "x": 956,
+     "y": 150,
+     "bounds": [
+      481,
+      119,
+      1431,
+      182
+     ]
+    },
+    {
+     "i": 6,
+     "t_ms": 1579.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "expense_form",
+     "modal": false,
+     "x": 956,
+     "y": 247,
+     "text": "报销事由",
+     "key": "f_reason",
+     "bounds": [
+      490,
+      204,
+      1431,
+      280
+     ]
+    },
+    {
+     "i": 7,
+     "t_ms": 1782.7,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "expense_form",
+     "modal": false,
+     "field": "f_reason"
+    },
+    {
+     "i": 8,
+     "t_ms": 1782.8,
+     "lane": "action",
+     "kind": "type",
+     "screen": "expense_form",
+     "modal": false,
+     "text": "10月华东出差差旅费报销",
+     "field": "f_reason",
+     "key": "f_reason",
+     "x": 968,
+     "y": 243,
+     "bounds": [
+      480,
+      199,
+      1457,
+      287
+     ]
+    },
+    {
+     "i": 9,
+     "t_ms": 2044.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "expense_form",
+     "modal": false,
+     "x": 944,
+     "y": 319,
+     "text": "报销金额",
+     "key": "f_amount",
+     "bounds": [
+      492,
+      319,
+      1453,
+      342
+     ]
+    },
+    {
+     "i": 10,
+     "t_ms": 2244.7,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "expense_form",
+     "modal": false,
+     "field": "f_amount"
+    },
+    {
+     "i": 11,
+     "t_ms": 2245.0,
+     "lane": "action",
+     "kind": "type",
+     "screen": "expense_form",
+     "modal": false,
+     "text": "1250.00",
+     "field": "f_amount",
+     "key": "f_amount",
+     "x": 954,
+     "y": 315,
+     "bounds": [
+      464,
+      285,
+      1445,
+      345
+     ]
+    },
+    {
+     "i": 12,
+     "t_ms": 2502.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "expense_form",
+     "modal": false,
+     "x": 956,
+     "y": 401,
+     "text": "上传发票附件",
+     "key": "f_attach",
+     "bounds": [
+      489,
+      378,
+      1453,
+      447
+     ]
+    },
+    {
+     "i": 13,
+     "t_ms": 2863.1,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "expense_done",
+     "modal": false,
+     "x": 1594,
+     "y": 994,
+     "text": "提交",
+     "key": "f_submit",
+     "bounds": [
+      1371,
+      991,
+      1797,
+      1007
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "id": "open_mail",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "collect",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "cross_check",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "open_finance",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "fill",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "attach",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "submit",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "receipt",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    }
+   ],
+   "summary": {
+    "steps": 8,
+    "ok": 8,
+    "success": true,
+    "popups": 1,
+    "type_retries": 0,
+    "health": 0,
+    "elapsed_s": 3.22
+   },
+   "highlights": {
+    "发票合计": 1250.0,
+    "邮箱页合计": 1250.0,
+    "报销单号": "BX-2026-1001"
+   },
+   "artifact": ".autoglm_runtime/artifacts/invoice_expense_report.json"
+  },
+  {
+   "id": "gov_auth",
+   "name": "手机端·政务取证",
+   "device": {
+    "kind": "virtual",
+    "width": 1080,
+    "height": 2400
+   },
+   "layout": {
+    "home": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_hint",
+       "text": "桌面",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.2,
+       "y": 0.4,
+       "w": 0.6,
+       "h": 0.05
+      }
+     ]
+    },
+    "login_page": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_title",
+       "text": "政务通 - 会话已过期，请重新登录",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.5,
+       "h": 0.05
+      },
+      {
+       "key": "gov.phone",
+       "text": "请输入手机号",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.16,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "g_send",
+       "text": "获取验证码",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.26,
+       "w": 0.4,
+       "h": 0.055
+      },
+      {
+       "key": "g_login",
+       "text": "登录",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.36,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "__back__",
+       "text": "退出",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.9,
+       "w": 0.2,
+       "h": 0.05
+      }
+     ]
+    },
+    "otp_page": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_otp_hint",
+       "text": "验证码已发送至 138****8000",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.9,
+       "h": 0.05
+      },
+      {
+       "key": "g_otp_demo",
+       "text": "演示验证码：111111",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.1,
+       "w": 0.9,
+       "h": 0.05
+      },
+      {
+       "key": "otp_input",
+       "text": "请输入短信验证码",
+       "cls": "EditText",
+       "editable": true,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.2,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "g_otp_submit",
+       "text": "提交",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.3,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "__back__",
+       "text": "返回登录",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.9,
+       "w": 0.2,
+       "h": 0.05
+      }
+     ]
+    },
+    "home_page": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_home_title",
+       "text": "我的办事大厅",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.6,
+       "h": 0.05
+      },
+      {
+       "key": "g_entry",
+       "text": "公积金查询",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.08,
+       "y": 0.14,
+       "w": 0.84,
+       "h": 0.1
+      }
+     ]
+    },
+    "balance_page": {
+     "modal": false,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_bal_title",
+       "text": "公积金账户详情",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.02,
+       "w": 0.6,
+       "h": 0.05
+      },
+      {
+       "key": "g_bal_amount",
+       "text": "公积金余额 ¥12345.67",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.08,
+       "y": 0.14,
+       "w": 0.84,
+       "h": 0.1
+      },
+      {
+       "key": "g_bal_unit",
+       "text": "缴存单位：某某科技有限公司",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.08,
+       "y": 0.26,
+       "w": 0.84,
+       "h": 0.06
+      },
+      {
+       "key": "__back__",
+       "text": "返回首页",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.05,
+       "y": 0.9,
+       "w": 0.2,
+       "h": 0.05
+      }
+     ]
+    },
+    "ad_popup": {
+     "modal": true,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_ad_title",
+       "text": "政务服务平台 全新升级",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.3,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "g_ad_skip",
+       "text": "跳过2",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.82,
+       "y": 0.24,
+       "w": 0.12,
+       "h": 0.045
+      }
+     ]
+    },
+    "perm_popup": {
+     "modal": true,
+     "content_height": 1.0,
+     "elements": [
+      {
+       "key": "g_perm_title",
+       "text": "政务通想要获取本机识别码",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.1,
+       "y": 0.35,
+       "w": 0.8,
+       "h": 0.06
+      },
+      {
+       "key": "g_perm_deny",
+       "text": "拒绝",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.18,
+       "y": 0.5,
+       "w": 0.25,
+       "h": 0.05
+      },
+      {
+       "key": "g_perm_allow",
+       "text": "允许",
+       "cls": "Button",
+       "editable": false,
+       "clickable": true,
+       "x": 0.58,
+       "y": 0.5,
+       "w": 0.25,
+       "h": 0.05
+      }
+     ]
+    }
+   },
+   "events": [
+    {
+     "i": 0,
+     "t_ms": 0.3,
+     "lane": "action",
+     "kind": "launch",
+     "screen": "ad_popup",
+     "modal": true,
+     "target": "govapp"
+    },
+    {
+     "i": 1,
+     "t_ms": 402.0,
+     "lane": "action",
+     "kind": "dismiss",
+     "screen": "login_page",
+     "modal": false,
+     "x": 944,
+     "y": 632,
+     "text": "跳过2",
+     "key": "g_ad_skip",
+     "bounds": [
+      872,
+      557,
+      1016,
+      666
+     ]
+    },
+    {
+     "i": 2,
+     "t_ms": 710.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "login_page",
+     "modal": false,
+     "x": 549,
+     "y": 455,
+     "text": "请输入手机号",
+     "key": "gov.phone",
+     "bounds": [
+      116,
+      402,
+      963,
+      515
+     ]
+    },
+    {
+     "i": 3,
+     "t_ms": 915.2,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "login_page",
+     "modal": false,
+     "field": "gov.phone"
+    },
+    {
+     "i": 4,
+     "t_ms": 915.3,
+     "lane": "action",
+     "kind": "type",
+     "screen": "login_page",
+     "modal": false,
+     "text": "13800138000",
+     "field": "gov.phone",
+     "key": "gov.phone",
+     "x": 526,
+     "y": 454,
+     "bounds": [
+      100,
+      396,
+      953,
+      513
+     ]
+    },
+    {
+     "i": 5,
+     "t_ms": 1169.8,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "otp_page",
+     "modal": false,
+     "x": 314,
+     "y": 695,
+     "text": "获取验证码",
+     "key": "g_send",
+     "bounds": [
+      97,
+      644,
+      556,
+      741
+     ]
+    },
+    {
+     "i": 6,
+     "t_ms": 1538.6,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "otp_page",
+     "modal": false,
+     "x": 530,
+     "y": 552,
+     "text": "请输入短信验证码",
+     "key": "otp_input",
+     "bounds": [
+      115,
+      494,
+      984,
+      637
+     ]
+    },
+    {
+     "i": 7,
+     "t_ms": 1740.7,
+     "lane": "action",
+     "kind": "clear",
+     "screen": "otp_page",
+     "modal": false,
+     "field": "otp_input"
+    },
+    {
+     "i": 8,
+     "t_ms": 1741.2,
+     "lane": "action",
+     "kind": "type",
+     "screen": "otp_page",
+     "modal": false,
+     "text": "111111",
+     "field": "otp_input",
+     "key": "otp_input",
+     "x": 546,
+     "y": 536,
+     "bounds": [
+      127,
+      462,
+      964,
+      609
+     ]
+    },
+    {
+     "i": 9,
+     "t_ms": 1994.2,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "home_page",
+     "modal": false,
+     "x": 537,
+     "y": 789,
+     "text": "提交",
+     "key": "g_otp_submit",
+     "bounds": [
+      107,
+      715,
+      984,
+      873
+     ]
+    },
+    {
+     "i": 10,
+     "t_ms": 2298.9,
+     "lane": "action",
+     "kind": "tap",
+     "screen": "balance_page",
+     "modal": false,
+     "x": 540,
+     "y": 453,
+     "text": "公积金查询",
+     "key": "g_entry",
+     "bounds": [
+      80,
+      354,
+      996,
+      585
+     ]
+    }
+   ],
+   "steps": [
+    {
+     "id": "open_app",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "login",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "balance",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    },
+    {
+     "id": "evidence",
+     "status": "ok",
+     "attempts": 1,
+     "error": ""
+    }
+   ],
+   "summary": {
+    "steps": 4,
+    "ok": 4,
+    "success": true,
+    "popups": 1,
+    "type_retries": 0,
+    "health": 0,
+    "elapsed_s": 2.66
+   },
+   "highlights": {
+    "登录路径": "otp-submitted",
+    "公积金余额": 12345.67,
+    "证据帧文本数": 8
+   },
+   "artifact": ".autoglm_runtime/artifacts/auth_report.json"
+  }
+ ]
+}
