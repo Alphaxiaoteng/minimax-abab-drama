@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "markdown-card": "/components/markdown-card/index",
+    "empty-state": "/components/empty-state/index"
+  },
+  "navigationBarTitleText": "详情与追问"
+}

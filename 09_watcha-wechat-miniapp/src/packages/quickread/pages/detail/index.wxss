@@ -1,0 +1,125 @@
+.head-row {
+  margin-bottom: 16rpx;
+  padding: 0 8rpx;
+}
+
+.head-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.ask-card {
+  margin-top: 20rpx;
+}
+
+.ask-hints {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 18rpx;
+}
+
+.ask-hint {
+  font-size: 24rpx;
+  color: var(--accent);
+  background: rgba(31, 111, 235, 0.1);
+  border-radius: 999rpx;
+  padding: 8rpx 22rpx;
+  margin: 0 14rpx 14rpx 0;
+}
+
+.ask-input-row {
+  display: flex;
+  align-items: center;
+}
+
+.ask-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 20rpx 22rpx;
+  font-size: 28rpx;
+  margin-right: 16rpx;
+}
+
+.ask-send {
+  flex: none;
+  width: 160rpx;
+  padding: 20rpx 0;
+  font-size: 28rpx;
+}
+
+.ask-send-disabled {
+  opacity: 0.5;
+}
+
+.qa {
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 14rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.qa-user {
+  background: rgba(31, 111, 235, 0.08);
+}
+
+.qa-ai {
+  background: var(--bg);
+}
+
+.qa-role {
+  flex: none;
+  width: 60rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.qa-text {
+  flex: 1;
+  font-size: 27rpx;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.card-title-row {
+  margin-bottom: 14rpx;
+}
+
+.sc-title {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.sc-sub {
+  font-size: 24rpx;
+  margin: 8rpx 0 16rpx;
+}
+
+.sc-line {
+  font-size: 26rpx;
+  line-height: 1.7;
+}
+
+.sc-tag {
+  font-size: 24rpx;
+  color: var(--accent);
+  margin-top: 16rpx;
+}
+
+.result-actions {
+  display: flex;
+  margin-top: 22rpx;
+}
+
+.result-btn {
+  flex: 1;
+}
+
+.result-btn + .result-btn {
+  margin-left: 16rpx;
+}

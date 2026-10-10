@@ -1,0 +1,275 @@
+{
+  "components": {
+    "schemas": {
+      "PluginError": {
+        "description": "所有接口统一返回该结构, 调用方先看 ok; 业务错误同样以 HTTP 200 + ok=false 返回, 避免平台把非 2xx 当网络故障重试.",
+        "properties": {
+          "data": {
+            "type": "object"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "",
+    "title": "Coze 垂类提效插件集",
+    "version": "0.1.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/tools/analyze_reviews": {
+      "post": {
+        "description": "输入一行一条的中英文差评原文, 本地关键词归因出主题分布: 物流时效/包装破损/尺寸偏差/质量做工/客服响应/描述不符/价格价值/气味材质, 返回负面占比、Top 主题(含严重度与原文样例)、以及可直接落地的中文改进清单。全程离线计算, 不依赖外部接口。\n\n标签: 差评, 电商, 洞察, 跨境\n分类: insight",
+        "operationId": "analyze_reviews",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "marketplace": {
+                    "default": "amazon",
+                    "description": "销售渠道标识。渠道不改变差评主题归因, 但决定运营口径: amazon 走站内信且严禁以补偿换好评, shopee/tiktok 走站内 IM, temu 由平台代客服, general 为通用兜底。默认 amazon。",
+                    "enum": [
+                      "amazon",
+                      "shopee",
+                      "tiktok",
+                      "temu",
+                      "general"
+                    ],
+                    "type": "string"
+                  },
+                  "reviews": {
+                    "description": "差评原文列表, 一行一条, 支持中英文, 最多 500 条。",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "top_n": {
+                    "default": 5,
+                    "description": "返回的主题数量上限 1-20, 按命中条数降序、主题名升序取, 默认 5。",
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "reviews"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginError"
+                }
+              }
+            },
+            "description": "工具 analyze_reviews 的统一响应, 先看 ok 字段"
+          }
+        },
+        "summary": "多平台差评主题洞察"
+      }
+    },
+    "/tools/batch_check": {
+      "post": {
+        "description": "一次检测多条商品文案/笔记 (最多 200 条), 返回每条的风险等级与 Top 命中词、高危条数、风险分布汇总, 以及「N 条中 M 条高危, 建议优先改写XX」的一句话结论, 适合发笔记前对文案库做整体体检。\n\n标签: 合规, 批量, 文案, 体检\n分类: compliance",
+        "operationId": "batch_check",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "platform": {
+                    "default": "xhs",
+                    "description": "投放平台标识, 不同平台词库宽松度不同: xhs/douyin/taobao 额外启用「平台软性词」(超值/爆款/亏本等易限流表达); amazon/general 仅查法定高危词与正则极限表述。默认 xhs。",
+                    "enum": [
+                      "xhs",
+                      "douyin",
+                      "taobao",
+                      "amazon",
+                      "general"
+                    ],
+                    "type": "string"
+                  },
+                  "texts": {
+                    "description": "批量待检文案列表, 最多 200 条; 空字符串条目跳过检测并记为 low。",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "texts"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginError"
+                }
+              }
+            },
+            "description": "工具 batch_check 的统一响应, 先看 ok 字段"
+          }
+        },
+        "summary": "批量文案合规体检"
+      }
+    },
+    "/tools/check_compliance": {
+      "post": {
+        "description": "检测小红书/抖音/淘宝/亚马逊商品文案中的广告法禁限词与敏感表述: 绝对化用语、医疗功效宣称、金融违规承诺、极限词正则、平台软性风险词, 输出风险等级、命中详情(含出现位置与合规建议)以及可直接使用的改写文本。\n\n标签: 合规, 文案, 广告法, 小红书\n分类: compliance",
+        "operationId": "check_compliance",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "extra_words": {
+                    "description": "品牌自定义补充禁词列表; 命中记为「品牌自定义词」且风险为 high。",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "platform": {
+                    "default": "xhs",
+                    "description": "投放平台标识, 不同平台词库宽松度不同: xhs/douyin/taobao 额外启用「平台软性词」(超值/爆款/亏本等易限流表达); amazon/general 仅查法定高危词与正则极限表述。默认 xhs。",
+                    "enum": [
+                      "xhs",
+                      "douyin",
+                      "taobao",
+                      "amazon",
+                      "general"
+                    ],
+                    "type": "string"
+                  },
+                  "text": {
+                    "description": "待检测的商品文案/笔记正文, 1-5000 字符。",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginError"
+                }
+              }
+            },
+            "description": "工具 check_compliance 的统一响应, 先看 ok 字段"
+          }
+        },
+        "summary": "文案合规禁限词检测"
+      }
+    },
+    "/tools/draft_reply": {
+      "post": {
+        "description": "针对单条差评生成英文客服回复草稿: 自动归因问题主题、按语气(正式/亲和/极简)套用模板, 输出致谢+复述问题+责任承担+补救动作+联系方式占位的完整文本, 并给出发送前自检项(含渠道合规提醒)。refund_ready 为 true 时写入退款/补偿承诺。\n\n标签: 差评, 客服, 回复, 跨境\n分类: insight",
+        "operationId": "draft_reply",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "marketplace": {
+                    "default": "amazon",
+                    "description": "销售渠道标识。渠道不改变差评主题归因, 但决定运营口径: amazon 走站内信且严禁以补偿换好评, shopee/tiktok 走站内 IM, temu 由平台代客服, general 为通用兜底。默认 amazon。",
+                    "enum": [
+                      "amazon",
+                      "shopee",
+                      "tiktok",
+                      "temu",
+                      "general"
+                    ],
+                    "type": "string"
+                  },
+                  "refund_ready": {
+                    "default": false,
+                    "description": "是否已准备好退款/补偿方案; true 时草稿写入补偿承诺并把道歉强度提升为 high。",
+                    "type": "boolean"
+                  },
+                  "review": {
+                    "description": "单条差评原文, 1-2000 字符, 支持中英文。",
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "tone": {
+                    "default": "professional",
+                    "description": "回复语气: professional 正式 / friendly 亲和 / concise 极简, 默认 professional。",
+                    "enum": [
+                      "professional",
+                      "friendly",
+                      "concise"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "review"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginError"
+                }
+              }
+            },
+            "description": "工具 draft_reply 的统一响应, 先看 ok 字段"
+          }
+        },
+        "summary": "差评英文回复草稿生成"
+      }
+    }
+  }
+}

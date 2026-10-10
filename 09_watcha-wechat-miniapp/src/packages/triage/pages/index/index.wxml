@@ -1,0 +1,50 @@
+<view class="page-root">
+  <!-- 输入区：一行一条待办，越乱越好，断舍离的价值就是处理这种混乱 -->
+  <view class="card">
+    <view class="row-between">
+      <text class="card-title">粘贴你的杂乱待办</text>
+      <text class="muted mono">{{inputChars}}/{{maxChars}}</text>
+    </view>
+    <textarea
+      class="textarea"
+      value="{{input}}"
+      placeholder="一行一条，例如：&#10;紧急：10 月 17 日大赛截止前提交材料&#10;有空了解一下 uni-app 的差异"
+      maxlength="{{maxChars}}"
+      bindinput="onInput"
+      disabled="{{running}}"
+    ></textarea>
+
+    <view class="action-row">
+      <view class="btn btn-ghost action-sample" bindtap="onUseSample">填入示例</view>
+      <view class="btn btn-ghost action-clear" bindtap="onClear">清空</view>
+      <view wx:if="{{!running}}" class="btn action-run" bindtap="onRun">开始断舍离</view>
+      <view wx:else class="btn action-run btn-danger" bindtap="onAbort">中断</view>
+    </view>
+  </view>
+
+  <!-- 骨架步骤：首帧即出，零等待 -->
+  <view wx:if="{{steps.length > 0}}" class="card">
+    <step-trace steps="{{steps}}" progress="{{progress}}" expandable="{{true}}"></step-trace>
+  </view>
+
+  <!-- 流式原文 -->
+  <view wx:if="{{streaming || streamText}}" class="card">
+    <view class="row-between card-title-row">
+      <text class="card-title">模型输出</text>
+      <text class="tag mono">{{modelName}}</text>
+    </view>
+    <stream-lines text="{{streamText}}" streaming="{{streaming}}" maxLines="{{24}}"></stream-lines>
+  </view>
+
+  <!-- 结构化断舍离结果 -->
+  <view wx:if="{{structured}}" class="card-result">
+    <view class="row-between result-meta">
+      <text class="muted">耗时 {{elapsedMs}} ms</text>
+      <text class="tag {{offline ? 'tag-offline' : 'tag-ok'}}">{{offline ? '离线分析' : '云端 AI'}}</text>
+    </view>
+    <markdown-card scene="triage" structured="{{structured}}" offline="{{offline}}"></markdown-card>
+    <view class="result-actions">
+      <view class="btn result-btn" bindtap="onOpenToday">查看今日安排</view>
+    </view>
+  </view>
+</view>

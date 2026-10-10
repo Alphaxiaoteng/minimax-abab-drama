@@ -1,0 +1,84 @@
+# CI：离线静态校验 + 单测 + 分包策略守护
+# 本项目源码不依赖第三方 npm 包（云函数依赖由云开发运行时安装），
+# install 步骤仅为满足 package.json scripts 所需的运行环境，不引入功能依赖。
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  verify:
+    name: verify (静态校验 + 测试)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Show Node version
+        run: node --version
+
+      # 仓库可能尚未产出 package.json（由并行任务生成），因此先判断存在性；
+      # 无 lockfile 时 npm ci 会失败，故 fallback 到 npm install。
+      - name: Install deps (fallback: npm ci || npm install)
+        run: |
+          if [ -f package.json ]; then
+            npm ci || npm install
+          else
+            echo "package.json 不存在（由并行任务产出），跳过安装"
+          fi
+
+      - name: Syntax check all .js (src / tools / cloudfunctions)
+        run: |
+          sh -c 'for d in src tools cloudfunctions; do
+            if [ -d "$d" ]; then
+              find "$d" -type f -name "*.js" ! -path "*/node_modules/*" | while read -r f; do
+                node --check "$f"
+              done
+            else
+              echo "目录 $d 尚不存在，跳过（并行任务产出）"
+            fi
+          done'
+
+      - name: Detect npm scripts
+        id: scripts
+        run: |
+          if [ -f package.json ]; then
+            node -e "process.exit(require('./package.json').scripts?.check ? 0 : 1)" && echo "check=true" >> "$GITHUB_OUTPUT" || true
+            node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)" && echo "test=true" >> "$GITHUB_OUTPUT" || true
+          fi
+
+      - name: npm run check (仅当脚本存在)
+        if: steps.scripts.outputs.check == 'true'
+        run: npm run check
+
+      - name: npm test (仅当脚本存在)
+        if: steps.scripts.outputs.test == 'true'
+        run: npm test
+
+  guard:
+    name: guard (分包秒开策略)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Assert src/app.json keeps lazyCodeLoading=requiredComponents
+        run: |
+          if [ ! -f src/app.json ]; then
+            echo "::error::src/app.json 不存在（由并行任务产出），分包策略守护失败"
+            exit 1
+          fi
+          node -e "const a=require('./src/app.json'); if(a.lazyCodeLoading!=='requiredComponents'){console.error('lazyCodeLoading 必须为 requiredComponents，当前为 '+a.lazyCodeLoading);process.exit(1)} console.log('guard ok')"

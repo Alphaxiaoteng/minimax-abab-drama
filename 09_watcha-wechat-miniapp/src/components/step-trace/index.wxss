@@ -1,0 +1,93 @@
+.st-wrap {
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 24rpx 28rpx;
+}
+
+.st-head {
+  margin-bottom: 14rpx;
+}
+
+.st-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.st-actions {
+  display: flex;
+  align-items: center;
+}
+
+.st-progress {
+  color: var(--accent);
+  margin-right: 16rpx;
+}
+
+.st-toggle {
+  font-size: 24rpx;
+  text-decoration: underline;
+}
+
+.st-bar {
+  height: 8rpx;
+  background: var(--border);
+  border-radius: 999rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.st-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s linear;
+}
+
+.st-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 14rpx;
+}
+
+.st-dot {
+  flex: none;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  margin-top: 12rpx;
+  margin-right: 16rpx;
+  background: var(--border);
+}
+
+.st-dot-running {
+  background: var(--accent);
+  box-shadow: 0 0 0 6rpx rgba(31, 111, 235, 0.15);
+}
+
+.st-dot-done {
+  background: var(--success);
+}
+
+.st-body {
+  flex: 1;
+}
+
+.st-name {
+  font-size: 28rpx;
+  color: var(--muted);
+}
+
+.st-name-running {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.st-name-done {
+  color: var(--fg);
+}
+
+.st-text {
+  font-size: 24rpx;
+  margin-top: 4rpx;
+  word-break: break-word;
+}

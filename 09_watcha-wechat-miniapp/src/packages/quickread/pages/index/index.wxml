@@ -1,0 +1,51 @@
+<view class="page-root">
+  <!-- 输入区 -->
+  <view class="card">
+    <view class="row-between">
+      <text class="card-title">粘贴论文 / 财报 / 长文</text>
+      <text class="muted mono">{{inputChars}}/{{maxChars}}</text>
+    </view>
+    <textarea
+      class="textarea"
+      value="{{input}}"
+      placeholder="把长文粘贴到这里。秒开策略：结果先生成结构化骨架，再流式补齐内容。"
+      maxlength="{{maxChars}}"
+      bindinput="onInput"
+      disabled="{{running}}"
+    ></textarea>
+
+    <view class="action-row">
+      <view class="btn btn-ghost action-sample" bindtap="onUseSample">填入示例</view>
+      <view class="btn btn-ghost action-clear" bindtap="onClear">清空</view>
+      <view wx:if="{{!running}}" class="btn action-run" bindtap="onRun">生成一页纸</view>
+      <view wx:else class="btn action-run btn-danger" bindtap="onAbort">中断</view>
+    </view>
+  </view>
+
+  <!-- 骨架步骤：首帧就出现，证明「在动」 -->
+  <view wx:if="{{steps.length > 0}}" class="card">
+    <step-trace steps="{{steps}}" progress="{{progress}}" expandable="{{true}}"></step-trace>
+  </view>
+
+  <!-- 流式原文 -->
+  <view wx:if="{{streaming || streamText}}" class="card">
+    <view class="row-between card-title-row">
+      <text class="card-title">模型输出</text>
+      <text class="tag mono">{{modelName}}</text>
+    </view>
+    <stream-lines text="{{streamText}}" streaming="{{streaming}}" maxLines="{{30}}"></stream-lines>
+  </view>
+
+  <!-- 结构化一页纸 -->
+  <view wx:if="{{structured}}" class="card-result">
+    <view class="row-between result-meta">
+      <text class="muted">耗时 {{elapsedMs}} ms</text>
+      <text class="tag {{offline ? 'tag-offline' : 'tag-ok'}}">{{offline ? '离线分析' : '云端 AI'}}</text>
+    </view>
+    <markdown-card scene="quickread" structured="{{structured}}" offline="{{offline}}"></markdown-card>
+    <view class="result-actions">
+      <view class="btn btn-ghost result-btn" bindtap="onOpenHistory">历史记录</view>
+      <view class="btn result-btn" bindtap="onOpenDetail">查看详情与追问</view>
+    </view>
+  </view>
+</view>

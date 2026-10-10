@@ -1,20 +1,8 @@
 {
-  "n_images": 16,
+  "n_images": 8,
   "images": [
     {
       "file": "gear_surface_ok_00.png",
-      "scene_id": "gear_surface",
-      "scene_cn": "齿轮齿面 · 划伤检测",
-      "has_defect": false,
-      "label_cn": "合格 · 放行",
-      "ground_truth": {
-        "n_defects": 0,
-        "classes": [],
-        "bboxes": []
-      }
-    },
-    {
-      "file": "gear_surface_ok_01.png",
       "scene_id": "gear_surface",
       "scene_cn": "齿轮齿面 · 划伤检测",
       "has_defect": false,
@@ -32,58 +20,16 @@
       "has_defect": true,
       "label_cn": "不合格 · 拦截",
       "ground_truth": {
-        "n_defects": 3,
+        "n_defects": 1,
         "classes": [
-          "porosity",
-          "contamination",
           "scratch"
         ],
         "bboxes": [
           [
-            762,
-            457,
-            20,
-            17
-          ],
-          [
-            1087,
-            758,
-            46,
-            54
-          ],
-          [
-            566,
-            602,
-            50,
-            74
-          ]
-        ]
-      }
-    },
-    {
-      "file": "gear_surface_ng_01.png",
-      "scene_id": "gear_surface",
-      "scene_cn": "齿轮齿面 · 划伤检测",
-      "has_defect": true,
-      "label_cn": "不合格 · 拦截",
-      "ground_truth": {
-        "n_defects": 2,
-        "classes": [
-          "indentation",
-          "contamination"
-        ],
-        "bboxes": [
-          [
-            468,
-            187,
-            48,
-            34
-          ],
-          [
-            390,
-            594,
-            37,
-            34
+            107,
+            136,
+            149,
+            43
           ]
         ]
       }
@@ -101,62 +47,36 @@
       }
     },
     {
-      "file": "bearing_ring_ok_01.png",
-      "scene_id": "bearing_ring",
-      "scene_cn": "轴承套圈 · 滚道点蚀",
-      "has_defect": false,
-      "label_cn": "合格 · 放行",
-      "ground_truth": {
-        "n_defects": 0,
-        "classes": [],
-        "bboxes": []
-      }
-    },
-    {
       "file": "bearing_ring_ng_00.png",
       "scene_id": "bearing_ring",
       "scene_cn": "轴承套圈 · 滚道点蚀",
       "has_defect": true,
       "label_cn": "不合格 · 拦截",
       "ground_truth": {
-        "n_defects": 2,
+        "n_defects": 3,
         "classes": [
-          "indentation",
-          "contamination"
-        ],
-        "bboxes": [
-          [
-            472,
-            188,
-            39,
-            28
-          ],
-          [
-            392,
-            598,
-            33,
-            29
-          ]
-        ]
-      }
-    },
-    {
-      "file": "bearing_ring_ng_01.png",
-      "scene_id": "bearing_ring",
-      "scene_cn": "轴承套圈 · 滚道点蚀",
-      "has_defect": true,
-      "label_cn": "不合格 · 拦截",
-      "ground_truth": {
-        "n_defects": 1,
-        "classes": [
+          "porosity",
+          "contamination",
           "scratch"
         ],
         "bboxes": [
           [
-            468,
-            302,
-            39,
-            80
+            761,
+            457,
+            21,
+            18
+          ],
+          [
+            1095,
+            765,
+            38,
+            46
+          ],
+          [
+            571,
+            611,
+            40,
+            61
           ]
         ]
       }
@@ -174,76 +94,22 @@
       }
     },
     {
-      "file": "casting_cover_ok_01.png",
-      "scene_id": "casting_cover",
-      "scene_cn": "铝合金压铸件 · 气孔砂眼",
-      "has_defect": false,
-      "label_cn": "合格 · 放行",
-      "ground_truth": {
-        "n_defects": 0,
-        "classes": [],
-        "bboxes": []
-      }
-    },
-    {
       "file": "casting_cover_ng_00.png",
       "scene_id": "casting_cover",
       "scene_cn": "铝合金压铸件 · 气孔砂眼",
       "has_defect": true,
       "label_cn": "不合格 · 拦截",
       "ground_truth": {
-        "n_defects": 2,
+        "n_defects": 1,
         "classes": [
-          "indentation",
-          "porosity"
+          "contamination"
         ],
         "bboxes": [
           [
-            373,
-            276,
-            54,
-            51
-          ],
-          [
-            516,
-            176,
-            17,
-            19
-          ]
-        ]
-      }
-    },
-    {
-      "file": "casting_cover_ng_01.png",
-      "scene_id": "casting_cover",
-      "scene_cn": "铝合金压铸件 · 气孔砂眼",
-      "has_defect": true,
-      "label_cn": "不合格 · 拦截",
-      "ground_truth": {
-        "n_defects": 3,
-        "classes": [
-          "contamination",
-          "indentation",
-          "porosity"
-        ],
-        "bboxes": [
-          [
-            653,
-            734,
-            61,
-            64
-          ],
-          [
-            149,
-            468,
-            28,
-            29
-          ],
-          [
-            859,
-            23,
-            17,
-            17
+            89,
+            283,
+            56,
+            53
           ]
         ]
       }
@@ -261,54 +127,7 @@
       }
     },
     {
-      "file": "stamping_shell_ok_01.png",
-      "scene_id": "stamping_shell",
-      "scene_cn": "冲压覆盖件 · 压痕油污",
-      "has_defect": false,
-      "label_cn": "合格 · 放行",
-      "ground_truth": {
-        "n_defects": 0,
-        "classes": [],
-        "bboxes": []
-      }
-    },
-    {
       "file": "stamping_shell_ng_00.png",
-      "scene_id": "stamping_shell",
-      "scene_cn": "冲压覆盖件 · 压痕油污",
-      "has_defect": true,
-      "label_cn": "不合格 · 拦截",
-      "ground_truth": {
-        "n_defects": 3,
-        "classes": [
-          "scratch",
-          "indentation",
-          "porosity"
-        ],
-        "bboxes": [
-          [
-            597,
-            384,
-            112,
-            126
-          ],
-          [
-            935,
-            136,
-            63,
-            42
-          ],
-          [
-            273,
-            500,
-            21,
-            22
-          ]
-        ]
-      }
-    },
-    {
-      "file": "stamping_shell_ng_01.png",
       "scene_id": "stamping_shell",
       "scene_cn": "冲压覆盖件 · 压痕油污",
       "has_defect": true,
@@ -316,14 +135,14 @@
       "ground_truth": {
         "n_defects": 1,
         "classes": [
-          "porosity"
+          "indentation"
         ],
         "bboxes": [
           [
-            318,
-            494,
-            21,
-            19
+            725,
+            696,
+            46,
+            38
           ]
         ]
       }
