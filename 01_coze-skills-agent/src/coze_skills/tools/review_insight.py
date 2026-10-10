@@ -61,6 +61,19 @@ THEME_ACTIONS: Dict[str, str] = {
     "其他": "补充差评关键词归因规则，把未覆盖表述加入主题词表",
 }
 
+#: 主题 -> 英文标签 (draft_reply 生成的英文草稿用, 避免中英夹杂)
+THEME_EN_LABEL: Dict[str, str] = {
+    "物流时效": "delivery timeliness",
+    "包装破损": "packaging damage",
+    "尺寸偏差": "size mismatch",
+    "质量做工": "quality and workmanship",
+    "客服响应": "customer service responsiveness",
+    "描述不符": "item not as described",
+    "价格价值": "price-to-value concern",
+    "气味材质": "smell and material issues",
+    "其他": "an issue not covered by our usual topics",
+}
+
 #: 高危主题 (道歉强度直接拉满)
 HIGH_APOLOGY_THEMES: Tuple[str, ...] = ("物流时效", "质量做工", "包装破损")
 
@@ -349,9 +362,10 @@ def draft_reply(
         apology_level = "high"
 
     if matched:
-        detail = "、".join(matched[:3])
+        detail = ", ".join(matched[:3])
     else:
         detail = _truncate(review, 60)
+    theme_en = THEME_EN_LABEL.get(theme, theme)
 
     if apology_level == "high":
         opener = f"{_TONE_OPENER[normalized_tone]} {_APOLOGY_INTENSIFIER[normalized_tone]}"
@@ -360,7 +374,7 @@ def draft_reply(
 
     parts = [
         opener,
-        f"You mentioned the issue of {theme} ({detail}).",
+        f"You mentioned the issue of {theme_en} ({detail}).",
         _TONE_ACCOUNTABILITY[normalized_tone],
     ]
     if refund_ready:
