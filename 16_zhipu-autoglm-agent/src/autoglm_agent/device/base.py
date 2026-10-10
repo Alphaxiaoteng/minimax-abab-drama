@@ -44,6 +44,10 @@ class UiElement:
         return self.text or self.desc or self.rid
 
 
+class DeviceError(RuntimeError):
+    """设备层不可用（无 adb / 无图形后端 / 命令超时）。上抛给流程层做降级。"""
+
+
 class Device(ABC):
     """端侧设备统一操作接口（手机 / 桌面 / 虚拟）。"""
 
@@ -107,3 +111,11 @@ class Device(ABC):
 
     def back(self) -> None:
         self.key("back")
+
+    def alive(self) -> bool:
+        """设备是否仍可操作。真机适配器覆写；默认乐观返回 True。"""
+        return True
+
+    def app_hint(self) -> str:
+        """当前前台应用标识，供自愈看门狗“重启应用”使用。"""
+        return ""

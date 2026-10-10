@@ -21,6 +21,8 @@ class Effect:
     set: Dict[str, Any] = field(default_factory=dict)
     record: Optional[str] = None
     close_modal: bool = False
+    set_challenge: Optional[str] = None
+    goto_if: Optional[Tuple[str, str]] = None
 
 
 @dataclass
@@ -165,14 +167,24 @@ class VirtualDevice(Device):
             self.world["log"].append({"event": eff.record})
         for k, v in eff.set.items():
             self.world["vars"][k] = v
+        if eff.set_challenge is not None:
+            self.world["vars"]["challenge_code"] = eff.set_challenge
+            self.world["log"].append({"event": "challenge", "code": eff.set_challenge})
         if eff.popup:
             if eff.popup in self.scenario.screens:
                 self.modal = eff.popup
-        if eff.goto:
+        if eff.goto and self._condition_ok(eff):
             self.screen = eff.goto
             nxt = self.scenario.screens[eff.goto]
             if nxt.popup_on_enter:
                 self.modal = nxt.popup_on_enter
+
+    def _condition_ok(self, eff: Effect) -> bool:
+        """`goto_if=(变量名, 期望值)`：登录态等分流条件不满足时，入口点击不跳转。"""
+        if eff.goto_if is None:
+            return True
+        key, expected = eff.goto_if
+        return str(self.world["vars"].get(key, "")) == str(expected)
 
     def long_press(self, x: float, y: float, duration_ms: int = 800) -> None:
         self.tap(x, y)
@@ -188,6 +200,7 @@ class VirtualDevice(Device):
     def input_text(self, text: str) -> None:
         if self._focused:
             self.world["form"][self._focused] = self.world["form"].get(self._focused, "") + text
+            self.world["vars"][self._focused] = self.world["form"][self._focused]
 
     def clear_field(self) -> None:
         if self._focused:
@@ -208,6 +221,7 @@ class VirtualDevice(Device):
 
     def launch(self, target: str) -> None:
         screen = self.scenario.apps.get(target, target)
+        self.world["vars"]["app"] = target  # 自愈看门狗据此重启前台应用
         if screen in self.scenario.screens:
             self.screen = screen
             self.modal = None

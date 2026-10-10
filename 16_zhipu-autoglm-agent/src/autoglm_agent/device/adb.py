@@ -6,7 +6,7 @@ import time
 import xml.etree.ElementTree as ET
 from typing import List, Optional, Tuple
 
-from .base import Bounds, Device, UiElement
+from .base import Bounds, Device, DeviceError, UiElement
 
 _KEYMAP = {
     "back": "KEYCODE_BACK",
@@ -19,26 +19,83 @@ _KEYMAP = {
 
 
 class AdbDevice(Device):
-    """通过 adb 驱动的 Android 端侧设备（uiautomator dump 提供 UI 树）。"""
+    """通过 adb 驱动的 Android 端侧设备（uiautomator dump 提供 UI 树）。
+
+    真机环境不保证任意命令都成功（未连接/离线/权限不足/attached 多设备），
+    因此每次调用都带超时与异常归一化：失败统一抛 `DeviceError`，
+    由流程层决定重连、切换设备还是降级到其他设备适配器。
+    """
 
     name = "adb"
+    default_timeout = 15.0
+    fallback_resolution = (1080, 2400)
 
-    def __init__(self, serial: Optional[str] = None):
+    def __init__(self, serial: Optional[str] = None, timeout: Optional[float] = None):
         self.serial = serial
+        self.timeout = timeout or self.default_timeout
         self._cache: Optional[Tuple[int, int]] = None
+
+    @property
+    def app_hint(self) -> str:
+        try:
+            out = self._adb("shell", "dumpsys", "window", "windows", binary=True)
+        except DeviceError:
+            return ""
+        m = re.search(r"mCurrentFocus=.*?([\w.]+)/", out.decode("utf-8", "ignore"))
+        return m.group(1) if m else ""
 
     def _adb(self, *args: str, binary: bool = False) -> bytes:
         cmd = ["adb"] + (["-s", self.serial] if self.serial else []) + list(args)
-        proc = subprocess.run(cmd, capture_output=True, check=True)
+        try:
+            proc = subprocess.run(cmd, capture_output=True, check=True, timeout=self.timeout)
+        except FileNotFoundError as e:
+            raise DeviceError("未找到 adb 可执行文件：请安装 platform-tools 并在 PATH 中可用") from e
+        except subprocess.TimeoutExpired as e:
+            raise DeviceError(f"adb 命令超时（{self.timeout:.0f}s）：{' '.join(args[:3])}") from e
+        except subprocess.CalledProcessError as e:
+            detail = (e.stderr or b"").decode("utf-8", "ignore").strip()
+            raise DeviceError(f"adb 命令失败（{e.returncode}）：{' '.join(args[:3])} {detail}") from e
         return proc.stdout if binary else proc.stdout
+
+    # ---- 连接 ----
+    def alive(self) -> bool:
+        try:
+            self._adb("shell", "echo", "ok", binary=True)
+            return True
+        except DeviceError:
+            return False
+
+    def wait_boot(self, timeout: float = 60.0) -> bool:
+        """等待设备就绪：先 wait-for-device，再轮询 sys.boot_completed。"""
+        try:
+            self._adb("wait-for-device", binary=True)
+        except DeviceError:
+            return False
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                out = self._adb("shell", "getprop", "sys.boot_completed", binary=True)
+                if out.decode("utf-8", "ignore").strip() == "1":
+                    return True
+            except DeviceError:
+                return False
+            time.sleep(1.0)
+        return False
 
     def resolution(self) -> Tuple[int, int]:
         if self._cache:
             return self._cache
-        out = self._adb("shell", "wm", "size").decode()
+        out = ""
+        try:
+            out = self._adb("shell", "wm", "size").decode("utf-8", "ignore")
+        except DeviceError:
+            out = ""
         m = re.search(r"(\d+)x(\d+)", out)
         if not m:
-            raise RuntimeError(f"无法解析屏幕分辨率: {out!r}")
+            w, h = self.fallback_resolution
+            print(f"[AdbDevice] 无法解析屏幕分辨率（{out.strip() or '命令失败'}），回退 {w}x{h}")
+            self._cache = self.fallback_resolution
+            return self._cache
         self._cache = (int(m.group(1)), int(m.group(2)))
         return self._cache
 
@@ -56,7 +113,7 @@ class AdbDevice(Device):
         for node in root.iter("node"):
             m = re.match(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.get("bounds", ""))
             if not m:
-                continue
+                continue  # 单节点结构异常不应让整屏丢失
             x1, y1, x2, y2 = map(int, m.groups())
             if x2 <= x1 or y2 <= y1:
                 continue
@@ -70,6 +127,8 @@ class AdbDevice(Device):
                 clickable=node.get("clickable") == "true",
                 scrollable=node.get("scrollable") == "true",
                 editable=cls.endswith(("EditText", "AutoCompleteTextView")),
+                extra={"enabled": node.get("enabled", "true"),
+                       "focusable": node.get("focusable", "false")},
             ))
         return elems
 

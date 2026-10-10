@@ -24,6 +24,7 @@ class Settings:
     max_scroll_probe: int = int(os.environ.get("LOCATE_MAX_SCROLL", "6"))
     scroll_settle: float = float(os.environ.get("LOCATE_SCROLL_SETTLE", "0.35"))
     action_max_verify: int = int(os.environ.get("ACTION_MAX_VERIFY", "2"))
+    blank_settle: float = float(os.environ.get("BLANK_SETTLE", "0.4"))
 
     checkpoint_dir: str = os.environ.get("CHECKPOINT_DIR", ".autoglm_runtime/checkpoints")
     artifact_dir: str = os.environ.get("ARTIFACT_DIR", ".autoglm_runtime/artifacts")

@@ -144,3 +144,88 @@ def desktop_invoice_with_popup() -> Scenario:
     sc = desktop_invoice_scenario()
     sc.screens["mail_inbox"].popup_on_enter = "update_popup"
     return sc
+
+
+def _gb(key, x, y, w, h, text="", rid="", desc="", on_tap=None, noisy=False, cls="Button"):
+    return VElem(key=key, x=x, y=y, w=w, h=h, text=text, rid=rid, desc=desc,
+                 on_tap=on_tap, noisy=noisy, cls=cls)
+
+
+def _ginput(key, x, y, w, h, placeholder="", rid="", noisy=False):
+    return VElem(key=key, x=x, y=y, w=w, h=h, text=placeholder, rid=rid, desc="",
+                 editable=True, clickable=True, noisy=noisy, cls="EditText")
+
+
+def gov_auth_scenario() -> Scenario:
+    """政务/银行类 App：开屏广告 → 权限弹窗 → 会话过期重登 → OTP 挑战 → 余额页。
+
+    OTP 输入框故意带 `noisy=True`：短信码场景下 OCR/UI 文本都会抖动，
+    用于验证「输入后必须回读校验」这条容错链路不是摆设。
+    """
+    ad_popup = ScreenDef(modal=True, elements=[
+        _gb("g_ad_title", 0.1, 0.3, 0.8, 0.06, text="政务服务平台 全新升级"),
+        _gb("g_ad_skip", 0.82, 0.24, 0.12, 0.045, text="跳过2",
+            on_tap=Effect(close_modal=True)),
+    ])
+    perm_popup = ScreenDef(modal=True, elements=[
+        _gb("g_perm_title", 0.1, 0.35, 0.8, 0.06, text="政务通想要获取本机识别码"),
+        _gb("g_perm_deny", 0.18, 0.5, 0.25, 0.05, text="拒绝",
+            on_tap=Effect(close_modal=True)),
+        _gb("g_perm_allow", 0.58, 0.5, 0.25, 0.05, text="允许",
+            on_tap=Effect(close_modal=True, record="device_id_allowed")),
+    ])
+    login_page = ScreenDef(elements=[
+        _gb("g_title", 0.05, 0.02, 0.5, 0.05, text="政务通 - 会话已过期，请重新登录"),
+        _ginput("gov.phone", 0.1, 0.16, 0.8, 0.06, placeholder="请输入手机号",
+                rid="gov.phone"),
+        _gb("g_send", 0.1, 0.26, 0.4, 0.055, text="获取验证码",
+            on_tap=Effect(goto="otp_page", set_challenge="111111")),
+        # 登录态仍有效时，「登录」直接进办事大厅；否则走验证码挑战（goto_if 分流）
+        _gb("g_login", 0.1, 0.36, 0.8, 0.06, text="登录",
+            on_tap=Effect(goto="home_page", goto_if=("logged_in", "True"))),
+        _gb("__back__", 0.05, 0.9, 0.2, 0.05, text="退出"),
+    ])
+    otp_page = ScreenDef(elements=[
+        _gb("g_otp_hint", 0.05, 0.02, 0.9, 0.05, text="验证码已发送至 138****8000"),
+        _gb("g_otp_demo", 0.05, 0.1, 0.9, 0.05, text="演示验证码：111111"),
+        _ginput("otp_input", 0.1, 0.2, 0.8, 0.06, placeholder="请输入短信验证码",
+                rid="gov.otp", noisy=True),
+        _gb("g_otp_submit", 0.1, 0.3, 0.8, 0.06, text="提交",
+            on_tap=Effect(goto="home_page", goto_if=("otp_input", "111111"),
+                          set={"logged_in": True}, record="otp_verified")),
+        _gb("__back__", 0.05, 0.9, 0.2, 0.05, text="返回登录",
+            on_tap=Effect(goto="login_page")),
+    ])
+    home_page = ScreenDef(elements=[
+        _gb("g_home_title", 0.05, 0.02, 0.6, 0.05, text="我的办事大厅"),
+        _gb("g_entry", 0.08, 0.14, 0.84, 0.1, text="公积金查询",
+            on_tap=Effect(goto="balance_page")),
+    ])
+    balance_page = ScreenDef(elements=[
+        _gb("g_bal_title", 0.05, 0.02, 0.6, 0.05, text="公积金账户详情"),
+        _gb("g_bal_amount", 0.08, 0.14, 0.84, 0.1, text="公积金余额 ¥12345.67"),
+        _gb("g_bal_unit", 0.08, 0.26, 0.84, 0.06, text="缴存单位：某某科技有限公司"),
+        _gb("__back__", 0.05, 0.9, 0.2, 0.05, text="返回首页",
+            on_tap=Effect(goto="home_page")),
+    ])
+    return Scenario(
+        screens={
+            "home": ScreenDef(elements=[_gb("g_hint", 0.2, 0.4, 0.6, 0.05, text="桌面")]),
+            "login_page": login_page,
+            "otp_page": otp_page,
+            "home_page": home_page,
+            "balance_page": balance_page,
+            "ad_popup": ad_popup,
+            "perm_popup": perm_popup,
+        },
+        apps={"govapp": "login_page"},
+        initial="home",
+    )
+
+
+def gov_auth_with_popups() -> Scenario:
+    """带开屏广告与权限弹窗的变体：`login_page` 进入即弹广告，广告跳权限弹窗。"""
+    sc = gov_auth_scenario()
+    sc.screens["login_page"].popup_on_enter = "ad_popup"
+    sc.screens["ad_popup"].elements[0].on_tap = Effect(popup="perm_popup")
+    return sc
