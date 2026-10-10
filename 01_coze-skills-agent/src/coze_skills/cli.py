@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from .core.registry import build_default_registry
 from .core.runner import ToolRunner
-from .core.schema import build_openapi, openapi_json, validate_openapi
+from .core.schema import DEFAULT_SERVER_URL, build_openapi, validate_openapi
 from .core.spec import ToolResult
 
 
@@ -43,14 +43,20 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_schema(args: argparse.Namespace) -> int:
-    """生成 OpenAPI 文档, 可选写入文件, 并做本地结构校验.
+    """生成 OpenAPI 文档 (含 info/servers/tags/example), 可选写入文件, 并做结构校验.
 
     :returns: 进程退出码 (校验不通过为 1, 便于 CI 拦截).
     """
     registry = _load_registry()
-    doc = build_openapi(registry, title=args.title, version=args.version, description=args.description)
+    doc = build_openapi(
+        registry,
+        title=args.title,
+        version=args.version,
+        description=args.description,
+        server_url=args.server_url,
+    )
     problems: List[str] = validate_openapi(doc)
-    payload = openapi_json(registry, title=args.title, version=args.version)
+    payload = json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True)
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fp:
             fp.write(payload)
@@ -62,7 +68,18 @@ def cmd_schema(args: argparse.Namespace) -> int:
         for item in problems:
             print(f"  - {item}", file=sys.stderr)
         return 1
-    print(f"Schema 校验通过: {len(doc.get('paths', {}))} 个 operation", file=sys.stderr)
+    n_examples = sum(
+        1
+        for methods in doc["paths"].values()
+        for op in methods.values()
+        if "example" in op["requestBody"]["content"]["application/json"]
+    )
+    print(
+        f"Schema 校验通过 (OpenAPI {doc['openapi']}): {len(doc['paths'])} 个 operation / "
+        f"{len(doc['tags'])} 个 tags / servers={doc['servers'][0]['url']} / "
+        f"{n_examples} 个 example payload",
+        file=sys.stderr,
+    )
     return 0
 
 
@@ -83,6 +100,8 @@ def cmd_selftest(args: argparse.Namespace) -> int:
             print(f"  ok {spec.name}: 缺参调用被正确拦截")
     summary: Dict[str, Any] = runner.describe()
     print(f"自检完成, 失败 {failures} 项; 日志: {json.dumps(summary['log'], ensure_ascii=False)}")
+    if not failures:
+        print("  (说明: 日志中的 failed 即缺参拦截次数, success_rate 0.0 为预期结果)")
     return 1 if failures else 0
 
 
@@ -104,19 +123,37 @@ def cmd_invoke(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """构造参数解析器 (子命令: list / schema / selftest / invoke)."""
+    """构造参数解析器 (子命令: list / schema / export-openapi / selftest / invoke)."""
     parser = argparse.ArgumentParser(prog="coze_skills", description="扣子插件 Schema 生成与本地自检")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list", help="列出全部已注册工具")
     p_list.set_defaults(func=cmd_list)
 
-    p_schema = sub.add_parser("schema", help="生成 Coze 插件 OpenAPI Schema")
-    p_schema.add_argument("--out", default=None, help="输出文件路径; 省略则打印到 stdout")
-    p_schema.add_argument("--title", default="Coze 垂类提效插件集", help="OpenAPI info.title")
-    p_schema.add_argument("--version", default="0.1.0", help="OpenAPI info.version")
-    p_schema.add_argument("--description", default="垂类提效小工具统一网关", help="OpenAPI info.description")
-    p_schema.set_defaults(func=cmd_schema)
+    def _add_schema_args(p: argparse.ArgumentParser, help_text: str) -> None:
+        p.description = help_text
+        p.add_argument("--out", default=None, help="输出文件路径; 省略则打印到 stdout")
+        p.add_argument("--title", default="Coze 垂类提效插件集", help="OpenAPI info.title")
+        p.add_argument("--version", default="0.1.0", help="OpenAPI info.version")
+        p.add_argument("--description", default="垂类提效小工具统一网关", help="OpenAPI info.description")
+        p.add_argument(
+            "--server-url",
+            default=DEFAULT_SERVER_URL,
+            help="网关 servers[0].url (扣子导入后按此地址发起调用, 上架前替换为公网 HTTPS 域名)",
+        )
+        p.set_defaults(func=cmd_schema)
+
+    _add_schema_args(
+        sub.add_parser("schema", help="生成 Coze 插件 OpenAPI Schema (别名: export-openapi)"),
+        "生成 Coze 插件 OpenAPI Schema (等价于 export-openapi)",
+    )
+    _add_schema_args(
+        sub.add_parser(
+            "export-openapi",
+            help="导出完整 openapi.json: info/servers/tags + 每个工具的 example payload",
+        ),
+        "导出完整 openapi.json: info/servers/tags + 每个工具的 example payload, 严格通过 OpenAPI 3.0 结构校验",
+    )
 
     p_self = sub.add_parser("selftest", help="逐工具执行缺参调用, 验证校验链路")
     p_self.set_defaults(func=cmd_selftest)

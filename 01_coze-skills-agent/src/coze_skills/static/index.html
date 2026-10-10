@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugin Debugger Studio · 扣子电商提效插件工作台</title>
+<link rel="stylesheet" href="/studio/studio.css">
+</head>
+<body data-studio="plugin-debugger-studio">
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">⚡</span>
+    <div>
+      <h1>Plugin Debugger Studio</h1>
+      <p>扣子电商提效插件集 · 合规审查 / 批量体检 / 差评归因 / 英文回复 · <b>全程离线，零外部依赖</b></p>
+    </div>
+  </div>
+  <div class="topmeta">
+    <span id="gw-status" class="pill pill-dim">网关检测中…</span>
+    <span id="gw-tools" class="pill pill-dim">tools -</span>
+    <button id="btn-tour" class="btn btn-ghost" type="button">▶ 评委一键演示</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" data-tab="compliance" role="tab">① 文案合规检测</button>
+  <button class="tab" data-tab="batch" role="tab">② 批量文案体检</button>
+  <button class="tab" data-tab="insight" role="tab">③ 差评主题洞察</button>
+  <button class="tab" data-tab="reply" role="tab">④ 差评英文回复</button>
+</nav>
+
+<main>
+  <!-- ================= ① 在线文案合规检测 ================= -->
+  <section class="panel active" id="panel-compliance">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h2>实时检测 <span class="sub">输入即高亮（200ms 防抖 · 本地规则引擎）</span></h2>
+          <span id="c-risk-badge" class="badge badge-none">待输入</span>
+        </div>
+        <div class="field-row">
+          <label>平台
+            <select id="c-platform">
+              <option value="xhs">小红书 xhs</option>
+              <option value="douyin">抖音 douyin</option>
+              <option value="taobao">淘宝 taobao</option>
+              <option value="amazon">亚马逊 amazon</option>
+              <option value="general">通用 general</option>
+            </select>
+          </label>
+          <button class="btn btn-demo" id="c-demo" type="button">填入示例文案</button>
+        </div>
+        <div class="editor">
+          <div id="c-backdrop" class="backdrop" aria-hidden="true"></div>
+          <textarea id="c-text" spellcheck="false" placeholder="粘贴商品文案/笔记正文，高危词将实时标出下划线…">这款面膜全网销量第一，药效显著，七天美白立竿见影！亏本清仓，绝对无效全额退款。</textarea>
+        </div>
+        <div class="legend">
+          <span><i class="u u-high"></i>高危（广告法/医疗宣称）</span>
+          <span><i class="u u-medium"></i>软性风险（平台限流词）</span>
+          <span><i class="u u-low"></i>提示</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>命中详情 <span class="sub">词 → 建议替换</span></h2>
+          <span id="c-hitcount" class="pill pill-dim">0 命中</span>
+        </div>
+        <div id="c-hits" class="hits"><p class="empty">尚无命中，或等待首次检测…</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>一键合规改写 · 原文 ↔ 改写侧边对比</h2>
+        <button id="c-copy" class="btn btn-primary" type="button" disabled>复制改写文案</button>
+      </div>
+      <div class="grid-2 compare">
+        <div><h3>原文</h3><div id="c-original" class="diffpane"></div></div>
+        <div><h3>合规改写</h3><div id="c-rewritten" class="diffpane pane-ok"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ② 批量文案体检 ================= -->
+  <section class="panel" id="panel-batch">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>批量文案 <span class="sub">一行一条，≤200 条</span></h2>
+          <button class="btn btn-demo" id="b-demo" type="button">填入示例</button></div>
+        <textarea id="b-texts" rows="9" spellcheck="false" placeholder="一行一条文案"></textarea>
+        <div class="field-row"><label>平台
+          <select id="b-platform">
+            <option value="xhs">小红书 xhs</option><option value="douyin">抖音 douyin</option>
+            <option value="taobao">淘宝 taobao</option><option value="amazon">亚马逊 amazon</option>
+            <option value="general">通用 general</option>
+          </select></label>
+          <button id="b-run" class="btn btn-primary" type="button">批量体检</button></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>体检结论</h2><span id="b-verdict" class="pill pill-dim">未运行</span></div>
+        <div id="b-dist" class="dist"></div>
+        <div id="b-results" class="results"><p class="empty">运行后逐条显示风险等级与 Top 命中词</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ③ 差评主题洞察 ================= -->
+  <section class="panel" id="panel-insight">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>差评原文 <span class="sub">一行一条，支持中英混排</span></h2>
+          <button class="btn btn-demo" id="i-demo" type="button">填入示例</button></div>
+        <textarea id="i-reviews" rows="11" spellcheck="false" placeholder="一行一条差评"></textarea>
+        <div class="field-row">
+          <label>渠道
+            <select id="i-market">
+              <option value="amazon">亚马逊 amazon</option><option value="shopee">虾皮 shopee</option>
+              <option value="tiktok">TikTok Shop</option><option value="temu">Temu</option>
+              <option value="general">通用 general</option>
+            </select></label>
+          <label>Top N <input id="i-topn" type="number" min="1" max="20" value="8"></label>
+          <button id="i-run" class="btn btn-primary" type="button">生成归因报告</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="s-total">-</b><span>评论条数</span></div>
+        <div class="stat"><b id="s-neg">-</b><span>负面占比</span></div>
+        <div class="stat"><b id="s-theme">-</b><span>命中主题</span></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>8 大主题占比</h2><span class="sub">进度条 = 该主题命中条数 / 总条数</span></div>
+        <div id="i-bars" class="bars"><p class="empty">等待归因…</p></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>原文引用 <span class="sub">每个 Top 主题的样例差评</span></h2></div>
+        <div id="i-quotes" class="quotes"><p class="empty">等待归因…</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>改进清单 <span class="sub">中文动作 + 英文标签（跨境团队同步用）</span></h2></div>
+      <ul id="i-actions" class="actions"><li class="empty">等待归因…</li></ul>
+    </div>
+  </section>
+
+  <!-- ================= ④ 差评英文回复 ================= -->
+  <section class="panel" id="panel-reply">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h2>单条差评</h2>
+          <button class="btn btn-demo" id="r-demo" type="button">填入示例</button></div>
+        <textarea id="r-review" rows="6" spellcheck="false" placeholder="粘贴一条差评"></textarea>
+        <div class="field-row">
+          <label>语气
+            <select id="r-tone"><option value="professional">正式 professional</option>
+            <option value="friendly">亲和 friendly</option><option value="concise">极简 concise</option></select></label>
+          <label>渠道
+            <select id="r-market"><option value="amazon">amazon</option><option value="shopee">shopee</option>
+            <option value="tiktok">tiktok</option><option value="temu">temu</option><option value="general">general</option></select></label>
+          <label class="chk"><input id="r-refund" type="checkbox"> 已备好退款/补偿</label>
+          <button id="r-run" class="btn btn-primary" type="button">生成英文草稿</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>草稿 <span id="r-theme" class="pill pill-dim">-</span></h2>
+          <button id="r-copy" class="btn btn-primary" type="button" disabled>复制草稿</button></div>
+        <pre id="r-draft" class="draft">生成后显示英文回复草稿</pre>
+        <h3 class="mt">发送前合规自检</h3>
+        <ul id="r-checklist" class="actions"><li class="empty">-</li></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+<footer class="foot">ToolSpec → OpenAPI 3.0 → 同一网关进程直调 · 结果确定可复现 · <a href="/openapi.coze.json">/openapi.coze.json</a> · <a href="/tools">/tools</a></footer>
+<script src="/studio/app.js"></script>
+</body>
+</html>
