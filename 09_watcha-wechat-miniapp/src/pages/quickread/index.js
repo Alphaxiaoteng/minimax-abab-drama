@@ -8,12 +8,12 @@
 //  - 任一失败（无云环境 / 版本不足 / 报错 / 超时）都静默降级到 local-engine，
 //    结果照常渲染，只在结果区标注「离线分析」。
 
-const config = require('../../../../config.js');
-const { createAgent } = require('../../../../core/agent.js');
-const { createStreamBus } = require('../../../../core/stream-bus.js');
-const { buildSkeleton } = require('../../../../core/skeleton.js');
-const { createWxAIAdapter } = require('../../../../core/ai-adapter.js');
-const { normalizeInput } = require('../../../../utils/decode.js');
+const config = require('../../config.js');
+const { createAgent } = require('../../core/agent.js');
+const { createStreamBus } = require('../../core/stream-bus.js');
+const { buildSkeleton } = require('../../core/skeleton.js');
+const { createWxAIAdapter } = require('../../core/ai-adapter.js');
+const { normalizeInput } = require('../../utils/decode.js');
 
 const app = getApp();
 

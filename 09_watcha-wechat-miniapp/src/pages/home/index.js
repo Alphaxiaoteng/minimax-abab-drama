@@ -15,6 +15,7 @@ Page({
     firstRenderMs: 0,
     cacheReady: false,
     recent: [],
+    recentCount: 0,
     skeletonRows: 3,
 
     // ---- 启动后异步补充的数据 ----
@@ -28,14 +29,14 @@ Page({
         title: 'AI 一页纸快读',
         desc: '论文 / 财报 / 长文 → 一句话结论 + 关键数据 + 风险点 + 原文依据',
         action: '去快读',
-        path: '/packages/quickread/pages/index/index'
+        path: '/pages/quickread/index'
       },
       {
         key: 'triage',
         title: '日程断舍离',
         desc: '杂乱待办 → 今日必做 Top3 + 可延后 + 建议删除（附理由）+ 时间块',
         action: '去整理',
-        path: '/packages/triage/pages/index/index'
+        path: '/pages/triage/index'
       }
     ]
   },
@@ -52,6 +53,7 @@ Page({
       bootMs: g.bootMs || 0,
       cacheReady: !!g.cacheReady,
       recent: recent,
+      recentCount: this.syncHistoryBadges(g.cache),
       cloudReady: !!g.cloudReady
     });
 
@@ -70,15 +72,40 @@ Page({
   },
 
   onShow() {
-    // 从分包页面返回时，缓存可能已被写入新记录，这里同步刷新列表（仍是本地同步读，非网络）。
+    // 从场景页返回时，缓存可能已被写入新记录，这里同步刷新列表与角标（仍是本地同步读，非网络）。
     const g = app.globalData || {};
     if (g.cache) {
       try {
-        this.setData({ recent: g.cache.rank().slice(0, 5) });
+        const all = g.cache.rank();
+        this.setData({ recent: all.slice(0, 5), recentCount: this.syncHistoryBadges(g.cache) });
       } catch (e) {
         // 读缓存失败保持原样
       }
     }
+  },
+
+  // 历史记录角标同步：按场景统计缓存条数，写进两个 tab 的徽标；数量为 0 时摘除徽标。
+  // 返回本页 / 清空记录后都会调用，保证角标与列表始终一致。返回总条数供卡片角标渲染。
+  syncHistoryBadges(cache) {
+    let all = [];
+    try {
+      all = cache ? cache.rank() : [];
+    } catch (e) {
+      all = [];
+    }
+    const triageCount = all.filter(function (r) { return r.scene === 'triage'; }).length;
+    const quickCount = all.length - triageCount;
+    const setBadge = function (index, n) {
+      try {
+        if (n > 0) wx.setTabBarBadge({ index: index, text: n > 99 ? '99+' : String(n), fail() {} });
+        else wx.removeTabBarBadge({ index: index, fail() {} });
+      } catch (e) {
+        // 角标失败不影响页面
+      }
+    };
+    setBadge(1, quickCount);
+    setBadge(2, triageCount);
+    return all.length;
   },
 
   // 统计信息：本地计算，不发起网络请求。
@@ -93,27 +120,16 @@ Page({
     }
   },
 
-  // 跳转场景（分包页面，首次进入由微信按需下载分包；preloadRule 已提前预热 quickread）
+  // 跳转场景（两个场景入口均为 tabBar 页，必须用 switchTab；详情/历史仍在分包，按需加载）
   onOpenScene(e) {
     const path = e.currentTarget.dataset.path;
     if (!path) return;
-    wx.navigateTo({
-      url: path,
-      fail() {
-        // navigateTo 不能跳 tabBar 页，回退到 switchTab
-        wx.switchTab({ url: path });
-      }
-    });
+    wx.switchTab({ url: path });
   },
 
   // 空态里的行动按钮：直达一页纸快读
   onOpenFirstScene() {
-    wx.navigateTo({
-      url: '/packages/quickread/pages/index/index',
-      fail() {
-        wx.switchTab({ url: '/packages/quickread/pages/index/index' });
-      }
-    });
+    wx.switchTab({ url: '/pages/quickread/index' });
   },
 
   // 点击最近记录：跳到详情页并带上记录 id
@@ -127,7 +143,7 @@ Page({
     wx.navigateTo({
       url: url,
       fail() {
-        wx.switchTab({ url: '/packages/quickread/pages/index/index' });
+        wx.switchTab({ url: scene === 'triage' ? '/pages/triage/index' : '/pages/quickread/index' });
       }
     });
   },
@@ -146,7 +162,7 @@ Page({
         } catch (e) {
           // 忽略
         }
-        this.setData({ recent: [] });
+        this.setData({ recent: [], recentCount: this.syncHistoryBadges(g.cache) });
         wx.showToast({ title: '已清空', icon: 'success' });
       }
     });

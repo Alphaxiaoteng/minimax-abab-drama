@@ -17,8 +17,8 @@
 | Tab | 做什么 | 入口 | 截图占位 |
 | --- | --- | --- | --- |
 | 首页 | 秒开壳 + 两个入口卡 + 历史记录角标（本地缓存） | `src/pages/home`（主包） | `doc/screenshots/01-home.png`（待人工补拍） |
-| AI 一页纸快读 | 粘贴长文/分享链接 → 流式输出 4 区块：一句话结论 / 关键数据 ≤3 / 风险点 ≤3 / 原文引用 ≤3 | `packages/quickread`（分包） | `doc/screenshots/02-quickread.png`（待人工补拍） |
-| 日程断舍离 | 把今日待办一股脑丢进去 → Top3 必做 / 可延后 / 建议删除（含理由） / 时间块 | `packages/triage`（分包） | `doc/screenshots/03-triage.png`（待人工补拍） |
+| AI 一页纸快读 | 粘贴长文/分享链接 → 流式输出 4 区块：一句话结论 / 关键数据 ≤3 / 风险点 ≤3 / 原文引用 ≤3 | `src/pages/quickread`（主包 tab）+ 详情/历史在 `packages/quickread`（分包） | `doc/screenshots/02-quickread.png`（待人工补拍） |
+| 日程断舍离 | 把今日待办一股脑丢进去 → Top3 必做 / 可延后 / 建议删除（含理由） / 时间块 | `src/pages/triage`（主包 tab）+ 今日安排在 `packages/triage`（分包） | `doc/screenshots/03-triage.png`（待人工补拍） |
 
 关键组件：`markdown-card`（流式文本渲染）、`stream-lines`（SSE 逐行上屏）、`step-trace`（工具调用轨迹）、`empty-state`（空态与离线提示）。
 
@@ -55,8 +55,8 @@ flowchart TD
 
 ## 5. 快速开始
 
-1. 微信开发者工具 → 导入项目，目录选 `src/`。
-2. 替换 `src/project.config.json` 的 `appid` 为你自己的小程序 AppID。
+1. 微信开发者工具 → 导入项目，目录选**项目根目录**（含 `project.config.json`；`miniprogramRoot` 已指向 `src/`）。详细导入、AppID/测试号、本地设置、离线降级与真机预览见 [docs/WECHAT_DEVTOOLS_GUIDE.md](docs/WECHAT_DEVTOOLS_GUIDE.md)。
+2. 替换根目录 `project.config.json` 的 `appid` 为你自己的小程序 AppID（或直接选「使用测试号」）。
 3. **（可选，接入云 AI）**按 [agent/README.md](agent/README.md) 在云开发控制台创建 Agent，把环境 ID 填入 `src/config.js` 的 `CLOUD_ENV`、botId 填入 `AGENT_BOT_ID`（当前为单值字符串；分场景双 bot 需按该文件注释扩展为映射）。
 4. **（可选，部署云函数）**`tcb fn deploy --config cloudbaserc.json`，或控制台逐个上传 `cloudfunctions/*`。
 5. 编译预览。
@@ -65,7 +65,7 @@ flowchart TD
 
 ## 6. 一键验证
 
-> `package.json` scripts 已落地：`check` / `test`（`node --test tests/`）/ `verify` / `demo` / `size`（无第三方依赖）。截至本文档产出，`tests/` 为空目录、`src/app.json` 尚未落地——`npm test` 与 CI 的 `guard` job 属并行任务未完成项，非本任务职责范围。
+> `package.json` scripts 已落地：`check` / `test`（`node --test`）/ `verify` / `demo` / `size`（无第三方依赖）。当前状态：`npm run verify` 全绿——13 条静态规则 0 失败 + 41/41 单元测试通过。
 
 | 命令 | 做什么 | 预期输出 | 退出码 |
 | --- | --- | --- | --- |
@@ -97,9 +97,9 @@ CI（[.github/workflows/ci.yml](.github/workflows/ci.yml)）在每次 push / PR 
 ├── src/                          # 小程序工程（由并行任务产出）
 │   ├── app.json / app.js         #   lazyCodeLoading=requiredComponents
 │   ├── config.js                 #   CLOUD_ENV / AGENT_BOT_ID
-│   ├── pages/home/               #   首页（主包）
-│   ├── packages/quickread/       #   分包：AI 一页纸快读
-│   ├── packages/triage/          #   分包：日程断舍离
+│   ├── pages/home|quickread|triage/  # 主包：首页 + 两个 tab 场景页（tabBar 页必须在主包）
+│   ├── packages/quickread/       #   分包：详情页 detail、历史页 history
+│   ├── packages/triage/          #   分包：今日安排页 today
 │   ├── components/               #   markdown-card / stream-lines / step-trace / empty-state
 │   └── core/                     #   ai-adapter.js / local-engine.js / skeleton.js / stream-bus.js
 ├── tests/                        # 单元测试（由并行任务产出）
@@ -151,7 +151,7 @@ const out = await wx.cloud.callFunction({
 
 评审前需人工确认的清单：
 
-- [ ] 开发者工具编译 `src/` 通过，真机预览三 tab 可交互。
+- [ ] 开发者工具按根目录导入、编译通过，真机预览三 tab 可交互（步骤见 [docs/WECHAT_DEVTOOLS_GUIDE.md](docs/WECHAT_DEVTOOLS_GUIDE.md)）。
 - [ ] 按 `agent/README.md` 在云开发控制台创建 Agent 并填入 `CLOUD_ENV` / `AGENT_BOT_ID`（单值字符串），观察一次真实 `RUN_STARTED → … → RUN_FINISHED` 流。
 - [ ] `tcb fn deploy` 后调用 `health` 返回 `{ ok:true }`；`doc-insight` 对样例文本返回 4 区块 JSON。
 - [ ] 断开云环境验证降级路径：卡片标注「离线分析」（`usage.mode:'local'`）且功能可用。

@@ -1,13 +1,14 @@
 {
   "pages": [
-    "pages/home/index"
+    "pages/home/index",
+    "pages/quickread/index",
+    "pages/triage/index"
   ],
   "subPackages": [
     {
       "root": "packages/quickread",
       "name": "quickread",
       "pages": [
-        "pages/index/index",
         "pages/detail/index",
         "pages/history/index"
       ]
@@ -16,7 +17,6 @@
       "root": "packages/triage",
       "name": "triage",
       "pages": [
-        "pages/index/index",
         "pages/today/index"
       ]
     }
@@ -40,11 +40,11 @@
         "text": "首页"
       },
       {
-        "pagePath": "packages/quickread/pages/index/index",
+        "pagePath": "pages/quickread/index",
         "text": "一页纸"
       },
       {
-        "pagePath": "packages/triage/pages/index/index",
+        "pagePath": "pages/triage/index",
         "text": "断舍离"
       }
     ]

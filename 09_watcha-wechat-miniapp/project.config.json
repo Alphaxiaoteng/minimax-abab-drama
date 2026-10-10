@@ -2,8 +2,8 @@
   "description": "观猹 × 2026 微信小程序开发大赛参赛作品：秒开 AI 智能体小程序",
   "appid": "wx0000000000000000",
   "projectname": "watcha-wechat-miniapp",
-  "miniprogramRoot": "./",
-  "cloudfunctionRoot": "../cloudfunctions/",
+  "miniprogramRoot": "src/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "compileType": "miniprogram",
   "libVersion": "3.15.1",
   "setting": {
@@ -31,13 +31,13 @@
         },
         {
           "name": "一页纸快读",
-          "pathName": "packages/quickread/pages/index/index",
+          "pathName": "pages/quickread/index",
           "query": "",
           "scene": null
         },
         {
           "name": "日程断舍离",
-          "pathName": "packages/triage/pages/index/index",
+          "pathName": "pages/triage/index",
           "query": "",
           "scene": null
         }

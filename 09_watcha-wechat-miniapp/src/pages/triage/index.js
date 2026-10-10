@@ -2,12 +2,12 @@
 // 与快读页共用同一套 Agent/骨架/流式机制，只是 scene 换成 triage，结构化字段不同。
 // 关键决策同样在 quickread 页里写过：骨架先行 + 流式节流 + 静默降级。这里保持同一节奏。
 
-const config = require('../../../../config.js');
-const { createAgent } = require('../../../../core/agent.js');
-const { createStreamBus } = require('../../../../core/stream-bus.js');
-const { buildSkeleton } = require('../../../../core/skeleton.js');
-const { createWxAIAdapter } = require('../../../../core/ai-adapter.js');
-const { normalizeInput } = require('../../../../utils/decode.js');
+const config = require('../../config.js');
+const { createAgent } = require('../../core/agent.js');
+const { createStreamBus } = require('../../core/stream-bus.js');
+const { buildSkeleton } = require('../../core/skeleton.js');
+const { createWxAIAdapter } = require('../../core/ai-adapter.js');
+const { normalizeInput } = require('../../utils/decode.js');
 
 const app = getApp();
 

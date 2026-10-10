@@ -69,7 +69,7 @@ Page({
   },
 
   onOpenFirstScene() {
-    wx.navigateTo({ url: '/packages/quickread/pages/index/index' });
+    wx.switchTab({ url: '/pages/quickread/index' });
   },
 
   onClearAll() {
@@ -90,7 +90,7 @@ Page({
   onShareAppMessage() {
     return {
       title: '我的 AI 一页纸快读记录',
-      path: '/packages/quickread/pages/index/index'
+      path: '/pages/quickread/index'
     };
   }
 });

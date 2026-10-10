@@ -76,14 +76,9 @@ Page({
     this.onAsk();
   },
 
-  // 无记录时的空态行动：回到快读输入页
+  // 无记录时的空态行动：回到快读输入页（tabBar 页，用 switchTab）
   onOpenFirstScene() {
-    wx.navigateTo({
-      url: '/packages/quickread/pages/index/index',
-      fail() {
-        wx.switchTab({ url: '/packages/quickread/pages/index/index' });
-      }
-    });
+    wx.switchTab({ url: '/pages/quickread/index' });
   },
 
   // 追问：agent.ask 内部优先云端线程，失败回退 localAnswer，结果一定可见。
@@ -161,7 +156,7 @@ Page({
 
     return {
       title: card ? card.title + ' · ' + card.subtitle : 'AI 一页纸快读',
-      path: '/packages/quickread/pages/index/index' + (card ? '?' + card.query : '')
+      path: '/pages/quickread/index' + (card ? '?' + card.query : '')
     };
   }
 });
