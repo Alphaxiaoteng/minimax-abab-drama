@@ -71,7 +71,10 @@ const main = async (): Promise<void> => {
   await server.listen();
   const url = server.resolvedUrls?.local[0] ?? "http://localhost:5199/";
 
-  const browser = await chromium.launch({ headless: !args.headed });
+  const browser = await chromium.launch({
+    headless: !args.headed,
+    args: ["--use-angle=metal", "--enable-webgl", "--enable-unsafe-webgl"],
+  });
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
   const consoleErrors: string[] = [];
   page.on("pageerror", (e) => consoleErrors.push(String(e)));
