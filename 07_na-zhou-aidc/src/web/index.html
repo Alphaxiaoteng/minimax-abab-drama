@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>初焰·钠宙 — 钠电 × AIDC 削峰填谷仿真控制台</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">Na</div>
+    <div class="brand-text">
+      <h1>初焰·钠宙 <span class="dim">|</span> AIDC 削峰填谷智能调度控制台</h1>
+      <p class="sub">钠离子储能 × AI 数据中心 · 线性规划实时仿真 · LP / CBC</p>
+    </div>
+  </div>
+  <div class="sysbar">
+    <span class="led" id="led"></span>
+    <span id="sys-status" class="mono">初始化…</span>
+    <span class="divider"></span>
+    <span class="mono dim" id="solve-time"></span>
+  </div>
+</header>
+
+<section class="controls">
+  <div class="ctl">
+    <label>负载情景</label>
+    <select id="c-scenario">
+      <option value="baseline_day">常态算力日</option>
+      <option value="transient_spike" selected>瞬态多尖峰日</option>
+      <option value="extreme_peak">极端满发峰值日</option>
+    </select>
+  </div>
+  <div class="ctl grow">
+    <label>算力尖峰倍率 <output id="c-mult-out" class="mono">1.00×</output></label>
+    <input type="range" id="c-mult" min="0.5" max="4.0" step="0.05" value="1.0">
+    <div class="scale mono"><span>0.5×</span><span>它峰上限缩放 it_peak</span><span>4.0×</span></div>
+  </div>
+  <div class="ctl">
+    <label>储能容量</label>
+    <select id="c-battery">
+      <option value="2mwh">2 MWh / 500 kW</option>
+      <option value="8mwh">8 MWh / 2,000 kW</option>
+      <option value="22mwh">22 MWh / 5,500 kW</option>
+    </select>
+  </div>
+  <div class="ctl">
+    <label>分时电价方案</label>
+    <select id="c-tariff">
+      <option value="standard">标准分时 0.30/0.62/0.98/1.28</option>
+      <option value="steep">尖峰加剧 0.25/0.60/1.20/1.65</option>
+      <option value="mild">峰谷趋缓 0.35/0.55/0.75/0.95</option>
+    </select>
+  </div>
+</section>
+
+<div class="banner hidden" id="banner"></div>
+
+<section class="kpis">
+  <div class="kpi accent-cyan">
+    <div class="kpi-label">削峰率</div>
+    <div class="kpi-value mono" id="k-shave">—</div>
+    <div class="kpi-foot" id="k-shave-foot">&nbsp;</div>
+  </div>
+  <div class="kpi accent-green">
+    <div class="kpi-label">单日节省电费</div>
+    <div class="kpi-value mono" id="k-saving">—</div>
+    <div class="kpi-foot" id="k-saving-foot">&nbsp;</div>
+  </div>
+  <div class="kpi accent-amber">
+    <div class="kpi-label">并网点峰值</div>
+    <div class="kpi-value mono" id="k-peak">—</div>
+    <div class="kpi-foot" id="k-peak-foot">&nbsp;</div>
+  </div>
+  <div class="kpi accent-red">
+    <div class="kpi-label">平均 PUE（储能后）</div>
+    <div class="kpi-value mono" id="k-pue">—</div>
+    <div class="kpi-foot" id="k-pue-foot">&nbsp;</div>
+  </div>
+</section>
+
+<main class="grid">
+  <div class="panel span2">
+    <div class="panel-head"><h2>24H 负荷与削峰曲线</h2><span class="tag">kW · 15 min 粒度</span></div>
+    <div class="chart" id="chart-load"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>PUE 仪表盘</h2><span class="tag">含储能往返损耗</span></div>
+    <div class="chart" id="chart-pue"></div>
+  </div>
+  <div class="panel span2">
+    <div class="panel-head"><h2>储能削峰填谷功率</h2><span class="tag">充电 ▼ / 放电 ▲ · SOC 曲线</span></div>
+    <div class="chart" id="chart-battery"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>经济性分解</h2><span class="tag">元 / 日</span></div>
+    <div class="chart" id="chart-cost"></div>
+  </div>
+</main>
+
+<footer class="foot mono">
+  数据由 <b>GET /api/simulate</b> 实时计算（PuLP/CBC 线性规划）· 储能不改善 PUE，收益在电网侧 ·
+  参数为工程假设区间 [INFERENCE] · 初焰·钠电×AIDC 黑客松提交件
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
