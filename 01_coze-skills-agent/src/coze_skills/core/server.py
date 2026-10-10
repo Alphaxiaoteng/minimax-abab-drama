@@ -17,7 +17,11 @@ import json
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .registry import ToolRegistry, build_default_registry
 from .runner import ToolRunner
@@ -130,6 +134,15 @@ def create_app(
     def metrics() -> Dict[str, Any]:
         """执行器快照: tools / count / log."""
         return ToolResult.success(**app.state.runner.describe()).model_dump()
+
+    # 静态调试工作台挂载
+    static_dir = Path(__file__).resolve().parent.parent / "static"
+    if static_dir.exists():
+        app.mount("/studio", StaticFiles(directory=str(static_dir), html=True), name="studio")
+
+        @app.get("/", include_in_schema=False)
+        def index_root():
+            return FileResponse(str(static_dir / "index.html"))
 
     return app
 

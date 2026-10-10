@@ -12,6 +12,7 @@ setup(
     description="扣子 (Coze) 高复用性垂类提效插件工具包",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
+    package_data={"coze_skills": ["static/*.html", "static/*.css", "static/*.js"]},
     python_requires=">=3.9",
     install_requires=[],
     extras_require={"server": ["fastapi>=0.110,<1.0", "uvicorn>=0.27,<1.0"], "dev": ["pytest>=8.0", "httpx>=0.27"]},

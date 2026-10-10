@@ -42,7 +42,7 @@ help:
 # ------------------------------------------------------------------------------
 test-01:
 	@echo -e "\n$(BLUE)>>> [01_coze-skills-agent] 运行单元测试...$(NC)"
-	cd 01_coze-skills-agent && uv run --with pytest --with fastapi --with httpx pytest tests/
+	cd 01_coze-skills-agent && uv run --with pytest --with fastapi --with httpx --with openapi-spec-validator pytest tests/
 
 test-07:
 	@echo -e "\n$(BLUE)>>> [07_na-zhou-aidc] 运行 110 项物理与优化测试...$(NC)"
