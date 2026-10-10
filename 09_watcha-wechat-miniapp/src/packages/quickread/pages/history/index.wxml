@@ -1,0 +1,38 @@
+<view class="page-root">
+  <!-- 搜索条：全部基于本地缓存同步过滤，无网络 -->
+  <view class="search-row">
+    <input
+      class="search-input"
+      value="{{keyword}}"
+      placeholder="按标题或摘要搜索本地记录"
+      bindinput="onKeywordInput"
+    />
+    <view wx:if="{{keyword}}" class="search-clear" bindtap="onClearKeyword">×</view>
+  </view>
+
+  <view class="row-between list-head">
+    <text class="muted">共 {{list.length}} 条 · 本地存储</text>
+    <text wx:if="{{list.length > 0}}" class="clear-link muted" bindtap="onClearAll">全部清空</text>
+  </view>
+
+  <empty-state
+    wx:if="{{list.length === 0}}"
+    icon="◷"
+    title="{{keyword ? '没有匹配的记录' : '还没有快读记录'}}"
+    desc="生成一次一页纸快读，结果会自动保存在本机"
+    actionText="去生成"
+    bind:action="onOpenFirstScene"
+  ></empty-state>
+
+  <view wx:for="{{list}}" wx:key="id" class="card history-item">
+    <view class="row-between">
+      <view class="hi-title" data-id="{{item.id}}" bindtap="onOpenItem">{{item.title}}</view>
+      <text class="tag">score {{item.score}}</text>
+    </view>
+    <view class="hi-summary muted" data-id="{{item.id}}" bindtap="onOpenItem">{{item.summary}}</view>
+    <view class="row-between hi-foot">
+      <text class="muted mono">{{item.ts}}</text>
+      <text class="del-link" data-id="{{item.id}}" bindtap="onRemoveItem">删除</text>
+    </view>
+  </view>
+</view>

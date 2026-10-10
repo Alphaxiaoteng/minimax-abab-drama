@@ -1,0 +1,55 @@
+services:
+  netintel-mcp:
+    build:
+      context: .
+      target: runtime
+    image: netintel-mcp:0.1.0
+    container_name: netintel-mcp
+    # Hardening: no privileges, read-only root FS, tmpfs only where needed.
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /app/data:size=8m,mode=0755
+    environment:
+      NETINTEL_TRANSPORT: "http"
+      NETINTEL_HOST: "0.0.0.0"
+      NETINTEL_PORT: "8765"
+      # Reproducible, network-free demo: every response comes from fixtures/feeds.
+      NETINTEL_OFFLINE: "1"
+      NETINTEL_LOG_LEVEL: "debug"
+      NETINTEL_CACHE_TTL_MS: "300000"
+      # Set a bearer token to require `Authorization: Bearer <token>`.
+      # NETINTEL_TOKEN: "change-me"
+      # NETINTEL_ALLOW_ANY_ORIGIN: "1"
+    ports:
+      - "127.0.0.1:8765:8765"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          node -e "fetch('http://127.0.0.1:8765/mcp',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'})}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # One-shot proof: runs the full NDJSON handshake against the built CLI and
+  # exits non-zero if any step of the JSON-RPC conversation misbehaves.
+  netintel-smoke:
+    build:
+      context: .
+      target: runtime
+    image: netintel-mcp:0.1.0
+    command: ["-e", "require('/app/scripts/smoke.js')"]
+    entrypoint: ["node"]
+    environment:
+      NETINTEL_OFFLINE: "1"
+      NETINTEL_FIXTURE_DIR: "/app/fixtures/feeds"
+      NETINTEL_SMOKE_BIN: "/app/dist/src/cli.js"
+    profiles:
+      - verify

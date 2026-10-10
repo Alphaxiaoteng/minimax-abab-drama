@@ -1,0 +1,123 @@
+/* 全局样式：设计 token + 通用类。
+   颜色集中在 :root 变量里，页面只引用变量，方便统一换肤与参赛材料截图配色。 */
+page {
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --fg: #1A1D23;
+  --muted: #8A8F99;
+  --border: #E4E7EC;
+  --accent: #1F6FEB;
+  --success: #16A34A;
+  --warning: #D97706;
+  --error: #DC2626;
+  --radius: 20rpx;
+
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 30rpx;
+  line-height: 1.6;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+.page-root {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  background: rgba(31, 111, 235, 0.1);
+  color: var(--accent);
+}
+
+.tag-warn {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--warning);
+}
+
+.tag-ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success);
+}
+
+.tag-offline {
+  background: rgba(138, 143, 153, 0.15);
+  color: var(--muted);
+}
+
+.divider {
+  height: 1rpx;
+  background: var(--border);
+  margin: 20rpx 0;
+}
+
+.btn {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-radius: var(--radius);
+  font-size: 30rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+
+.btn-ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1rpx solid var(--border);
+}
+
+.btn[disabled] {
+  opacity: 0.5;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 280rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: var(--radius);
+  padding: 24rpx;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.mono {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 24rpx;
+}

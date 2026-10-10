@@ -1,0 +1,69 @@
+{
+  "total_count": 4,
+  "items": [
+    {
+      "id": 900002,
+      "full_name": "openai/openai-agents-python",
+      "html_url": "https://github.com/openai/openai-agents-python",
+      "description": "Lightweight framework for multi-agent workflows",
+      "owner": {
+        "login": "openai"
+      },
+      "created_at": "2025-03-11T00:00:00Z",
+      "stargazers_count": 17800,
+      "topics": [
+        "agent",
+        "openai",
+        "python"
+      ]
+    },
+    {
+      "id": 900003,
+      "full_name": "crewAIInc/crewAI",
+      "html_url": "https://github.com/crewAIInc/crewAI",
+      "description": "Framework for orchestrating role-playing autonomous AI agents",
+      "owner": {
+        "login": "crewAIInc"
+      },
+      "created_at": "2023-10-29T00:00:00Z",
+      "stargazers_count": 28400,
+      "topics": [
+        "agent",
+        "crew",
+        "llm"
+      ]
+    },
+    {
+      "id": 900010,
+      "full_name": "huggingface/smolagents",
+      "html_url": "https://github.com/huggingface/smolagents",
+      "description": "Lightweight library for building agent systems",
+      "owner": {
+        "login": "huggingface"
+      },
+      "created_at": "2024-12-31T00:00:00Z",
+      "stargazers_count": 23100,
+      "topics": [
+        "agent",
+        "llm",
+        "python"
+      ]
+    },
+    {
+      "id": 900009,
+      "full_name": "langgenius/dify",
+      "html_url": "https://github.com/langgenius/dify",
+      "description": "Platform for LLM app and agent workflow development",
+      "owner": {
+        "login": "langgenius"
+      },
+      "created_at": "2023-04-12T00:00:00Z",
+      "stargazers_count": 97000,
+      "topics": [
+        "agent",
+        "llm",
+        "workflow"
+      ]
+    }
+  ]
+}

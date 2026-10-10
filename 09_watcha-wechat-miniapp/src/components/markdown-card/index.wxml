@@ -1,0 +1,69 @@
+<!-- 结构化一页纸卡片：wxml 只做遍历，所有加工在 index.js 的 buildSections 完成 -->
+<view class="md-card">
+  <view class="md-head row-between">
+    <text class="md-head-title">一页纸结果</text>
+    <text wx:if="{{offline}}" class="tag tag-offline">离线分析</text>
+  </view>
+
+  <view wx:if="{{sections.length === 0}}" class="md-empty muted">
+    暂无可展示的结构化结果
+  </view>
+
+  <view wx:for="{{sections}}" wx:key="key" class="md-section">
+    <view class="md-section-bar"></view>
+    <view class="md-section-title">{{item.title}}</view>
+
+    <!-- 纯文本 / 引用 -->
+    <block wx:if="{{item.kind === 'plain' || item.kind === 'quote'}}">
+      <view
+        wx:for="{{item.items}}"
+        wx:for-item="line"
+        wx:key="index"
+        class="{{item.kind === 'quote' ? 'md-quote' : 'md-plain'}}"
+        data-text="{{line.text}}"
+        bindlongpress="onCopy"
+      >{{line.text}}</view>
+    </block>
+
+    <!-- 有序列表（今日必做） -->
+    <block wx:elif="{{item.kind === 'ordered'}}">
+      <view
+        wx:for="{{item.items}}"
+        wx:for-item="line"
+        wx:key="index"
+        class="md-ordered"
+        data-text="{{line.text}}"
+        bindlongpress="onCopy"
+      >
+        <text class="md-index">{{index + 1}}</text>
+        <text class="md-ordered-text">{{line.text}}</text>
+      </view>
+    </block>
+
+    <!-- 键值（关键数据：数值 + 标签） -->
+    <block wx:elif="{{item.kind === 'kv'}}">
+      <view wx:for="{{item.items}}" wx:for-item="line" wx:key="index" class="md-kv">
+        <text class="md-kv-value">{{line.text}}</text>
+        <text class="md-kv-label">{{line.label}}</text>
+      </view>
+    </block>
+
+    <!-- 带理由（建议删除） -->
+    <block wx:elif="{{item.kind === 'reason'}}">
+      <view wx:for="{{item.items}}" wx:for-item="line" wx:key="index" class="md-reason">
+        <text class="md-reason-item">{{line.text}}</text>
+        <text class="md-reason-why">{{line.reason}}</text>
+      </view>
+    </block>
+
+    <!-- 时间块 -->
+    <block wx:elif="{{item.kind === 'block'}}">
+      <view wx:for="{{item.items}}" wx:for-item="line" wx:key="index" class="md-block {{line.type === 'break' ? 'md-block-break' : 'md-block-' + line.type}}">
+        <text class="md-block-time mono">{{line.text}}</text>
+        <text class="md-block-label">{{line.label}}</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="md-foot muted">长按任意条目可复制原文，便于核对</view>
+</view>

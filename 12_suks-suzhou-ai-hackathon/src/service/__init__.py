@@ -1,0 +1,1 @@
+"""S3 在线质检服务包（FastAPI 应用位于 :mod:`service.api`）。"""
