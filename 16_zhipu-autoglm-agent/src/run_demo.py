@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -22,6 +23,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # 战报输出目录：src/run_demo.py -> <project>/docs
 _DOCS_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                           "..", "docs"))
+# 回放看板目录与轨迹落点：src/run_demo.py -> src/viewer/trace.json
+_VIEWER_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "viewer")
+_TRACE_JSON = os.path.join(_VIEWER_DIR, "trace.json")
 
 from autoglm_agent.act.actions import Controller
 from autoglm_agent.config import load_settings
@@ -164,6 +168,199 @@ class RecoveryMeter:
         return self.popup_interceptions + self.type_retry_count + self.health_count
 
 
+_RECOVERY_TRACE = ("type_retry", "watch", "stall", "plan_drift")
+
+
+class ReplayRecorder:
+    """端侧执行回放记录器：把一次场景运行还原为可动画的双轨时间线（供看板回放）。
+
+    - **action 轨**：包裹设备物理接口 launch / tap / input_text / clear_field，
+      带真实像素坐标、命中元素文本与包围盒、当前屏幕/弹窗标识，看板据此绘制
+      虚拟屏幕并对目标元素做红框高亮；对 modal 上的点击识别为弹窗拦截快照。
+    - **recovery 轨**：包裹控制器动作 click / type_text / watch / tap_if_present，
+      把该次调用新产生的 `ctrl.trace` 自愈条目（type_retry / watch / stall /
+      plan_drift）按时序落成事件，构成“输入自愈重试时间轴”。
+
+    两轨共用同一 perf_counter 时钟（以场景起点为零点）。命中判定会临时保存并回拨
+    设备 RNG，确保“记录”这一副作用不扰动漂移/噪声注入的确定性。
+    """
+
+    def __init__(self, name: str, dev, ctrl: Controller, settings):
+        self.name = name
+        self.dev = dev
+        self.ctrl = ctrl
+        self.s = settings
+        self.events: list[dict] = []
+        self._t0 = time.perf_counter()
+        self._cursor = 0  # ctrl.trace 已落轨游标，杜绝嵌套调用重复记录
+
+    # ---- 时间 / 命中工具 ----
+    def _t_ms(self) -> float:
+        return round((time.perf_counter() - self._t0) * 1000, 1)
+
+    def _screen_id(self) -> str:
+        return self.dev.modal or self.dev.screen
+
+    def _snapshot_elements(self):
+        """读取当前可见元素，但冻结 RNG：记录不消耗抖动随机数。"""
+        rng = getattr(self.dev, "rng", None)
+        saved = rng.getstate() if rng is not None else None
+        try:
+            return list(self.dev.visible_elements())
+        finally:
+            if rng is not None and saved is not None:
+                rng.setstate(saved)
+
+    def _hit(self, x, y):
+        for el, b in reversed(self._snapshot_elements()):
+            if b.x1 - 4 <= x <= b.x2 + 4 and b.y1 - 4 <= y <= b.y2 + 4:
+                return el, [round(v) for v in (b.x1, b.y1, b.x2, b.y2)]
+        return None, None
+
+    def _by_key(self, key):
+        for el, b in self._snapshot_elements():
+            if el.key == key:
+                return el, [round(v) for v in (b.x1, b.y1, b.x2, b.y2)]
+        return None, None
+
+    def _push(self, lane: str, kind: str, **kw) -> dict:
+        ev = {"i": len(self.events), "t_ms": self._t_ms(), "lane": lane, "kind": kind,
+              "screen": self._screen_id(), "modal": bool(self.dev.modal)}
+        ev.update(kw)
+        self.events.append(ev)
+        return ev
+
+    def _emit_recovery(self) -> None:
+        for item in self.ctrl.trace[self._cursor:]:
+            act = item.get("action")
+            if act in _RECOVERY_TRACE:
+                self._push("recovery", act,
+                           spec=item.get("spec"), attempt=item.get("attempt"),
+                           got=item.get("got"), handled=item.get("handled"),
+                           fault=item.get("kind"), rnd=item.get("round"),
+                           source=item.get("source"), conf=item.get("conf"))
+        self._cursor = len(self.ctrl.trace)
+
+    # ---- 安装 ----
+    def start(self) -> None:
+        dev = self.dev
+
+        _launch = dev.launch
+        def launch(target, *a, **k):
+            _launch(target, *a, **k)
+            self._push("action", "launch", target=target)
+        dev.launch = launch  # type: ignore[assignment]
+
+        _tap = dev.tap
+        def tap(x, y, *a, **k):
+            is_modal = bool(dev.modal)
+            el, bounds = self._hit(x, y)
+            _tap(x, y, *a, **k)
+            self._push("action", "dismiss" if is_modal else "tap",
+                       x=round(x), y=round(y),
+                       text=(el.text if el else ""), key=(el.key if el else ""),
+                       bounds=bounds)
+        dev.tap = tap  # type: ignore[assignment]
+
+        _inp = dev.input_text
+        def input_text(text, *a, **k):
+            focused = getattr(dev, "_focused", None)
+            el, bounds = (None, None)
+            if focused:
+                el, bounds = self._by_key(focused)
+            cx = round((bounds[0] + bounds[2]) / 2) if bounds else None
+            cy = round((bounds[1] + bounds[3]) / 2) if bounds else None
+            self._push("action", "type", text=text, field=focused,
+                       key=(el.key if el else focused), x=cx, y=cy, bounds=bounds)
+            _inp(text, *a, **k)
+        dev.input_text = input_text  # type: ignore[assignment]
+
+        _clear = dev.clear_field
+        def clear_field(*a, **k):
+            _clear(*a, **k)
+            self._push("action", "clear", field=getattr(dev, "_focused", None))
+        dev.clear_field = clear_field  # type: ignore[assignment]
+
+        for meth in ("click", "type_text", "watch", "tap_if_present"):
+            self._wrap_ctrl(meth)
+
+    def _wrap_ctrl(self, meth_name: str) -> None:
+        ctrl = self.ctrl
+        original = getattr(ctrl, meth_name)
+
+        def wrapper(*a, **k):
+            try:
+                return original(*a, **k)
+            finally:
+                self._emit_recovery()
+        setattr(ctrl, meth_name, wrapper)
+
+
+def _build_layout(dev) -> dict:
+    """把场景静态元素布局（归一化 0..1 坐标）导出，供看板绘制任意虚拟屏幕。"""
+    layout: dict[str, dict] = {}
+    scenario = getattr(dev, "scenario", None)
+    if scenario is None:
+        return layout
+    for sid, sd in scenario.screens.items():
+        layout[sid] = {
+            "modal": bool(sd.modal),
+            "content_height": round(float(sd.content_height), 3),
+            "elements": [
+                {"key": e.key, "text": e.text or "", "cls": e.cls,
+                 "editable": bool(e.editable), "clickable": bool(e.clickable),
+                 "x": round(float(e.x), 4), "y": round(float(e.y), 4),
+                 "w": round(float(e.w), 4), "h": round(float(e.h), 4)}
+                for e in sd.elements
+            ],
+        }
+    return layout
+
+
+def _export_trace(records: list[dict], chaos: bool, drift: int, settings) -> tuple[str, int]:
+    """聚合三场景回放数据并落盘 src/viewer/trace.json。"""
+    scenes = []
+    for r in records:
+        dev = r["dev"]; rec = r["recorder"]; m = r["meter"]; res = r["res"]
+        w, h = dev.resolution()
+        scenes.append({
+            "id": r["id"],
+            "name": r["name"],
+            "device": {"kind": getattr(dev, "name", "virtual"), "width": w, "height": h},
+            "layout": _build_layout(dev),
+            "events": rec.events,
+            "steps": [{"id": o.step_id, "status": o.status, "attempts": o.attempts,
+                       "error": o.error or ""} for o in res.outcomes],
+            "summary": {
+                "steps": len(res.outcomes),
+                "ok": sum(1 for o in res.outcomes if o.status == "ok"),
+                "success": bool(res.success),
+                "popups": m.popup_interceptions,
+                "type_retries": m.type_retry_count,
+                "health": m.health_count,
+                "elapsed_s": round(m.elapsed_s, 2),
+            },
+            "highlights": r["highlights"],
+            "artifact": r["artifact"],
+        })
+    payload = {
+        "project": "AutoGLM Cross-Platform Device Agent",
+        "subtitle": "端侧执行回放看板 · Execution Replay Dashboard",
+        "mode": "chaos" if chaos else "standard",
+        "chaos": bool(chaos),
+        "drift_px": drift,
+        "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "settings": {"retry_backoff_base": settings.retry_backoff_base,
+                     "action_max_verify": settings.action_max_verify,
+                     "max_step_retries": settings.max_step_retries},
+        "scenes": scenes,
+    }
+    os.makedirs(_VIEWER_DIR, exist_ok=True)
+    with open(_TRACE_JSON, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+    return _TRACE_JSON, sum(len(s["events"]) for s in scenes)
+
+
 def _fmt_secs(v: float) -> str:
     return f"{v:.2f}s"
 
@@ -296,6 +493,7 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     drift = 20 if chaos else 0
     meters: list[RecoveryMeter] = []
     scene_meta: list[dict] = []
+    scene_records: list[dict] = []
 
     title = "手机端 跨平台比价 + 领券（含开屏广告弹窗/权限弹窗/折叠区滚动）"
     print(f"\n【场景一】{title}")
@@ -306,6 +504,7 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     meters.append(meter1)
     if chaos:
         _install_chaos_injection(ctrl)
+    rec1 = ReplayRecorder("场景一·比价领券", dev, ctrl, settings); rec1.start()
     _t = time.perf_counter()
     res = price_coupon.run(ctrl, settings, resume=False)
     meter1.elapsed_s = time.perf_counter() - _t
@@ -319,9 +518,12 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     rc |= 0 if res.success else 1
     if trace is not None:
         _trace_step(ctrl, trace, "场景一-比价领券")
+    hl1 = {"比价结果": report.get("offers"), "购买建议": report.get("recommendation")}
     scene_meta.append({"name": "手机端·跨平台比价领券", "res": res, "artifact": art1,
-                       "highlights": {"比价结果": report.get("offers"),
-                                      "购买建议": report.get("recommendation")}})
+                       "highlights": hl1})
+    scene_records.append({"id": "price_coupon", "name": "手机端·跨平台比价领券",
+                          "dev": dev, "ctrl": ctrl, "recorder": rec1, "meter": meter1,
+                          "res": res, "artifact": art1, "highlights": hl1})
 
     print("\n【场景二】桌面端 月度发票归集 + 报销单填报（含升级弹窗/OCR 噪声/提交降级）")
     dev2 = VirtualDevice(desktop_invoice_with_popup(), width=1920, height=1080, seed=7,
@@ -329,6 +531,7 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     ctrl2 = Controller(dev2, settings, ocr=VirtualJsonOcr())
     meter2 = RecoveryMeter("场景二·发票报销", ctrl2, settings); meter2.instrument()
     meters.append(meter2)
+    rec2 = ReplayRecorder("场景二·发票报销", dev2, ctrl2, settings); rec2.start()
     _t = time.perf_counter()
     res2 = invoice_expense.run(ctrl2, settings, resume=False)
     meter2.elapsed_s = time.perf_counter() - _t
@@ -342,16 +545,20 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     rc |= 0 if res2.success else 1
     if trace is not None:
         _trace_step(ctrl2, trace, "场景二-发票报销")
+    hl2 = {"发票合计": rep2.get("total"), "邮箱页合计": rep2.get("mail_page_total"),
+           "报销单号": rep2.get("expense_no")}
     scene_meta.append({"name": "桌面端·月度发票报销", "res": res2, "artifact": art2,
-                       "highlights": {"发票合计": rep2.get("total"),
-                                      "邮箱页合计": rep2.get("mail_page_total"),
-                                      "报销单号": rep2.get("expense_no")}})
+                       "highlights": hl2})
+    scene_records.append({"id": "invoice_expense", "name": "桌面端·月度发票报销",
+                          "dev": dev2, "ctrl": ctrl2, "recorder": rec2, "meter": meter2,
+                          "res": res2, "artifact": art2, "highlights": hl2})
 
     print("\n【场景三】手机端 政务 App 会话过期重登 + 公积金余额取证（权限弹窗/OTP/登录态分流）")
     dev3 = VirtualDevice(gov_auth_with_popups(), seed=11, drift_px=drift)
     ctrl3 = Controller(dev3, settings, ocr=VirtualJsonOcr())
     meter3 = RecoveryMeter("场景三·政务取证", ctrl3, settings); meter3.instrument()
     meters.append(meter3)
+    rec3 = ReplayRecorder("场景三·政务取证", dev3, ctrl3, settings); rec3.start()
     _t = time.perf_counter()
     res3 = auth_scenario.run(ctrl3, settings, resume=False)
     meter3.elapsed_s = time.perf_counter() - _t
@@ -365,10 +572,13 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
     rc |= 0 if res3.success else 1
     if trace is not None:
         _trace_step(ctrl3, trace, "场景三-政务取证")
+    hl3 = {"登录路径": res3.ctx.get("login"), "公积金余额": res3.ctx.get("balance"),
+           "证据帧文本数": evidence.get("texts")}
     scene_meta.append({"name": "手机端·政务取证", "res": res3, "artifact": art3,
-                       "highlights": {"登录路径": res3.ctx.get("login"),
-                                      "公积金余额": res3.ctx.get("balance"),
-                                      "证据帧文本数": evidence.get("texts")}})
+                       "highlights": hl3})
+    scene_records.append({"id": "gov_auth", "name": "手机端·政务取证",
+                          "dev": dev3, "ctrl": ctrl3, "recorder": rec3, "meter": meter3,
+                          "res": res3, "artifact": art3, "highlights": hl3})
 
     print("\n【定位轨迹抽样】（展示多通道融合与置信度）")
     for t in ctrl.trace[:6]:
@@ -405,6 +615,15 @@ def run_virtual_demo(settings, chaos: bool = False, trace: TraceRecorder | None 
         print(f"\n📄 结构化自愈战报已生成：{report_path}")
     except OSError as e:  # noqa: BLE001 —— 战报落盘失败不应影响闭环结论
         print(f"\n⚠ 战报落盘失败（不影响演示闭环）：{e}")
+
+    # --chaos：导出结构化回放轨迹，供 src/viewer 看板开箱即用
+    if chaos:
+        try:
+            trace_path, ev_count = _export_trace(scene_records, chaos, drift, settings)
+            print(f"🎬 回放轨迹已导出：{trace_path}")
+            print(f"   ↳ {len(scene_records)} 场景 · {ev_count} 个事件（操作步骤轨 + 自愈重试轨）")
+        except (OSError, TypeError, ValueError) as e:  # noqa: BLE001
+            print(f"⚠ 回放轨迹导出失败（不影响演示闭环）：{e}")
 
     print("\n结果:", "全部闭环通过 ✅" if rc == 0 else "存在失败步骤 ❌")
     return rc
