@@ -25,3 +25,6 @@ build/
 .env.local
 *.pem
 *.key
+
+# IDE & Tools
+.qoder/
