@@ -17,6 +17,7 @@ import base64
 import logging
 import math
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List, Optional
 
@@ -348,49 +349,101 @@ async def inspect_upload(
     * ``file`` 必填；>20MB → 413；非图像 MIME / 解码失败 → 400。
     * ``scene_id`` 空或 ``"auto"`` 时用 :func:`guess_scene` 自动推断并回显。
     * ``include_overlay=False`` 时剥离 ``overlay_png_b64`` 以缩减响应体。
+    
+    响应字段：
+        - result: :class:`~inspectai.contracts.DetectionResult`
+        - scene_id: 使用的场景 ID（自动推断或指定）
+        - elapsed_ms: 总耗时（毫秒）
+        - response_timestamp: ISO8601 UTC 时间戳（服务器响应时间）
     """
+    # === 边界检查与错误处理 ===
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="上传文件为空")
     if len(data) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="文件大小超过 20MB 上限")
+        raise HTTPException(status_code=413, detail=f"文件大小超过{MAX_UPLOAD_BYTES // (1024*1024)}MB 上限，实际大小：{len(data) // (1024*1024)}MB")
     ctype = (file.content_type or "").lower()
     # octet-stream 是命令行/脚本上传的常见缺省，放行；其余非 image/* 一律 400
     if ctype and not (ctype.startswith("image/") or ctype == "application/octet-stream"):
-        raise HTTPException(status_code=400, detail=f"不支持的文件类型：{ctype}")
-
-    image = _decode_image(data)
+        raise HTTPException(status_code=400, detail=f"不支持的文件类型：{ctype}，仅支持 image/* 或 application/octet-stream")
+    
+    try:
+        image = _decode_image(data)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"图像解码异常：{exc}")
+        raise HTTPException(status_code=400, detail="无法解码图像文件，请确保为有效的 PNG/JPG/BMP/WebP 格式")
+    
+    # === 处理业务逻辑 ===
     scene = _resolve_scene(scene_id, image)
     stem = Path(file.filename or "").stem
     image_id = stem if stem else "upload"
     result, elapsed_ms = _run_inspection(image, image_id, scene)
     if not include_overlay:
         result.overlay_png_b64 = None
+    
+    # === 构建响应（包含服务器时间戳）===
     return {
         "result": result.to_dict(),
         "scene_id": scene,
         "elapsed_ms": round(elapsed_ms, 2),
+        "response_timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
     }
 
 
 @app.post("/api/v1/inspect/demo")
 def inspect_demo(req: DemoRequest) -> dict[str, Any]:
-    """服务端合成一张图 → 检测，返回与上传检测同构的结果 + 真值 + 内联 PNG。"""
-    # demo 的图像在检测前还不存在，无法跑 guess_scene；空/auto/缺省一律落到默认场景
-    scene = SC_GEAR if not req.scene_id or req.scene_id.strip().lower() == "auto" else _validate_scene(req.scene_id)
-    gen = _get_generator(scene, req.seed)
+    """服务端合成一张图 → 检测，返回与上传检测同构的结果 + 真值 + 内联 PNG。
+    
+    响应字段：
+        - result: :class:`~inspectai.contracts.DetectionResult`
+        - scene_id: 使用的场景 ID
+        - elapsed_ms: 总耗时（毫秒）
+        - ground_truth: 合成图像的真值标注
+        - image_png_b64: 合成图像的 Base64 编码
+        - response_timestamp: ISO8601 UTC 时间戳
+    """
+    # === 边界检查与错误处理 ===
+    if not req.scene_id or req.scene_id.strip().lower() in ("", "auto"):
+        scene = SC_GEAR
+    else:
+        try:
+            scene = _validate_scene(req.scene_id)
+        except HTTPException as e:
+            raise
+        except Exception as exc:
+            logger.error(f"场景验证异常：{exc}")
+            raise HTTPException(status_code=400, detail=f"无效的场景 ID：{req.scene_id!r}")
+    
+    try:
+        gen = _get_generator(scene, req.seed)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"生成器初始化异常：{exc}")
+        raise HTTPException(status_code=503, detail="合成引擎不可用")
+    
     has_defect = bool(req.has_defect)
-    image, truth = gen.generate(
-        has_defect=has_defect,
-        n_defects=req.n_defects if has_defect else None,
-    )
+    try:
+        image, truth = gen.generate(
+            has_defect=has_defect,
+            n_defects=req.n_defects if has_defect else None,
+        )
+    except Exception as exc:
+        logger.error(f"图像生成失败：{exc}")
+        raise HTTPException(status_code=500, detail="图像生成失败")
+    
     result, elapsed_ms = _run_inspection(image, truth.image_id or "demo", scene)
+    
+    # === 构建响应 ===
     return {
         "result": result.to_dict(),
         "scene_id": scene,
         "elapsed_ms": round(elapsed_ms, 2),
         "ground_truth": truth.to_dict(),
         "image_png_b64": _png_b64(image),
+        "response_timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z",
     }
 
 
