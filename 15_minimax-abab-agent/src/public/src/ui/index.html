@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1024 号案：镜厅未干的倒影 - 沉浸式推理剧</title>
+  <style>
+    :root {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-card: rgba(26, 26, 46, 0.8);
+      --accent-red: #e74c3c;
+      --accent-dark-red: #c0392b;
+      --accent-gold: #f39c12;
+      --text-primary: #ecf0f1;
+      --text-secondary: #bdc3c7;
+      --border-color: rgba(236, 240, 241, 0.1);
+      --shadow-color: rgba(0, 0, 0, 0.5);
+      --success-green: #27ae60;
+      --warning-orange: #e67e22;
+      --stress-low: #2ecc71;
+      --stress-medium: #f39c12;
+      --stress-high: #e74c3c;
+      --stress-critical: #c0392b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+
+    header { text-align: center; padding: 30px 0; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
+    h1 { font-size: 2.5em; margin-bottom: 10px; background: linear-gradient(45deg, var(--accent-red), var(--accent-gold)); background-clip: text; -webkit-background-clip: text; color: transparent; }
+    .subtitle { font-size: 1.1em; color: var(--text-secondary); }
+
+    .main-layout { display: grid; grid-template-columns: 1fr 380px 320px; gap: 20px; min-height: calc(100vh - 200px); }
+
+    @media (max-width: 1400px) {
+      .main-layout { grid-template-columns: 1fr 380px; }
+      .right-panel { display: none; }
+    }
+
+    /* ===== Chat Panel ===== */
+    .chat-panel {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 280px);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .character-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-red), var(--accent-dark-red));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8em;
+      font-weight: bold;
+    }
+
+    .status-badges { display: flex; gap: 10px; margin-left: auto; }
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 500; }
+    .badge-trust { background: rgba(39, 174, 96, 0.2); color: var(--success-green); }
+    .badge-tension { background: rgba(231, 76, 60, 0.2); color: var(--accent-red); }
+
+    .chat-messages { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+    .message { margin-bottom: 20px; animation: slideIn 0.3s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .message-content { padding: 15px 20px; border-radius: 12px; max-width: 80%; line-height: 1.6; }
+    .message.persona .message-content { background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.1)); border-left: 3px solid var(--accent-red); }
+    .message.user .message-content { background: linear-gradient(135deg, rgba(39, 174, 96, 0.1), rgba(46, 204, 113, 0.1)); border-right: 3px solid var(--success-green); align-self: flex-end; }
+
+    .emotion-label { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; margin-bottom: 10px; background: rgba(255, 255, 255, 0.1); }
+
+    .chat-input-container { display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+    .chat-input { flex: 1; padding: 15px 20px; border-radius: 25px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.05); color: var(--text-primary); font-size: 1em; outline: none; }
+    .send-btn { padding: 15px 30px; background: linear-gradient(135deg, var(--accent-red), var(--accent-dark-red)); border: none; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; }
+    .send-btn:hover { transform: scale(1.05); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===== Right Panel ===== */
+    .right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .panel { background: var(--bg-card); border-radius: 16px; padding: 20px; backdrop-filter: blur(20px); border: 1px solid var(--border-color); }
+    .panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+    .panel-icon { font-size: 1.3em; }
+
+    /* Suspect Cards */
+    .suspect-list { display: flex; flex-direction: column; gap: 12px; }
+    .suspect-card { background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.3s; border: 1px solid transparent; }
+    .suspect-card:hover { background: rgba(255, 255, 255, 0.06); }
+    .suspect-card.selected { border-color: var(--accent-red); background: rgba(231, 76, 60, 0.1); }
+
+    .suspect-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .suspect-avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-gold), var(--accent-red)); display: flex; align-items: center; justify-content: center; font-size: 1.2em; font-weight: bold; }
+    .suspect-name { font-weight: 600; }
+
+    .stress-meter { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .stress-fill { height: 100%; border-radius: 4px; transition: all 0.5s; }
+    .stress-fill.low { background: linear-gradient(90deg, var(--stress-low), var(--success-green)); }
+    .stress-fill.medium { background: linear-gradient(90deg, var(--stress-medium), var(--warning-orange)); }
+    .stress-fill.high { background: linear-gradient(90deg, var(--stress-high), var(--warning-orange)); }
+    .stress-fill.critical { background: linear-gradient(90deg, var(--stress-critical), var(--accent-red)); animation: stressPulse 1s infinite; }
+    @keyframes stressPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+    .confession-preview { margin-top: 8px; padding: 8px; background: rgba(243, 156, 18, 0.1); border-radius: 6px; font-size: 0.85em; color: var(--accent-gold); border-left: 3px solid var(--accent-gold); }
+
+    /* Evidence Wall with SVG Threads */
+    .evidence-wall { position: relative; height: 350px; background: rgba(0, 0, 0, 0.2); border-radius: 12px; overflow: hidden; }
+    .evidence-wall svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+    .evidence-thread { fill: none; stroke: var(--accent-red); stroke-width: 2; stroke-dasharray: 5,5; opacity: 0.6; }
+    .evidence-thread.active { stroke: var(--accent-gold); stroke-width: 3; opacity: 1; }
+
+    .evidence-card {
+      position: absolute;
+      width: 130px;
+      padding: 12px;
+      background: rgba(26, 26, 46, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px var(--shadow-color);
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s;
+    }
+    .evidence-card:hover { border-color: var(--accent-red); transform: translateY(-3px); }
+    .evidence-card.revealed { border-color: var(--accent-gold); }
+    .evidence-card.hidden { opacity: 0.4; filter: grayscale(1); }
+    .evidence-card-title { font-weight: 600; font-size: 0.9em; margin-bottom: 6px; color: var(--accent-red); }
+    .evidence-card-detail { font-size: 0.75em; color: var(--text-secondary); line-height: 1.3; }
+    .expose-btn { margin-top: 8px; padding: 5px 10px; background: var(--accent-red); border: none; border-radius: 5px; color: white; font-size: 0.75em; cursor: pointer; width: 100%; }
+    .expose-btn.exposed { background: var(--success-green); cursor: default; }
+
+    /* Story Tree */
+    .story-tree { max-height: 400px; overflow-y: auto; }
+    .story-node { display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 8px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border-left: 4px solid var(--border-color); transition: all 0.3s; }
+    .story-node.unlocked { border-left-color: var(--accent-gold); }
+    .story-node.current { border-left-color: var(--accent-red); background: rgba(231, 76, 60, 0.1); }
+    .story-node.is-ending { border-right: 3px solid var(--accent-gold); }
+    .story-node-icon { font-size: 1.2em; }
+    .story-node-label { font-weight: 600; font-size: 0.95em; }
+    .story-node-meta { font-size: 0.75em; color: var(--text-secondary); }
+    .status-badge { padding: 3px 10px; border-radius: 10px; font-size: 0.7em; font-weight: 600; }
+    .status-unlocked { background: rgba(39, 174, 96, 0.2); color: var(--success-green); }
+    .status-locked { background: rgba(127, 140, 141, 0.2); color: #7f8c8d; }
+
+    .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🔍 1024 号案：镜厅未干的倒影</h1>
+    <p class="subtitle">沉浸式互动推理剧 · MiniMax ABAB × T2A v2 情绪拟真</p>
+  </header>
+
+  <div class="main-layout">
+    <!-- Left: Chat -->
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="character-avatar" id="avatar">何</div>
+        <div class="character-info">
+          <h2 id="charName">加载中...</h2>
+          <p id="charTagline">等待初始化</p>
+        </div>
+        <div class="status-badges">
+          <span class="badge badge-trust">信任：<span id="trustValue">—</span>%</span>
+          <span class="badge badge-tension">紧张：<span id="tensionValue">—</span>%</span>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <div class="chat-input-container">
+        <input type="text" class="chat-input" id="chatInput" placeholder="输入你的调查问题..." disabled />
+        <button class="send-btn" id="sendBtn" disabled>发送</button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <!-- Suspect Stress Gauge -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon">⚡</span>
+          <h3>嫌疑人心理压力计</h3>
+        </div>
+        <div id="suspectList" class="suspect-list"></div>
+      </div>
+
+      <!-- Evidence Wall with SVG Threads -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon">🕸️</span>
+          <h3>线索证据墙</h3>
+        </div>
+        <div class="evidence-wall" id="evidenceWall"></div>
+      </div>
+
+      <!-- Story Tree -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-icon">🌳</span>
+          <h3>剧情分支追踪</h3>
+        </div>
+        <div id="storyTree" class="story-tree"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { DramaEngine } from './src/engine/director.js';
+import { screenplayRegistry } from './src/engine/screenplay.js';
+import { personas } from './src/personas/index.js';
+import { createClient } from './src/minimax/index.js';
+
+const screenplay = screenplayRegistry['case-1024-mirror'];
+const persona = personas.byId('he-jinglan');
+const client = createClient({ mode: 'mock' });
+
+let engine = null;
+let currentSessionId = null;
+
+// DOM Elements
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const charName = document.getElementById('charName');
+const charTagline = document.getElementById('charTagline');
+const avatar = document.getElementById('avatar');
+const trustValue = document.getElementById('trustValue');
+const tensionValue = document.getElementById('tensionValue');
+const suspectList = document.getElementById('suspectList');
+const evidenceWall = document.getElementById('evidenceWall');
+const storyTree = document.getElementById('storyTree');
+
+// Initialize
+async function init() {
+  engine = new DramaEngine({
+    persona,
+    screenplay,
+    client,
+    seed: Math.floor(Math.random() * 1000000),
+  });
+
+  const response = await engine.start();
+  currentSessionId = response.state.sessionId;
+  
+  charName.textContent = persona.name;
+  charTagline.textContent = persona.tagline;
+  avatar.textContent = persona.name.charAt(0);
+
+  addMessage(response.turn, true);
+  updateDashboard();
+  
+  chatInput.disabled = false;
+  sendBtn.disabled = false;
+}
+
+// Add message to chat
+function addMessage(turn, isPersona = false) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ${turn.role}`;
+  
+  const roleEmoji = { persona: '🎭', user: '🕵️', narrator: '📜' };
+  const roleLabel = { persona: persona.name, user: '你', narrator: '旁白' };
+  const emotion = turn.emotion ? `<br><span class="emotion-label">${getEmotionLabel(turn.emotion)}</span>` : '';
+  
+  msgDiv.innerHTML = `
+    <div style="font-size: 0.8em; color: var(--text-secondary); margin-bottom: 4px;">${roleEmoji[turn.role]} ${roleLabel[turn.role]}</div>
+    <div class="message-content">${turn.text}${emotion}</div>
+  `;
+  
+  chatMessages.appendChild(msgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function getEmotionLabel(emotion) {
+  const labels = { calm: '平静', joyful: '欢愉', tense: '紧张', sorrowful: '悲恸', furious: '暴怒', fearful: '惊惧', suspicious: '狐疑', tender: '温柔' };
+  return labels[emotion] || emotion;
+}
+
+// Update dashboard
+function updateDashboard() {
+  const state = engine.state;
+  
+  trustValue.textContent = Math.round(state.trust);
+  tensionValue.textContent = Math.round(state.tension);
+  
+  renderSuspects();
+  renderEvidenceWall();
+  renderStoryTree();
+}
+
+// Render suspects
+function renderSuspects() {
+  const suspects = engine.getAllSuspects();
+  
+  suspectList.innerHTML = suspects.map(s => {
+    const stress = s.stress;
+    const stressClass = stress.stressLevel >= 80 ? 'critical' 
+                      : stress.stressLevel >= 50 ? 'high'
+                      : stress.stressLevel >= 25 ? 'medium' : 'low';
+    
+    return `
+      <div class="suspect-card" data-suspect-id="${s.id}" onclick="window.selectSuspect('${s.id}')">
+        <div class="suspect-header">
+          <div class="suspect-avatar">${s.name.charAt(0)}</div>
+          <div class="suspect-name">${s.name}</div>
+        </div>
+        <div class="stress-meter">
+          <div class="stress-fill ${stressClass}" style="width: ${stress.stressLevel}%"></div>
+        </div>
+        ${stress.unlockedConfessions.length > 0 ? '<div class="confession-preview">💬 已破防解锁核心证词</div>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+window.selectSuspect = function(suspectId) {
+  engine.setInterrogationTarget(suspectId);
+  document.querySelectorAll('.suspect-card').forEach(card => {
+    card.classList.remove('selected');
+    if (card.dataset.suspectId === suspectId) card.classList.add('selected');
+  });
+};
+
+// Render evidence wall with SVG threads
+function renderEvidenceWall() {
+  const clues = screenplay.clues;
+  const cols = 3;
+  const rows = Math.ceil(clues.length / cols);
+  const cellW = 480 / cols;
+  const cellH = 350 / rows;
+  
+  // Create SVG connections
+  let svgHTML = '<svg xmlns="http://www.w3.org/2000/svg">';
+  for (let i = 0; i < clues.length - 1; i++) {
+    const x1 = (i % cols) * cellW + cellW / 2;
+    const y1 = Math.floor(i / cols) * cellH + cellH / 2;
+    const x2 = ((i + 1) % cols) * cellW + cellW / 2;
+    const y2 = Math.floor((i + 1) / cols) * cellH + cellH / 2;
+    svgHTML += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="evidence-thread" />`;
+  }
+  svgHTML += '</svg>';
+  evidenceWall.innerHTML = svgHTML;
+  
+  // Add cards on top
+  clues.forEach((clue, idx) => {
+    const x = (idx % cols) * cellW + 10;
+    const y = Math.floor(idx / cols) * cellH + 10;
+    const revealed = engine.state.revealedClueIds.includes(clue.id);
+    const exposed = engine.getInterrogationStatus(clue.implicates)?.evidenceExposed?.includes(clue.id);
+    
+    const card = document.createElement('div');
+    card.className = `evidence-card ${revealed ? 'revealed' : 'hidden'}`;
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+    card.onclick = () => window.showEvidenceDetail(clue.id);
+    
+    card.innerHTML = `
+      <div class="evidence-card-title">${clue.title}</div>
+      <div class="evidence-card-detail">${clue.detail.substring(0, 45)}...</div>
+      ${revealed && !exposed ? `<button class="expose-btn" onclick="event.stopPropagation(); window.exposeEvidence('${clue.id}')">出示证据</button>` : ''}
+      ${exposed ? '<button class="expose-btn exposed">已出示</button>' : ''}
+    `;
+    
+    evidenceWall.appendChild(card);
+  });
+}
+
+window.showEvidenceDetail = function(clueId) {
+  const clue = screenplay.clues.find(c => c.id === clueId);
+  alert(`证物详情：\n\n标题：${clue.title}\n内容：${clue.detail}`);
+  engine.selectEvidence(clueId);
+};
+
+window.exposeEvidence = function(clueId) {
+  const clue = screenplay.clues.find(c => c.id === clueId);
+  if (!clue) return;
+  
+  const result = engine.exposeEvidence(clue.implicates, clueId);
+  if (result.broke) alert('🎯 心理防线突破！解锁隐藏证词！');
+  updateDashboard();
+};
+
+// Render story tree
+function renderStoryTree() {
+  const nodes = engine.getStoryTree();
+  const icons = { intro: '🎬', exploration: '🔍', 'cross-examination': '⚖️', confrontation: '🔥', resolution: '💡' };
+  
+  storyTree.innerHTML = nodes.map(node => {
+    const icon = icons[node.phase] || '❓';
+    const unlocked = node.isUnlocked;
+    const current = engine.state.phase === node.phase;
+    const ending = node.endingType ? ' [结局]' : '';
+    
+    return `
+      <div class="story-node ${unlocked ? 'unlocked' : ''} ${current ? 'current' : ''} ${node.endingType ? 'is-ending' : ''}">
+        <div class="story-node-icon">${icon}</div>
+        <div style="flex:1">
+          <div class="story-node-label">${node.label}${ending}</div>
+          ${node.trustRequirement !== undefined ? `<div class="story-node-meta">信任要求：${node.trustRequirement}%</div>` : ''}
+        </div>
+        <div class="status-badge ${unlocked ? 'status-unlocked' : 'status-locked'}">${unlocked ? '已解锁' : '未解锁'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Send message
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text || !currentSessionId) return;
+  
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<span class="loading"></span> 思考中...';
+  
+  try {
+    const response = await engine.send({ sessionId: currentSessionId, userText: text });
+    currentSessionId = response.state.sessionId;
+    addMessage(response.turn, response.turn.role === 'persona');
+    updateDashboard();
+    engine.updateStoryProgression();
+  } catch (error) {
+    console.error('Send error:', error);
+    alert('发送失败，请重试');
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = '发送';
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+init();
+</script>
+</body>
+</html>

@@ -17,7 +17,7 @@
  */
 
 import type { AgentConfig, ConfigOverrides } from './config.js';
-import type { MiniMaxTransport } from './types.js';
+import type { MiniMaxTransport, SuspectStress, StoryNode } from './types.js';
 import type {
   DialogueTurn,
   DramaEvent,
@@ -81,6 +81,13 @@ export interface DramaEngineLike {
   start(): Promise<DialogueResponse>;
   send(input: DialogueRequest): Promise<DialogueResponse>;
   events(): readonly DramaEvent[];
+  exposeEvidence(suspectId: string, evidenceId: string): { stressDelta: number; broke?: boolean };
+  getInterrogationStatus(suspectId: string): SuspectStress | undefined;
+  selectEvidence(evidenceId?: string): void;
+  setInterrogationTarget(suspectId?: string): void;
+  getStoryTree(): readonly StoryNode[];
+  updateStoryProgression(): void;
+  getAllSuspects(): Readonly<{ id: string; name: string; stress: SuspectStress }>[];
 }
 
 /* --------------------------------- eval ----------------------------------- */
