@@ -1,12 +1,14 @@
-// markdown-card：把结构化一页纸渲染成 4 个区块。
-// 输入 structured（quickread: conclusion/keyData/risks/evidence；triage: today/defer/deletions/timeBlocks）。
-// 纯展示组件，不做任何数据加工，避免把渲染逻辑散到组件里。
+// markdown-card：把结构化一页纸渲染成投研终端风格的多区块卡片。
+// 输入 structured（quickread: conclusion/keyData/risks/riskCards/landscape/evidence；triage: today/defer/deletions/timeBlocks）。
+// 纯展示组件，不做任何数据加工，避免把渲染逻辑散到页面里。
 
 const SECTION_TITLES = {
   quickread: {
     conclusion: '一句话结论',
-    keyData: '关键数据',
+    keyData: '关键财务指标',
     risks: '风险点',
+    riskCards: '风险红线警示',
+    landscape: '行业竞争格局',
     evidence: '原文引用依据'
   },
   triage: {
@@ -16,6 +18,17 @@ const SECTION_TITLES = {
     timeBlocks: '时间块'
   }
 };
+
+// keyData.kind → 徽章角标
+const KIND_TAG = {
+  percent: '比率',
+  amount: '金额',
+  year: '年份',
+  multiple: '倍数',
+  delta: '变动'
+};
+
+const SEVERITY_LABEL = { high: '红线', medium: '关注', low: '提示' };
 
 Component({
   properties: {
@@ -35,12 +48,16 @@ Component({
   },
 
   data: {
-    sections: []
+    sections: [],
+    formatLabel: ''
   },
 
   observers: {
     'structured, scene': function (structured, scene) {
-      this.setData({ sections: this.buildSections(scene, structured) });
+      this.setData({
+        sections: this.buildSections(scene, structured),
+        formatLabel: structured && structured.format ? structured.format.label : ''
+      });
     }
   },
 
@@ -87,22 +104,59 @@ Component({
           kind: 'plain',
           items: structured.conclusion ? [{ text: structured.conclusion }] : []
         });
+        // 关键财务指标徽章：数值 + 标签 + 类型角标，网格排布对齐投研终端
         out.push({
           key: 'keyData',
           title: titles.keyData,
-          kind: 'kv',
+          kind: 'badge',
           items: (structured.keyData || []).map(function (d) {
-            return { text: d.value || '', label: d.label || '' };
+            return {
+              text: (d.value || '') + ' ' + (d.label || ''),
+              value: d.value || '',
+              label: d.label || '',
+              tag: KIND_TAG[d.kind] || '指标'
+            };
           })
         });
-        out.push({
-          key: 'risks',
-          title: titles.risks,
-          kind: 'plain',
-          items: (structured.risks || []).map(function (r) {
-            return { text: r.text || '' };
-          })
-        });
+        // 风险穿透卡优先；引擎未给出 riskCards 时退回纯风险句
+        const cards = structured.riskCards || [];
+        if (cards.length) {
+          out.push({
+            key: 'riskCards',
+            title: titles.riskCards,
+            kind: 'riskcard',
+            items: cards.map(function (c) {
+              return {
+                title: c.title || '风险信号',
+                severity: c.severity || 'medium',
+                severityLabel: SEVERITY_LABEL[c.severity] || '关注',
+                detail: c.detail || '',
+                keywords: (c.keywords || []).slice(0, 4)
+              };
+            })
+          });
+        } else {
+          out.push({
+            key: 'risks',
+            title: titles.risks,
+            kind: 'plain',
+            items: (structured.risks || []).map(function (r) {
+              return { text: r.text || '' };
+            })
+          });
+        }
+        // 行业竞争格局：仅当原文命中格局词时出现，绝不空造
+        const land = structured.landscape || [];
+        if (land.length) {
+          out.push({
+            key: 'landscape',
+            title: titles.landscape,
+            kind: 'landscape',
+            items: land.map(function (l) {
+              return { text: l.text || '', signals: l.signals || [] };
+            })
+          });
+        }
         out.push({
           key: 'evidence',
           title: titles.evidence,

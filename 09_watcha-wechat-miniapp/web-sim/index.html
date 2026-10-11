@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>秒开 AI · H5 评委直测模拟器</title>
+<link rel="stylesheet" href="simulator.css">
+</head>
+<body>
+<div class="desk">
+  <!-- 左侧：评委上手指引（不进手机屏） -->
+  <aside class="side">
+    <div class="side-brand">
+      <span class="side-logo">◌</span>
+      <div>
+        <div class="side-title">秒开 AI 智能体 · 真机模拟器</div>
+        <div class="side-sub">iPhone 16 Pro / 微信小程序交互 1:1 还原</div>
+      </div>
+    </div>
+
+    <div class="side-card">
+      <div class="side-card-title">30 秒上手</div>
+      <ol class="side-steps">
+        <li>底部 <b>TabBar</b> 三页切换：首页秒开、一页纸快读、日程断舍离</li>
+        <li>快读页点 <b>填入示例</b> → <b>生成一页纸</b>：指标徽章 / 风险红线卡 / 竞争格局即时呈现</li>
+        <li>点 <b>查看详情与追问</b>，敲 <b>护城河与估值下行风险</b> 胶囊：打字机流式回答</li>
+        <li>结果写入 <b>localStorage</b>（等价 wx.setStorageSync），回到首页可见最近记录与角标</li>
+      </ol>
+    </div>
+
+    <div class="side-card">
+      <div class="side-card-title">真实性声明</div>
+      <p class="side-note">模拟器内嵌的 <code>engine.bundle.js</code> 由 <code>node tools/build-h5-sim.js</code>
+      从小程序源码 <code>src/core/local-engine.js</code> 原样打包——同一份确定性内核：同输入必同输出，
+      数据全部真实抽取（TF-IDF 摘要 + 正则提数 + 词表穿透），绝无硬编码假结果。</p>
+    </div>
+
+    <div class="side-actions">
+      <button id="btn-reset" class="ghost-btn" type="button">清空模拟缓存</button>
+      <span id="side-stats" class="side-stats"></span>
+    </div>
+  </aside>
+
+  <!-- 右侧：iPhone 16 Pro 外框 -->
+  <div class="stage-wrap">
+    <div class="iphone">
+      <div class="iphone-side iphone-left"></div>
+      <div class="iphone-side iphone-right-a"></div>
+      <div class="iphone-side iphone-right-b"></div>
+      <div class="iphone-body">
+        <div class="screen">
+          <!-- 微信状态栏 -->
+          <div class="statusbar">
+            <span class="sb-time" id="sb-time">9:41</span>
+            <span class="sb-right">
+              <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+              <span class="sb-wifi"></span>
+              <span class="sb-battery"><b></b></span>
+            </span>
+          </div>
+          <!-- 微信导航栏 -->
+          <div class="navbar">
+            <span class="nav-back" id="nav-back">‹</span>
+            <span class="nav-title" id="nav-title">秒开 AI</span>
+            <span class="nav-capsule"><i>···</i><em></em><i>◎</i></span>
+          </div>
+          <!-- 页面流转区 -->
+          <div class="viewport" id="viewport"></div>
+          <!-- TabBar -->
+          <div class="tabbar" id="tabbar"></div>
+          <div class="home-indicator"></div>
+          <!-- toast 层 -->
+          <div class="toast" id="toast"></div>
+        </div>
+        <div class="island"></div>
+      </div>
+    </div>
+    <div class="stage-caption">浏览器直开 · 无需微信开发者工具 · 缓存持久化于本机 localStorage</div>
+  </div>
+</div>
+<script src="engine.bundle.js"></script>
+<script src="simulator.js"></script>
+</body>
+</html>

@@ -120,6 +120,19 @@
   word-break: break-word;
 }
 
+/* 打字机光标：逐字输出期间闪烁 */
+.qa-caret {
+  flex: none;
+  color: var(--accent);
+  font-size: 27rpx;
+  animation: qa-caret-blink 0.7s steps(1) infinite;
+}
+
+@keyframes qa-caret-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
 .result-actions {
   display: flex;
   margin-top: 22rpx;

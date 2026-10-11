@@ -8,8 +8,61 @@ const { normalizeInput, splitSentences, tokenize, hashString, formatClock } = re
 const RISK_TERMS = [
   '下滑', '亏损', '诉讼', '监管', '违约', '召回', '延期', '竞争加剧', '减值', '商誉',
   '处罚', '违规', '退市', '降价', '裁员', '负债', '逾期', '造假', '不确定性',
+  '应收账款', '回款', '坏账', '减持', '解禁', '质押', '冻结', '现金流', '价格战', '审计',
   'decline', 'loss', 'lawsuit', 'regulation', 'default', 'recall', 'delay', 'impairment'
 ];
+
+// 风险穿透 playbook：命中关键词即给风险句贴上「红线类型 + 严重度」，供警示卡渲染。
+// 纯词表匹配，同输入同输出；未命中任何类型时归为通用风险信号。
+const RISK_PLAYBOOK = [
+  { key: 'receivable', label: '应收账款异动', severity: 'high', terms: ['应收账款', '回款', '坏账', '账期'] },
+  { key: 'shareholder', label: '大股东减持', severity: 'high', terms: ['减持', '解禁', '清仓', '质押', '冻结', '平仓'] },
+  { key: 'goodwill', label: '商誉减值', severity: 'high', terms: ['商誉', '减值'] },
+  { key: 'audit', label: '审计非标', severity: 'high', terms: ['审计', '保留意见', '无法表示意见', '造假'] },
+  { key: 'regulatory', label: '监管与诉讼', severity: 'high', terms: ['诉讼', '监管', '处罚', '违规', '召回', '责令', '退市'] },
+  { key: 'debt', label: '债务逾期', severity: 'high', terms: ['逾期', '违约', '负债', '资金链'] },
+  { key: 'cashflow', label: '现金流恶化', severity: 'medium', terms: ['现金流'] },
+  { key: 'competition', label: '竞争加剧', severity: 'medium', terms: ['竞争加剧', '价格战', '降价', '份额下滑'] },
+  { key: 'growth', label: '业绩下滑', severity: 'medium', terms: ['下滑', '亏损', '延期', '裁员', '不确定性'] }
+];
+
+const SEVERITY_RANK = { high: 3, medium: 2, low: 1 };
+
+// 一句可命中多个红线类型；按严重度降序、playbook 顺序升序，保证确定性。
+function classifyRiskSentence(sent) {
+  const hits = [];
+  for (let i = 0; i < RISK_PLAYBOOK.length; i++) {
+    const p = RISK_PLAYBOOK[i];
+    const matched = [];
+    for (const t of p.terms) {
+      if (sent.indexOf(t) !== -1) matched.push(t);
+    }
+    if (matched.length) hits.push({ def: p, order: i, matched: matched });
+  }
+  hits.sort(function (a, b) {
+    const ra = SEVERITY_RANK[a.def.severity] || 0;
+    const rb = SEVERITY_RANK[b.def.severity] || 0;
+    if (rb !== ra) return rb - ra;
+    return a.order - b.order;
+  });
+  return hits;
+}
+
+// 行业竞争格局信号：只抽取含份额/龙头/排名等格局词的原文句，找不到就如实为空。
+const LANDSCAPE_TERMS = ['市场份额', '市占率', '市占', '渗透率', '龙头', '排名', '竞争格局', '行业地位', '行业集中度', '装机量', '出货'];
+
+function extractLandscape(sentences) {
+  const out = [];
+  for (let i = 0; i < sentences.length; i++) {
+    const sent = sentences[i];
+    const signals = [];
+    for (const t of LANDSCAPE_TERMS) {
+      if (sent.indexOf(t) !== -1 && signals.indexOf(t) === -1) signals.push(t);
+    }
+    if (signals.length) out.push({ text: truncate(sent, 100), signals: signals, si: i });
+  }
+  return out.slice(0, 4);
+}
 
 // 命中任一风险词即视为风险句；纯正向词（增长/超预期）不进风险表，避免误判。
 function isRiskSentence(sent) {
@@ -248,8 +301,34 @@ function analyzeDocument(text, opts) {
         if (t === '好' || t === '增长' || t === '超预期') continue;
         if (x.sentence.indexOf(t) !== -1 && terms.indexOf(t) === -1) terms.push(t);
       }
-      return { text: truncate(x.sentence, 80), terms: terms, evidence: truncate(x.sentence, 120), si: x.si };
+      // 风险穿透：给每个风险句打上红线类型与严重度，未命中专项时归为通用风险信号
+      const classes = classifyRiskSentence(x.sentence);
+      const top = classes.length ? classes[0].def : null;
+      return {
+        text: truncate(x.sentence, 80),
+        terms: terms,
+        evidence: truncate(x.sentence, 120),
+        si: x.si,
+        category: top ? top.label : '风险信号',
+        categoryKey: top ? top.key : 'general',
+        severity: top ? top.severity : 'medium',
+        playbook: classes.map(function (c) { return { key: c.def.key, label: c.def.label, severity: c.def.severity, matched: c.matched }; })
+      };
     });
+
+  const landscape = extractLandscape(sentences);
+
+  // 风险红线警示卡：与 risks 一一对应，供页面按「类型 + 严重度 + 证据」渲染穿透卡
+  const riskCards = risks.map(function (r, i) {
+    return {
+      id: 'rc_' + i + '_' + hashString(r.evidence),
+      title: r.category,
+      severity: r.severity,
+      keywords: r.terms.slice(0, 4),
+      detail: r.evidence,
+      types: r.playbook.map(function (p) { return p.label; })
+    };
+  });
 
   const conclusionSource = summaryResult.top.length ? summaryResult.top[0].sentence : (sentences[0] || '');
   const conclusion = conclusionSource ? truncate(conclusionSource, 60) : '未检测到有效文本';
@@ -267,6 +346,8 @@ function analyzeDocument(text, opts) {
     conclusion: conclusion,
     keyData: keyData,
     risks: risks,
+    riskCards: riskCards,
+    landscape: landscape,
     evidence: evidence,
     summary: truncate(conclusion, 120),
     sentenceCount: sentences.length,
@@ -278,6 +359,8 @@ function analyzeDocument(text, opts) {
       conclusion: conclusion,
       keyData: keyData,
       risks: risks,
+      riskCards: riskCards,
+      landscape: landscape,
       evidence: evidence,
       format: { key: fmt.key, label: fmt.label, fields: formatFields }
     }
@@ -381,9 +464,44 @@ function localAnswer(question, context) {
   const structured = context.structured || context;
   const keys = Object.keys(structured);
   // 命中关键词回对应结构化块
+  if (/护城河|壁垒|估值|下行/.test(q)) {
+    const moatSeen = Object.create(null);
+    const moatSrc = (structured.keyData || []).filter(function (d) {
+      if (!/研发|营收|收入|利润|毛利|专利|增长|同比|环比/.test((d.label || '') + (d.evidence || ''))) return false;
+      if (moatSeen[d.value]) return false;
+      moatSeen[d.value] = true;
+      return true;
+    }).slice(0, 3);
+    const cards = (structured.riskCards || []).slice();
+    cards.sort(function (a, b) {
+      const ra = SEVERITY_RANK[a.severity] || 0, rb = SEVERITY_RANK[b.severity] || 0;
+      if (rb !== ra) return rb - ra;
+      return String(a.id) < String(b.id) ? -1 : 1;
+    });
+    const downside = cards.slice(0, 3);
+    const head = moatSrc.length
+      ? '【护城河线索】以下量化信号来自原文，可作壁垒判断依据：\n' +
+        moatSrc.map(function (d, i) { return (i + 1) + '. ' + d.value + '（' + d.label + '）'; }).join('\n')
+      : '【护城河线索】原文未出现研发/营收/利润等可支撑壁垒判断的量化指标，不做无依据结论。';
+    const tail = downside.length
+      ? '\n【三大估值下行风险】按严重度排序：\n' +
+        downside.map(function (c, i) { return (i + 1) + '. ' + c.title + '：' + c.detail; }).join('\n')
+      : '\n【估值下行风险】未提取到红线风险信号。';
+    return head + tail;
+  }
+  if (/竞争|格局|份额|龙头|行业/.test(q) && structured.landscape) {
+    return structured.landscape.length
+      ? '行业竞争格局（原文信号）：\n' + structured.landscape.map(function (l, i) {
+          return (i + 1) + '. ' + l.text + '（命中：' + l.signals.join('、') + '）';
+        }).join('\n')
+      : '原文未出现份额/龙头/排名等竞争格局信号，无法给出格局对比。';
+  }
   if (/风险|隐患|问题|坑/.test(q) && structured.risks) {
     return structured.risks.length
-      ? '风险点：\n' + structured.risks.map(function (r, i) { return (i + 1) + '. ' + (r.text || r); }).join('\n')
+      ? '风险点：\n' + structured.risks.map(function (r, i) {
+          const tag = r.category ? '〔' + r.category + '〕' : '';
+          return (i + 1) + '. ' + tag + (r.text || r);
+        }).join('\n')
       : '未发现明显风险信号。';
   }
   if (/数据|多少|指标|金额|数字/.test(q) && structured.keyData) {
@@ -414,7 +532,7 @@ function localAnswer(question, context) {
     return '文体识别：「' + f.label + '」' + (lines.length ? '\n' + lines.join('\n') : '（该文本未命中此格式的专属字段）');
   }
   if (/结论|总结|一句话/.test(q)) return '结论：' + (structured.conclusion || structured.summary || '见一页纸正文。');
-  return '基于当前结果可追问：风险、数据、文体、结论、今日必做、时间块。（可用字段：' + keys.join('/') + '）';
+  return '基于当前结果可追问：风险、护城河与估值、竞争格局、数据、文体、结论、今日必做、时间块。（可用字段：' + keys.join('/') + '）';
 }
 
 // 闲聊兜底：与场景相关的确定性引导，绝不编造事实。
@@ -422,7 +540,7 @@ function localChat(question, scene) {
   if (scene === 'triage') {
     return '我可以帮你把杂乱待办拆成：今日必做 Top3、可延后、建议删除（含理由）与时间块。把待办贴进来即可。';
   }
-  return '我可以把论文/财报/长文压成一页纸：一句话结论 + 3 个关键数据 + 3 个风险点 + 原文引用依据，并自动识别会议纪要/周报/学术摘要/技术文档/新闻五种文体。粘贴文本或链接内容即可。';
+  return '我可以把论文/财报/长文压成一页纸：一句话结论 + 关键财务指标徽章 + 风险红线穿透卡 + 行业竞争格局 + 原文引用依据，并自动识别会议纪要/周报/学术摘要/技术文档/新闻五种文体。粘贴文本或链接内容即可。';
 }
 
 module.exports = {

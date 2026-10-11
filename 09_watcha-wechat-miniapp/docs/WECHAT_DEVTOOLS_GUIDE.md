@@ -3,6 +3,10 @@
 > 面向大赛评委与开发者。按本指引可在 5 分钟内完成导入、编译、离线降级演示与真机预览。
 > 前置软件：[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html) 稳定版（Stable Build）即可。
 
+> **不想装开发者工具？** 项目自带 **H5 评委直测模拟器**：用任意现代浏览器直接打开（双击即可，无需服务器、无需联网）——
+> `web-sim/index.html`
+> 内嵌 iPhone 16 Pro 外框 + 微信状态栏/胶囊，TabBar 三页切换、页面流转、localStorage 模拟 `wx.setStorageSync` 全部还原；内核与小程序端**同一份** `src/core/local-engine.js`（由 `node tools/build-h5-sim.js` 从源码原样打包，同输入同输出）。可先 H5 把玩，再按本指引走真机验证。
+
 ---
 
 ## 1. 导入目录（第一步，最容易错）
@@ -28,6 +32,8 @@
 │   ├── packages/triage/     # 分包：今日安排页 today
 │   ├── components/          # 四个自定义组件（均已 usingComponents 声明）
 │   └── core/                # agent / ai-adapter / local-engine（离线内核）
+├── web-sim/                 # H5 评委直测模拟器（浏览器直开 index.html，不占小程序包体）
+├── tools/build-h5-sim.js    # 模拟器内核打包脚本（从 src/ 原样打包，改内核后需重跑）
 └── docs/WECHAT_DEVTOOLS_GUIDE.md   # 本文档
 ```
 
@@ -53,7 +59,7 @@
 | ES6 转 ES5 | `setting.es6: true` | **开** | 源码含 `const`/箭头函数/解构；开启后由工具内置 babel 转译，兼容全部真机基础库。 |
 | 增强编译 | `setting.enhance: true` | **开** | 补齐 async/await 等语法运行时（`core/agent.js` 使用 Promise 链）。 |
 | 上传时压缩样式 | `setting.postcss: true` | **开** | wxss 自动补全 flex 兼容前缀。 |
-| 上传代码时自动压缩混淆 | `setting.minified: true` | **开** | 上传体验版/提审包时进一步压缩体积；主包当前未压缩仅 118.8 KB（占 2MB 硬限 5.80%）。 |
+| 上传代码时自动压缩混淆 | `setting.minified: true` | **开** | 上传体验版/提审包时进一步压缩体积；主包当前未压缩仅 130.7 KB（占 2MB 硬限 6.38%）。 |
 | 不校验合法域名 | `setting.urlCheck: false` | **开**（即不校验） | 云开发 AI 域名由平台托管；本地联调无需在后台配域名。正式提审前在小程序后台配置合法域名。 |
 | 按需注入 | `app.json: lazyCodeLoading` | `requiredComponents` | 只注入页面实际用到的自定义组件代码，是「秒开」的关键开关。 |
 

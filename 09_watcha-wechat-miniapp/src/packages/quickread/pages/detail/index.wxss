@@ -29,6 +29,14 @@
   margin: 0 14rpx 14rpx 0;
 }
 
+/* 核心投研追问：加深底色 + 描边，一眼锁定 */
+.ask-hint-key {
+  color: #FFFFFF;
+  background: var(--accent);
+  border: 1rpx solid var(--accent);
+  font-weight: 500;
+}
+
 .ask-input-row {
   display: flex;
   align-items: center;
@@ -84,6 +92,19 @@
   font-size: 27rpx;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* 打字机光标：逐字输出期间闪烁 */
+.qa-caret {
+  flex: none;
+  color: var(--accent);
+  font-size: 27rpx;
+  animation: qa-caret-blink 0.7s steps(1) infinite;
+}
+
+@keyframes qa-caret-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
 }
 
 .card-title-row {
