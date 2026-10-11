@@ -6,16 +6,30 @@ export interface FeedItem extends RawItem {
   score: number;
 }
 
+export interface ScoringBreakdown {
+  matchScore: number;
+  recencyScore: number;
+  engagementScore: number;
+  total: number;
+  rrfContribution?: number;
+  sourceRank?: number;
+}
+
+export interface FeedItemWithScoring extends FeedItem {
+  scoring?: ScoringBreakdown;
+}
+
 export interface FeedResult {
   query: string;
   sources: string[];
   offline: boolean;
   partial: boolean;
   failedSources: { source: string; error: string }[];
-  items: FeedItem[];
+  items: FeedItemWithScoring[];
   total: number;
   tookMs: number;
   cache: CacheStats;
+  scoringMethod?: "rrf" | "weighted";
 }
 
 export interface FeedEngineOptions {
