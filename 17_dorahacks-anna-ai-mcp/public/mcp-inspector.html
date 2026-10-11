@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetIntel MCP Inspector - Interactive Debug Console</title>
+  <style>
+    :root {
+      --bg-primary: #0f1419;
+      --bg-secondary: #1a2027;
+      --bg-tertiary: #242d36;
+      --border-color: #3a4552;
+      --text-primary: #e8eaed;
+      --text-secondary: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --accent-yellow: #d29922;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .subtitle { color: var(--text-secondary); font-size: 14px; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    
+    .panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: monospace;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+    
+    textarea { resize: vertical; min-height: 100px; }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 20px;
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .tool-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tool-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    
+    .tool-name {
+      font-weight: 600;
+      color: var(--accent-blue);
+      margin-bottom: 4px;
+    }
+    
+    .tool-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .response-panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      max-width: 600px;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    
+    .log-request { border-left: 3px solid var(--accent-blue); }
+    .log-response { border-left: 3px solid var(--accent-green); }
+    .log-error { border-left: 3px solid var(--accent-red); }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status-online { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .status-offline { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+    
+    .progress {
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      transition: width 0.3s;
+    }
+    
+    .schema-viewer {
+      background: var(--bg-primary);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+      overflow-x: auto;
+      margin-top: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .timing-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔍 NetIntel MCP Inspector</h1>
+      <p class="subtitle">Interactive Model Context Protocol Debug Console • Powered by netintel-mcp v<span id="version"></span></p>
+      <div style="margin-top: 12px; display: flex; gap: 16px; align-items: center;">
+        <label>
+          <input type="checkbox" id="readonlyMode" style="width: auto; margin-right: 8px;"> 
+          🔒 Read-Only Mode (block write operations)
+        </label>
+        <label>
+          <input type="checkbox" id="enableSecurityGuard" checked style="width: auto; margin-right: 8px;">
+          🛡️ Security Guard Enabled
+        </label>
+        <button id="viewConfig" class="btn" style="padding: 6px 12px; font-size: 12px;">View Config</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left Panel: Tool Selection & Parameters -->
+      <div style="min-width: 0;">
+        
+        <!-- Server Status -->
+        <div class="panel" style="margin-bottom: 20px;">
+          <div class="panel-header">
+            <span class="panel-title">Server Connection</span>
+            <span id="serverStatus" class="status-badge status-offline">OFFLINE</span>
+          </div>
+          <div class="form-group">
+            <label for="serverUrl">MCP Server URL</label>
+            <input type="text" id="serverUrl" value="http://localhost:3000/mcp" placeholder="http://localhost:3000/mcp">
+          </div>
+          <button id="connectBtn" class="btn">Connect</button>
+        </div>
+
+        <!-- Tool Selector -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Available Tools</span>
+          </div>
+          <div class="tools-grid">
+            <div class="tool-card" data-tool="net_search">
+              <div class="tool-name">net_search</div>
+              <div class="tool-desc">Cross-source intelligence query</div>
+            </div>
+            <div class="tool-card" data-tool="net_digest">
+              <div class="tool-name">net_digest</div>
+              <div class="tool-desc">Generate topic digest</div>
+            </div>
+            <div class="tool-card" data-tool="net_fetch">
+              <div class="tool-name">net_fetch</div>
+              <div class="tool-desc">Fetch & clean URL</div>
+            </div>
+            <div class="tool-card" data-tool="net_sources">
+              <div class="tool-name">net_sources</div>
+              <div class="tool-desc">List available sources</div>
+            </div>
+            <div class="tool-card" data-tool="net_cache">
+              <div class="tool-name">net_cache</div>
+              <div class="tool-desc">Inspect cache stats</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Tool Parameters -->
+        <div class="panel" style="margin-top: 20px;">
+          <div class="panel-header">
+            <span class="panel-title" id="selectedToolTitle">Select a Tool</span>
+          </div>
+          <div id="toolParameters">
+            <p style="color: var(--text-secondary); text-align: center; padding: 40px 0;">
+              Click on a tool to see parameters and invoke
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Response Viewer -->
+      <div class="response-panel">
+        <div class="panel-header">
+          <span class="panel-title">Request/Response Log</span>
+          <button id="clearLog" class="btn" style="padding: 6px 12px; font-size: 12px;">Clear</button>
+        </div>
+        <div id="logContainer"></div>
+        <div class="timing-info" id="timingInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State management
+    const state = {
+      serverUrl: '',
+      connected: false,
+      selectedTool: null,
+      tools: {},
+      messageId: 0,
+      readonlyMode: false,
+      securityGuardEnabled: true,
+      blockedTools: ['net_fetch', 'net_cache'] // Tools blocked in readonly mode
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('version').textContent = '0.1.0';
+      
+      // Setup security controls
+      document.getElementById('readonlyMode')?.addEventListener('change', (e) => {
+        state.readonlyMode = e.target.checked;
+        logMessage('info', `Read-only mode ${state.readonlyMode ? 'enabled' : 'disabled'}`);
+      });
+      
+      document.getElementById('enableSecurityGuard')?.addEventListener('change', (e) => {
+        state.securityGuardEnabled = e.target.checked;
+        logMessage('info', `Security guard ${state.securityGuardEnabled ? 'enabled' : 'disabled'}`);
+      });
+      
+      document.getElementById('viewConfig')?.addEventListener('click', () => {
+        const config = {
+          readonlyMode: state.readonlyMode,
+          securityGuardEnabled: state.securityGuardEnabled,
+          blockedTools: state.blockedTools,
+          allowedMethods: ['GET', 'POST'],
+          originWhitelist: ['http://localhost:*', 'http://127.0.0.1:*']
+        };
+        alert(JSON.stringify(config, null, 2));
+      });
+      
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      // Connect button
+      document.getElementById('connectBtn').addEventListener('click', async () => {
+        state.serverUrl = document.getElementById('serverUrl').value.trim();
+        if (!state.serverUrl.endsWith('/mcp')) {
+          state.serverUrl += '/mcp';
+        }
+        
+        await testConnection();
+      });
+
+      // Clear log button
+      document.getElementById('clearLog').addEventListener('click', () => {
+        document.getElementById('logContainer').innerHTML = '';
+      });
+
+      // Tool cards click handlers
+      document.querySelectorAll('.tool-card').forEach(card => {
+        card.addEventListener('click', () => loadToolSchema(card.dataset.tool));
+      });
+    }
+
+    async function testConnection() {
+      updateStatus('Connecting...');
+      
+      try {
+        const response = await rpc('initialize', {
+          protocolVersion: '2025-06-18',
+          capabilities: {},
+          clientInfo: { name: 'mcp-inspector', version: '1.0.0' }
+        });
+
+        if (response && !response.error) {
+          state.connected = true;
+          updateStatus('ONLINE', 'online');
+          logMessage('connected', 'Connected to MCP server', 'success');
+          
+          // Fetch tools list
+          const toolsResp = await rpc('tools/list', {});
+          if (toolsResp && !toolsResp.error) {
+            state.tools = toolsResp.result?.tools || [];
+            logMessage('info', `Loaded ${state.tools.length} tools`);
+          }
+        } else {
+          throw new Error(response.error?.message || 'Connection failed');
+        }
+      } catch (err) {
+        updateStatus('OFFLINE', 'offline');
+        logMessage('error', `Connection failed: ${err.message}`);
+      }
+    }
+
+    async function loadToolSchema(toolName) {
+      state.selectedTool = toolName;
+      document.getElementById('selectedToolTitle').textContent = toolName;
+      
+      const tool = state.tools.find(t => t.name === toolName);
+      if (!tool) {
+        document.getElementById('toolParameters').innerHTML = '<p style="color: var(--accent-red);">Tool not found</p>';
+        return;
+      }
+
+      const schema = tool.inputSchema || {};
+      const params = buildParameterForm(schema, toolName);
+      document.getElementById('toolParameters').innerHTML = params;
+      
+      // Auto-fill example values
+      populateExampleValues(toolName);
+      
+      logMessage('info', `Selected tool: ${toolName}`);
+    }
+
+    function buildParameterForm(schema, toolName) {
+      const properties = schema.properties || {};
+      const required = schema.required || [];
+      
+      let html = `<div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">${tool.description || ''}</div>`;
+      html += `<pre class="schema-viewer">${JSON.stringify(schema, null, 2)}</pre>`;
+      html += `<form id="invokeForm" data-tool="${toolName}">`;
+      
+      for (const [key, prop] of Object.entries(properties)) {
+        const isRequired = required.includes(key);
+        const defaultValue = prop.default ?? '';
+        const placeholder = prop.type === 'string' ? (prop.format === 'uri' ? 'https://example.com' : '') : '';
+        
+        html += `<div class="form-group">
+          <label>${key}${isRequired ? ' <span style="color: var(--accent-red);">*</span>' : ''}</label>
+          <input 
+            type="${getInputType(prop.type)}" 
+            name="${key}" 
+            value="${defaultValue}" 
+            placeholder="${placeholder}"
+            ${prop.type === 'array' ? '' : ''}>
+        </div>`;
+      }
+      
+      html += `<button type="submit" class="btn" style="width: 100%;">Invoke Tool</button>`;
+      html += '</form>';
+      
+      // Add form submit handler
+      setTimeout(() => {
+        const form = document.getElementById('invokeForm');
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const params = {};
+            formData.forEach((value, key) => {
+              params[key] = value;
+            });
+            
+            // Convert types
+            if (params.sources && typeof params.sources === 'string') {
+              params.sources = JSON.parse(params.sources);
+            }
+            if (params.limit && typeof params.limit === 'string') {
+              params.limit = parseInt(params.limit, 10);
+            }
+            
+            await invokeTool(toolName, params);
+          });
+        }
+      }, 0);
+      
+      return html;
+    }
+
+    function getInputType(type) {
+      switch (type) {
+        case 'integer': return 'number';
+        case 'boolean': return 'checkbox';
+        case 'array': return 'text';
+        default: return 'text';
+      }
+    }
+
+    function populateExampleValues(toolName) {
+      setTimeout(() => {
+        const form = document.getElementById('invokeForm');
+        if (!form) return;
+        
+        if (toolName === 'net_search') {
+          form.querySelector('input[name="query"]')?.setAttribute('value', 'AI agents');
+          form.querySelector('input[name="limit"]')?.setAttribute('value', '5');
+        } else if (toolName === 'net_fetch') {
+          form.querySelector('input[name="url"]')?.setAttribute('value', 'https://news.ycombinator.com/item?id=12345');
+        }
+      }, 0);
+    }
+
+    async function invokeTool(toolName, params) {
+      if (!state.connected) {
+        alert('Not connected to MCP server. Please connect first.');
+        return;
+      }
+
+      showProgress(true);
+      
+      const startTime = Date.now();
+      const requestId = ++state.messageId;
+      const requestMsg = { jsonrpc: '2.0', id: requestId, method: 'tools/call', params: { name: toolName, arguments: params } };
+      
+      logMessage('request', `Invoking ${toolName}...`, JSON.stringify(requestMsg, null, 2));
+      
+      try {
+        const response = await fetch(state.serverUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestMsg)
+        });
+        
+        const result = await response.json();
+        const duration = Date.now() - startTime;
+        
+        logMessage('response', `${toolName} completed in ${duration}ms`, JSON.stringify(result, null, 2));
+        
+        if (result.error) {
+          logMessage('error', `Error: ${result.error.message}`, JSON.stringify(result.error, null, 2));
+        }
+      } catch (err) {
+        logMessage('error', `Network error: ${err.message}`);
+      } finally {
+        showProgress(false);
+      }
+    }
+
+    function rpc(method, params) {
+      return new Promise((resolve, reject) => {
+        const requestId = ++state.messageId;
+        const msg = { jsonrpc: '2.0', id: requestId, method, params };
+        
+        fetch(state.serverUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg)
+        })
+        .then(res => res.json())
+        .then(resolve)
+        .catch(reject);
+      });
+    }
+
+    function logMessage(type, title, details) {
+      const container = document.getElementById('logContainer');
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      
+      const timestamp = new Date().toISOString();
+      entry.innerHTML = `<strong>[${timestamp}] ${title}</strong><br><code>${details || ''}</code>`;
+      
+      container.appendChild(entry);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function updateStatus(text, type = 'offline') {
+      const badge = document.getElementById('serverStatus');
+      badge.textContent = text;
+      badge.className = `status-badge status-${type}`;
+    }
+
+    function showProgress(show) {
+      document.getElementById('connectBtn').disabled = show;
+    }
+  </script>
+</body>
+</html>

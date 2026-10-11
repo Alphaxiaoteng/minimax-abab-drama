@@ -34,6 +34,8 @@
     "test:jsonrpc": "npm run build && node --test dist/tests/jsonrpc.envelope.test.js dist/tests/jsonrpc.errors.test.js dist/tests/jsonrpc.fuzz.test.js dist/tests/transport.stdio.test.js dist/tests/transport.http.test.js",
     "smoke": "node scripts/smoke.js",
     "verify": "npm run typecheck && npm run lint && npm test && npm run smoke",
+    "server": "node dist/src/cli.js --transport http --port 3000",
+    "inspector": "node dist/src/cli.js --transport http --port 3000 & echo 'Open http://localhost:3000 in browser'",
     "start": "node dist/src/cli.js --transport stdio",
     "start:http": "node dist/src/cli.js --transport http"
   },
