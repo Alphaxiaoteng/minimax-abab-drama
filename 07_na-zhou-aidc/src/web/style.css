@@ -113,7 +113,7 @@ input[type="range"] { width: 100%; accent-color: var(--cyan); cursor: ew-resize;
 .panel-head h2 { font-size: 14px; font-weight: 600; }
 .tag { font-size: 11px; color: var(--dim); border: 1px solid var(--line); padding: 2px 8px; border-radius: 20px; }
 .chart { width: 100%; height: 300px; }
-#chart-pue { height: 300px; }
+#pue-gauge { height: 300px; }
 #chart-cost { height: 300px; }
 
 /* ---------- 页脚 ---------- */
@@ -146,7 +146,7 @@ input[type="range"] { width: 100%; accent-color: var(--cyan); cursor: ew-resize;
 /* ---------- 机房热孪生面板 ---------- */
 .twin-body { display: grid; grid-template-columns: 1.7fr 1fr; gap: 18px; padding: 4px 0 10px; }
 .twin-stage-wrap { perspective: 900px; }
-.rack-stage {
+.rack-grid {
   display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(4, 52px);
   gap: 7px; transform: rotateX(44deg) translateZ(-14px); transform-style: preserve-3d;
   padding: 14px 10px 22px; border: 1px dashed var(--line); border-radius: 12px;

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>初焰·钠宙 — 钠电 × AIDC 削峰填谷仿真控制台</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="echarts.min.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -80,7 +80,7 @@
         <input type="checkbox" id="c-island">
         <span class="track"><span class="knob"></span></span>
       </label>
-      <span class="island-hint mono" id="island-hint">ISLAND 待机</span>
+      <span class="island-hint island-banner mono" id="island-hint">ISLAND 待机</span>
     </div>
   </div>
 </section>
@@ -117,7 +117,7 @@
   </div>
   <div class="panel">
     <div class="panel-head"><h2>PUE 仪表盘</h2><span class="tag">含储能往返损耗</span></div>
-    <div class="chart" id="chart-pue"></div>
+    <div class="chart" id="pue-gauge"></div>
   </div>
   <div class="panel span2">
     <div class="panel-head"><h2>储能削峰填谷功率</h2><span class="tag">充电 ▼ / 放电 ▲ · SOC 曲线</span></div>
@@ -135,7 +135,7 @@
     </div>
     <div class="twin-body">
       <div class="twin-stage-wrap">
-        <div class="rack-stage" id="rack-stage"></div>
+        <div class="rack-grid" id="rack-grid"></div>
         <div class="aisle-strip" id="aisle-hot"></div>
         <div class="aisle-labels mono"><span>冷通道送风 <b id="t-cold">18.0℃</b></span><span>热通道回风 <b id="t-hot">—</b></span></div>
       </div>

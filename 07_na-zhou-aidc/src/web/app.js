@@ -39,7 +39,7 @@
       setStatus("err", "ECharts 未加载（CDN 不可达）— 图表不可用，KPI 仍会更新");
       return false;
     }
-    ["chart-load", "chart-pue", "chart-battery", "chart-cost"].forEach(function (id) {
+    ["chart-load", "pue-gauge", "chart-battery", "chart-cost"].forEach(function (id) {
       charts[id] = echarts.init(el(id), null, { renderer: "canvas" });
     });
     window.addEventListener("resize", function () {
@@ -97,7 +97,7 @@
 
   function drawPue(data) {
     var k = data.kpis;
-    charts["chart-pue"].setOption({
+    charts["pue-gauge"].setOption({
       animationDuration: 600,
       series: [{
         type: "gauge", min: 1.0, max: 1.6, radius: "92%", center: ["50%", "58%"],
@@ -261,7 +261,7 @@
   }
 
   function buildRackStage(racks) {
-    var stage = el("rack-stage");
+    var stage = el("rack-grid");
     stage.textContent = "";
     rackEls = racks.map(function (r) {
       var d = document.createElement("div");
