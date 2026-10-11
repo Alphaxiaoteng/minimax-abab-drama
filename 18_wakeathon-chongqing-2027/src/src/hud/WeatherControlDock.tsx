@@ -32,7 +32,7 @@ export const WeatherControlDock: React.FC<{
       <span className="panel-label">🌫️ 微气候控制</span>
       <div className="weather-sliders">
         <div className="slider-group">
-          <label htmlFor="fog-density">大雾浓度 Fog Density</label>
+          <label htmlFor="fog-density">山城雾浓度</label>
           <input
             type="range"
             id="fog-density"
@@ -51,7 +51,7 @@ export const WeatherControlDock: React.FC<{
           />
         </div>
         <div className="slider-group">
-          <label htmlFor="volumetric-light">体积光强 Volumetric Light</label>
+          <label htmlFor="volumetric-light">丁达尔体积光</label>
           <input
             type="range"
             id="volumetric-light"
@@ -70,7 +70,7 @@ export const WeatherControlDock: React.FC<{
           />
         </div>
         <div className="slider-group">
-          <label htmlFor="bloom-intensity">霓虹泛光辉光 Bloom Intensity</label>
+          <label htmlFor="bloom-intensity">泛光辉光强度</label>
           <input
             type="range"
             id="bloom-intensity"
@@ -93,7 +93,7 @@ export const WeatherControlDock: React.FC<{
         className="chip weather-trigger"
         onClick={handleFireworksTrigger}
         aria-label="触发跨江烟花">
-        🎆 跨江烟花 Fireworks
+        🎆 触发跨年焰火
       </button>
     </div>
   );
