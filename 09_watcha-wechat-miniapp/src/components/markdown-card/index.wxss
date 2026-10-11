@@ -75,22 +75,165 @@
   font-size: 30rpx;
 }
 
-.md-kv {
+/* 关键财务指标徽章：三列网格，数值大字 + 类型角标 */
+.md-badges {
   display: flex;
+  flex-wrap: wrap;
+}
+
+.md-badge {
+  width: 31%;
+  box-sizing: border-box;
+  background: rgba(31, 111, 235, 0.06);
+  border: 1rpx solid var(--border);
+  border-radius: 14rpx;
+  padding: 14rpx 14rpx 12rpx;
+  margin: 0 2% 12rpx 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.md-badge:nth-child(3n) {
+  margin-right: 0;
+}
+
+.md-badge-top {
   align-items: baseline;
-  margin-bottom: 10rpx;
 }
 
-.md-kv-value {
-  font-size: 34rpx;
-  font-weight: 600;
+.md-badge-value {
+  font-size: 30rpx;
+  font-weight: 700;
   color: var(--accent);
-  margin-right: 14rpx;
+  max-width: 130rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.md-kv-label {
-  font-size: 24rpx;
+.md-badge-tag {
+  flex: none;
+  font-size: 18rpx;
   color: var(--muted);
+  background: var(--surface);
+  border: 1rpx solid var(--border);
+  border-radius: 8rpx;
+  padding: 2rpx 8rpx;
+}
+
+.md-badge-label {
+  font-size: 20rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 风险红线警示卡：high 红边、medium 琥珀边 */
+.md-risk {
+  border-radius: 14rpx;
+  border: 1rpx solid var(--border);
+  border-left: 8rpx solid var(--warning);
+  background: rgba(217, 119, 6, 0.06);
+  padding: 16rpx 18rpx;
+  margin-bottom: 14rpx;
+}
+
+.md-risk-high {
+  border-left-color: var(--error);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.md-risk-head {
+  margin-bottom: 8rpx;
+}
+
+.md-risk-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.md-risk-med .md-risk-title {
+  color: var(--warning);
+}
+
+.md-risk-sev {
+  flex: none;
+  font-size: 20rpx;
+  color: #FFFFFF;
+  background: var(--error);
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+}
+
+.md-risk-med .md-risk-sev {
+  background: var(--warning);
+}
+
+.md-risk-detail {
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.md-risk-kws {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10rpx;
+}
+
+.md-risk-kw {
+  font-size: 20rpx;
+  color: var(--error);
+  border: 1rpx solid rgba(220, 38, 38, 0.35);
+  border-radius: 8rpx;
+  padding: 2rpx 10rpx;
+  margin: 0 10rpx 6rpx 0;
+}
+
+.md-risk-med .md-risk-kw {
+  color: var(--warning);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+/* 行业竞争格局：原文句 + 命中的格局信号 */
+.md-land {
+  border: 1rpx solid var(--border);
+  border-radius: 14rpx;
+  padding: 16rpx 18rpx;
+  margin-bottom: 12rpx;
+  background: var(--surface);
+}
+
+.md-land-text {
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.md-land-signals {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10rpx;
+}
+
+.md-land-sig {
+  font-size: 20rpx;
+  color: var(--accent);
+  background: rgba(31, 111, 235, 0.08);
+  border-radius: 8rpx;
+  padding: 2rpx 12rpx;
+  margin: 0 10rpx 6rpx 0;
+}
+
+.md-head-tags {
+  display: flex;
+  align-items: center;
+}
+
+.md-head-tags .tag {
+  margin-left: 12rpx;
 }
 
 .md-reason {

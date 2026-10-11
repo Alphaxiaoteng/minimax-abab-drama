@@ -2,7 +2,10 @@
 <view class="md-card">
   <view class="md-head row-between">
     <text class="md-head-title">一页纸结果</text>
-    <text wx:if="{{offline}}" class="tag tag-offline">离线分析</text>
+    <view class="md-head-tags">
+      <text wx:if="{{formatLabel}}" class="tag">{{formatLabel}}</text>
+      <text wx:if="{{offline}}" class="tag tag-offline">离线分析</text>
+    </view>
   </view>
 
   <view wx:if="{{sections.length === 0}}" class="md-empty muted">
@@ -40,11 +43,61 @@
       </view>
     </block>
 
-    <!-- 键值（关键数据：数值 + 标签） -->
-    <block wx:elif="{{item.kind === 'kv'}}">
-      <view wx:for="{{item.items}}" wx:for-item="line" wx:key="index" class="md-kv">
-        <text class="md-kv-value">{{line.text}}</text>
-        <text class="md-kv-label">{{line.label}}</text>
+    <!-- 关键财务指标徽章（网格） -->
+    <block wx:elif="{{item.kind === 'badge'}}">
+      <view class="md-badges">
+        <view
+          wx:for="{{item.items}}"
+          wx:for-item="line"
+          wx:key="index"
+          class="md-badge"
+          data-text="{{line.text}}"
+          bindlongpress="onCopy"
+        >
+          <view class="md-badge-top row-between">
+            <text class="md-badge-value mono">{{line.value}}</text>
+            <text class="md-badge-tag">{{line.tag}}</text>
+          </view>
+          <text class="md-badge-label">{{line.label}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 风险红线警示卡 -->
+    <block wx:elif="{{item.kind === 'riskcard'}}">
+      <view
+        wx:for="{{item.items}}"
+        wx:for-item="line"
+        wx:key="index"
+        class="md-risk {{line.severity === 'high' ? 'md-risk-high' : 'md-risk-med'}}"
+        data-text="{{line.detail}}"
+        bindlongpress="onCopy"
+      >
+        <view class="row-between md-risk-head">
+          <text class="md-risk-title">{{line.title}}</text>
+          <text class="md-risk-sev">{{line.severityLabel}}</text>
+        </view>
+        <view class="md-risk-detail">{{line.detail}}</view>
+        <view wx:if="{{line.keywords.length > 0}}" class="md-risk-kws">
+          <text wx:for="{{line.keywords}}" wx:for-item="kw" wx:key="*this" class="md-risk-kw">{{kw}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 行业竞争格局 -->
+    <block wx:elif="{{item.kind === 'landscape'}}">
+      <view
+        wx:for="{{item.items}}"
+        wx:for-item="line"
+        wx:key="index"
+        class="md-land"
+        data-text="{{line.text}}"
+        bindlongpress="onCopy"
+      >
+        <view class="md-land-text">{{line.text}}</view>
+        <view wx:if="{{line.signals.length > 0}}" class="md-land-signals">
+          <text wx:for="{{line.signals}}" wx:for-item="sig" wx:key="*this" class="md-land-sig">{{sig}}</text>
+        </view>
       </view>
     </block>
 

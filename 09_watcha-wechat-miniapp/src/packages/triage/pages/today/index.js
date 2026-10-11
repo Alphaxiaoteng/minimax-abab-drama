@@ -108,8 +108,35 @@ Page({
 
     if (!answerText) answerText = '未能获得回答，请稍后重试。';
 
-    answers.push({ role: 'assistant', text: answerText });
-    this.setData({ answers: answers, asking: false });
+    // 打字机式流式呈现：先挂空答复，再按帧增量 setData
+    const idx = this.data.answers.length;
+    const shown = this.data.answers.concat([{ role: 'assistant', text: '', typing: true }]);
+    this.setData({ answers: shown, asking: false });
+    this.revealAnswer(idx, answerText);
+  },
+
+  revealAnswer(idx, full) {
+    if (this._tw) clearInterval(this._tw);
+    const step = Math.max(2, Math.ceil(full.length / 60));
+    let pos = 0;
+    this._tw = setInterval(() => {
+      pos = Math.min(pos + step, full.length);
+      const patch = {};
+      patch['answers[' + idx + '].text'] = full.slice(0, pos);
+      if (pos >= full.length) {
+        patch['answers[' + idx + '].typing'] = false;
+        clearInterval(this._tw);
+        this._tw = null;
+      }
+      this.setData(patch);
+    }, 30);
+  },
+
+  onUnload() {
+    if (this._tw) {
+      clearInterval(this._tw);
+      this._tw = null;
+    }
   },
 
   // 把 Top3 + 删除建议转成一段可分享文本

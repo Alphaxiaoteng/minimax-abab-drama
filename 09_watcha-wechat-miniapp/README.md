@@ -17,10 +17,10 @@
 | Tab | 做什么 | 入口 | 截图占位 |
 | --- | --- | --- | --- |
 | 首页 | 秒开壳 + 两个入口卡 + 历史记录角标（本地缓存） | `src/pages/home`（主包） | `doc/screenshots/01-home.png`（待人工补拍） |
-| AI 一页纸快读 | 粘贴长文/分享链接 → 流式输出 4 区块：一句话结论 / 关键数据 ≤3 / 风险点 ≤3 / 原文引用 ≤3 | `src/pages/quickread`（主包 tab）+ 详情/历史在 `packages/quickread`（分包） | `doc/screenshots/02-quickread.png`（待人工补拍） |
+| AI 一页纸快读 | 粘贴长文/分享链接 → 流式输出投研五区块：一句话结论 / 关键财务指标徽章 / 风险红线警示卡（应收账款异动、大股东减持等自动归类分级）/ 行业竞争格局 / 原文引用 | `src/pages/quickread`（主包 tab）+ 详情/历史在 `packages/quickread`（分包） | `doc/screenshots/02-quickread.png`（待人工补拍） |
 | 日程断舍离 | 把今日待办一股脑丢进去 → Top3 必做 / 可延后 / 建议删除（含理由） / 时间块 | `src/pages/triage`（主包 tab）+ 今日安排在 `packages/triage`（分包） | `doc/screenshots/03-triage.png`（待人工补拍） |
 
-关键组件：`markdown-card`（流式文本渲染）、`stream-lines`（SSE 逐行上屏）、`step-trace`（工具调用轨迹）、`empty-state`（空态与离线提示）。
+关键组件：`markdown-card`（投研排版：指标徽章 / 风险红线卡 / 格局对比）、`stream-lines`（SSE 逐行上屏）、`step-trace`（工具调用轨迹）、`empty-state`（空态与离线提示）。详情页与今日页均带**打字机式流式追问**，预置一键追问（如「分析该标的核心护城河与三大估值下行风险」），由 `local-engine.localAnswer` 确定性作答。
 
 ## 3. 架构图
 
@@ -63,6 +63,8 @@ flowchart TD
 
 **不配云环境的离线体验路径**：跳过步骤 3–4 直接编译——卡片标注「离线分析」（`usage.mode:'local'`），快读与断舍离仍由 `local-engine` 给出确定性结果，可完整演示。CI 与 `npm run verify` 全程不依赖云环境。
 
+**评委 H5 直测（免微信开发者工具）**：用任意现代浏览器直接打开 `web-sim/index.html`（双击即可，无需服务器/联网）。内嵌 iPhone 16 Pro 外框 + 微信状态栏，还原 TabBar 切换、页面流转与 Storage 缓存（localStorage 等价 `wx.setStorageSync`）；其分析内核由 `node tools/build-h5-sim.js` 从 `src/core/local-engine.js` **原样打包**——与小程序端同一份确定性代码、同输入同输出，修改内核后重跑该命令即可。
+
 ## 6. 一键验证
 
 > `package.json` scripts 已落地：`check` / `test`（`node --test`）/ `verify` / `demo` / `size`（无第三方依赖）。当前状态：`npm run verify` 全绿——13 条静态规则 0 失败 + 41/41 单元测试通过。
@@ -103,7 +105,8 @@ CI（[.github/workflows/ci.yml](.github/workflows/ci.yml)）在每次 push / PR 
 │   ├── components/               #   markdown-card / stream-lines / step-trace / empty-state
 │   └── core/                     #   ai-adapter.js / local-engine.js / skeleton.js / stream-bus.js
 ├── tests/                        # 单元测试（由并行任务产出）
-├── tools/                        # check-static.js / demo.js / size.js（由并行任务产出）
+├── tools/                        # check-static.js / demo.js / size.js / build-h5-sim.js
+├── web-sim/                      # H5 评委直测模拟器（index.html 浏览器直开，不占小程序包体）
 └── doc/                          # 架构文档与 DEPLOY-NOTES.md（由并行任务产出）
 ```
 

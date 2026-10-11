@@ -12,7 +12,9 @@
     <view class="card ask-card">
       <view class="card-title">基于这份结果追问</view>
       <view class="ask-hints">
+        <text class="ask-hint ask-hint-key" bindtap="onAskHint" data-q="分析该标的核心护城河与三大估值下行风险">护城河与估值下行风险</text>
         <text class="ask-hint" bindtap="onAskHint" data-q="有哪些风险点？">有哪些风险点？</text>
+        <text class="ask-hint" bindtap="onAskHint" data-q="行业竞争格局如何？">行业竞争格局</text>
         <text class="ask-hint" bindtap="onAskHint" data-q="关键数据是多少？">关键数据是多少？</text>
         <text class="ask-hint" bindtap="onAskHint" data-q="结论是什么？">结论是什么？</text>
       </view>
@@ -30,9 +32,10 @@
       </view>
 
       <block wx:for="{{answers}}" wx:key="index">
-        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}}">
+        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}} {{item.typing ? 'qa-typing' : ''}}">
           <text class="qa-role">{{item.role === 'user' ? '我' : 'AI'}}</text>
           <text class="qa-text">{{item.text}}</text>
+          <text wx:if="{{item.typing}}" class="qa-caret">▍</text>
         </view>
       </block>
     </view>

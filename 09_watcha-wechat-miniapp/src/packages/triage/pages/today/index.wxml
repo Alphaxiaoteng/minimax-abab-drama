@@ -44,9 +44,10 @@
         <view class="btn ask-send {{asking ? 'ask-send-disabled' : ''}}" bindtap="onAsk">{{asking ? '思考中' : '提问'}}</view>
       </view>
       <block wx:for="{{answers}}" wx:key="index">
-        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}}">
+        <view class="qa {{item.role === 'user' ? 'qa-user' : 'qa-ai'}} {{item.typing ? 'qa-typing' : ''}}">
           <text class="qa-role">{{item.role === 'user' ? '我' : 'AI'}}</text>
           <text class="qa-text">{{item.text}}</text>
+          <text wx:if="{{item.typing}}" class="qa-caret">▍</text>
         </view>
       </block>
     </view>
