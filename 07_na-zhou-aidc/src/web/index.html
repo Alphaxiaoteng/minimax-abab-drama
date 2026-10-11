@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>初焰·钠宙 — 钠电 × AIDC 削峰填谷仿真控制台</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="echarts.min.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -56,6 +56,35 @@
   </div>
 </section>
 
+<section class="controls pareto">
+  <div class="ctl-head"><h2>多目标 Pareto 调控</h2><span class="tag">滑动即触发后端 LP 重解</span></div>
+  <div class="ctl-row">
+    <div class="ctl grow">
+      <label>充放电倍率限制 (C-rate) <output id="c-crate-out" class="mono">0.25C</output></label>
+      <input type="range" id="c-crate" min="0.2" max="1.0" step="0.05" value="0.25">
+      <div class="scale mono"><span>0.2C 长寿命</span><span>功率 = 容量 × C</span><span>1.0C 高倍率</span></div>
+    </div>
+    <div class="ctl grow">
+      <label>峰谷电价差波动 <output id="c-spread-out" class="mono">0%</output></label>
+      <input type="range" id="c-spread" min="-0.30" max="0.30" step="0.01" value="0">
+      <div class="scale mono"><span>−30% 趋缓</span><span>围绕平段拉伸价差的 ±30%</span><span>+30% 加剧</span></div>
+    </div>
+    <div class="ctl grow">
+      <label>衰减惩罚 vs 收益权重 <output id="c-deg-out" class="mono">1.0×</output></label>
+      <input type="range" id="c-deg" min="0.2" max="3.0" step="0.1" value="1.0">
+      <div class="scale mono"><span>0.2× 激进套利</span><span>Degradation Penalty</span><span>3.0× 保守</span></div>
+    </div>
+    <div class="ctl island-ctl">
+      <label>市电突发跌落</label>
+      <label class="switch" title="模拟电网跌落，10ms 无缝切入钠电孤网">
+        <input type="checkbox" id="c-island">
+        <span class="track"><span class="knob"></span></span>
+      </label>
+      <span class="island-hint island-banner mono" id="island-hint">ISLAND 待机</span>
+    </div>
+  </div>
+</section>
+
 <div class="banner hidden" id="banner"></div>
 
 <section class="kpis">
@@ -88,7 +117,7 @@
   </div>
   <div class="panel">
     <div class="panel-head"><h2>PUE 仪表盘</h2><span class="tag">含储能往返损耗</span></div>
-    <div class="chart" id="chart-pue"></div>
+    <div class="chart" id="pue-gauge"></div>
   </div>
   <div class="panel span2">
     <div class="panel-head"><h2>储能削峰填谷功率</h2><span class="tag">充电 ▼ / 放电 ▲ · SOC 曲线</span></div>
@@ -97,6 +126,55 @@
   <div class="panel">
     <div class="panel-head"><h2>经济性分解</h2><span class="tag">元 / 日</span></div>
     <div class="chart" id="chart-cost"></div>
+  </div>
+
+  <div class="panel span2 twin">
+    <div class="panel-head">
+      <h2>机房热负荷数字孪生 · 32 机柜</h2>
+      <span class="tag">2.5D 俯视 · 冷/热通道 · 联动实时 IT 负载</span>
+    </div>
+    <div class="twin-body">
+      <div class="twin-stage-wrap">
+        <div class="rack-grid" id="rack-grid"></div>
+        <div class="aisle-strip" id="aisle-hot"></div>
+        <div class="aisle-labels mono"><span>冷通道送风 <b id="t-cold">18.0℃</b></span><span>热通道回风 <b id="t-hot">—</b></span></div>
+      </div>
+      <aside class="twin-side">
+        <div class="band-card">
+          <div class="band-title">PUE 设计带 <span class="mono dim">1.15 ~ 1.28</span></div>
+          <div class="band-meter" id="band-meter">
+            <div class="band-zone"></div>
+            <div class="band-needle" id="band-needle"></div>
+          </div>
+          <div class="band-scale mono"><span>1.10</span><span>1.50</span></div>
+          <div class="band-now mono">当前时刻 PUE <b id="t-pue">—</b></div>
+          <div class="band-note">设计带为规划目标（含液冷/自然冷源演进路线）；
+            指针为<b>本模型实测</b>口径 PUE——储能损耗使其略升，属真实代价，不做美化。</div>
+        </div>
+        <div class="twin-stats mono" id="twin-stats"></div>
+        <div class="scrub">
+          <button id="t-play" class="mono" title="播放 24h 热动态">▶</button>
+          <input type="range" id="t-scrub" min="0" max="95" step="1" value="56">
+          <span class="mono t-time" id="t-time">14:00</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="panel island-panel" id="panel-island">
+    <div class="panel-head"><h2>离网应急 · Island Mode</h2><span class="tag" id="i-tag">待机</span></div>
+    <div class="island-idle mono" id="island-idle">
+      拨动「市电突发跌落」开关<br>模拟电网电压跌落 → PCS <b>10ms</b> 无缝切岛
+    </div>
+    <div class="island-live hidden" id="island-live">
+      <div class="i-hero">
+        <div class="i-count mono"><span id="i-remain">—</span><small>剩余续航</small></div>
+        <div class="i-soc"><span class="mono" id="i-soc">—</span><small>孤网 SOC</small></div>
+      </div>
+      <div class="i-detail" id="i-detail"></div>
+      <div class="chart i-chart" id="chart-island"></div>
+      <div class="i-foot mono" id="i-warning"></div>
+    </div>
   </div>
 </main>
 

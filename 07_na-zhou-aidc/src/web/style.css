@@ -113,15 +113,112 @@ input[type="range"] { width: 100%; accent-color: var(--cyan); cursor: ew-resize;
 .panel-head h2 { font-size: 14px; font-weight: 600; }
 .tag { font-size: 11px; color: var(--dim); border: 1px solid var(--line); padding: 2px 8px; border-radius: 20px; }
 .chart { width: 100%; height: 300px; }
-#chart-pue { height: 300px; }
+#pue-gauge { height: 300px; }
 #chart-cost { height: 300px; }
 
 /* ---------- 页脚 ---------- */
 .foot { margin-top: 16px; padding: 10px 4px; font-size: 11px; color: var(--dim); border-top: 1px solid var(--line); }
 
+/* ---------- 多目标 Pareto 控制条 ---------- */
+.controls.pareto { display: block; grid-template-columns: none; }
+.ctl-head { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 4px 8px; }
+.ctl-head h2 { font-size: 13px; font-weight: 600; color: var(--cyan); letter-spacing: 1px; }
+.ctl-head .tag { font-size: 10.5px; }
+.ctl-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; }
+.ctl.island-ctl { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 170px; }
+.ctl.island-ctl label:first-child { margin-bottom: 0; width: 100%; }
+.island-hint { font-size: 11px; color: var(--dim); letter-spacing: 1px; }
+.island-hint.active { color: var(--red); text-shadow: 0 0 10px rgba(255, 107, 122, 0.8); animation: blink 0.8s infinite; }
+
+.switch { position: relative; display: inline-block; width: 52px; height: 26px; cursor: pointer; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .track {
+  position: absolute; inset: 0; border-radius: 26px; transition: 0.25s;
+  background: rgba(94, 148, 255, 0.15); border: 1px solid var(--line-strong);
+}
+.switch .knob {
+  position: absolute; top: 3px; left: 4px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--dim); transition: 0.25s;
+}
+.switch input:checked + .track { background: rgba(255, 107, 122, 0.35); border-color: var(--red); box-shadow: 0 0 14px rgba(255, 107, 122, 0.5); }
+.switch input:checked + .track .knob { transform: translateX(25px); background: var(--red); }
+
+/* ---------- 机房热孪生面板 ---------- */
+.twin-body { display: grid; grid-template-columns: 1.7fr 1fr; gap: 18px; padding: 4px 0 10px; }
+.twin-stage-wrap { perspective: 900px; }
+.rack-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(4, 52px);
+  gap: 7px; transform: rotateX(44deg) translateZ(-14px); transform-style: preserve-3d;
+  padding: 14px 10px 22px; border: 1px dashed var(--line); border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(36, 120, 255, 0.05), transparent 40%),
+    repeating-linear-gradient(90deg, rgba(94, 148, 255, 0.05) 0 1px, transparent 1px 58px);
+}
+.rack {
+  border-radius: 4px 4px 6px 6px; border: 1px solid rgba(180, 220, 255, 0.25);
+  box-shadow: 0 5px 0 rgba(4, 9, 18, 0.9), 0 10px 18px rgba(0, 0, 0, 0.5);
+  transition: background 0.35s ease, box-shadow 0.35s ease, opacity 0.3s;
+  position: relative; cursor: default;
+}
+.rack.crit::after {
+  content: "◆"; position: absolute; top: -2px; right: 3px; font-size: 8px; color: rgba(255, 255, 255, 0.85);
+}
+.rack.shed { opacity: 0.18; filter: grayscale(1); }
+.rack.island-on { box-shadow: 0 5px 0 rgba(4, 9, 18, 0.9), 0 0 16px rgba(53, 217, 154, 0.7); border-color: var(--green); }
+.aisle-strip {
+  height: 12px; margin-top: 4px; border-radius: 6px; transition: background 0.4s;
+  background: linear-gradient(90deg, #1a3a5c, #2a5a8c, #1a3a5c); border: 1px solid var(--line);
+}
+.aisle-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: 6px; }
+.aisle-labels b { color: var(--text); }
+
+.twin-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.band-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: rgba(6, 11, 22, 0.6); }
+.band-title { font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+.band-meter { position: relative; height: 14px; border-radius: 7px; background: rgba(94, 148, 255, 0.12); overflow: visible; }
+.band-zone {
+  position: absolute; top: 0; bottom: 0; border-radius: 7px;
+  background: linear-gradient(90deg, rgba(53, 217, 154, 0.5), rgba(53, 217, 154, 0.28));
+  border: 1px solid rgba(53, 217, 154, 0.55);
+}
+.band-needle {
+  position: absolute; top: -5px; width: 4px; height: 24px; border-radius: 2px;
+  background: var(--red); box-shadow: 0 0 10px var(--red); transition: left 0.4s ease;
+}
+.band-scale { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-top: 4px; }
+.band-now { font-size: 12px; color: var(--dim); margin-top: 8px; }
+.band-now b { color: var(--text); font-size: 16px; }
+.band-note { font-size: 10.5px; color: var(--dim); margin-top: 8px; line-height: 1.55; }
+.twin-stats { font-size: 11.5px; color: var(--dim); line-height: 1.8; }
+.twin-stats b { color: var(--text); font-weight: 500; }
+.scrub { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+.scrub button {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line-strong);
+  background: rgba(6, 11, 22, 0.8); color: var(--cyan); cursor: pointer; font-size: 12px;
+}
+.scrub button.playing { border-color: var(--green); color: var(--green); }
+.scrub input[type="range"] { flex: 1; margin-top: 0; }
+.t-time { font-size: 12px; min-width: 44px; text-align: right; }
+
+/* ---------- Island 面板 ---------- */
+.island-panel.live { border-color: rgba(255, 107, 122, 0.5); box-shadow: 0 0 26px rgba(255, 107, 122, 0.12); }
+.island-idle { font-size: 12px; color: var(--dim); line-height: 2; text-align: center; padding: 60px 10px; }
+.island-idle b { color: var(--amber); }
+.i-hero { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 6px; }
+.i-count span { font-size: 34px; color: var(--green); }
+.i-count small, .i-soc small { display: block; font-size: 10.5px; color: var(--dim); }
+.i-soc { text-align: right; }
+.i-soc span { font-size: 22px; color: var(--cyan); }
+.i-detail { font-size: 11.5px; color: var(--dim); line-height: 1.9; padding: 2px 6px; }
+.i-detail b { color: var(--text); font-weight: 500; }
+.i-chart { height: 168px; }
+.i-foot { font-size: 10.5px; color: var(--amber); padding: 0 6px 6px; min-height: 14px; }
+
 @media (max-width: 1100px) {
   .controls { grid-template-columns: 1fr 1fr; }
+  .ctl-row { grid-template-columns: 1fr; }
   .kpis { grid-template-columns: 1fr 1fr; }
   .grid { grid-template-columns: 1fr; }
   .panel.span2 { grid-column: 1; }
+  .twin-body { grid-template-columns: 1fr; }
 }
