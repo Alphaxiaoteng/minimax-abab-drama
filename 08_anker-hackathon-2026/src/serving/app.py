@@ -12,6 +12,7 @@ import math
 import os
 import time
 from dataclasses import replace, asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -19,7 +20,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from serving.api import HealthResponse, PlanRequest
+from serving.api import HealthResponse, PlanRequest, ScenarioComparisonRequest, ROIReportRequest
 
 VERSION = "1.0.0"
 
@@ -565,9 +566,206 @@ def api_simulate(
 
 
 # --------------------------------------------------------------------------
-# 入口
+# 新 Phase 2 功能：NILM 分解、场景矩阵、SOH/ROI
 # --------------------------------------------------------------------------
-def main() -> None:
+@app.get("/api/appliances")
+def api_appliances() -> Dict[str, Any]:
+    """获取电器配置与状态。"""
+    from core.appliance import NILMEngine, ApplianceType
+    
+    appliances = {
+        ApplianceType.HEAT_PUMP: type('obj', (object,), {
+            'type': ApplianceType.HEAT_PUMP,
+            'max_power_kw': 3.0,
+            'can_defer': True,
+        })(),
+        ApplianceType.EV_CHARGER: type('obj', (object,), {
+            'type': ApplianceType.EV_CHARGER,
+            'max_power_kw': 11.0,
+            'can_defer': True,
+        })(),
+        ApplianceType.BASE_LOAD: type('obj', (object,), {
+            'type': ApplianceType.BASE_LOAD,
+            'max_power_kw': 1.0,
+            'can_defer': False,
+        })(),
+        ApplianceType.LIGHTING: type('obj', (object,), {
+            'type': ApplianceType.LIGHTING,
+            'max_power_kw': 0.5,
+            'can_defer': True,
+        })(),
+    }
+    
+    nilm = NILMEngine(appliances)
+    breakdown = nilm.get_breakdown(_current_hour())
+    
+    return {
+        "appliances": breakdown,
+        "nilm_available": True,
+        "scheduling_features": ["ev_smart_charging", "heat_pump_optimization", "load_shifting"],
+    }
+
+
+@app.post("/api/appliances/breakdown")
+def api_appliance_breakdown(req: PlanRequest) -> JSONResponse:
+    """家电负荷分解分析。"""
+    from core.appliance import NILMEngine, ApplianceType
+    
+    appliances = {
+        ApplianceType.HEAT_PUMP: type('obj', (object,), {
+            'type': ApplianceType.HEAT_PUMP, 'max_power_kw': 3.0, 'min_power_kw': 0.3, 'can_defer': True,
+        })(),
+        ApplianceType.EV_CHARGER: type('obj', (object,), {
+            'type': ApplianceType.EV_CHARGER, 'max_power_kw': 11.0, 'min_power_kw': 0.0, 'can_defer': True,
+        })(),
+        ApplianceType.BASE_LOAD: type('obj', (object,), {
+            'type': ApplianceType.BASE_LOAD, 'max_power_kw': 1.0, 'min_power_kw': 0.5, 'can_defer': False,
+        })(),
+        ApplianceType.LIGHTING: type('obj', (object,), {
+            'type': ApplianceType.LIGHTING, 'max_power_kw': 0.5, 'min_power_kw': 0.1, 'can_defer': True,
+        })(),
+    }
+    
+    load_series = _load_series(req)
+    nilm = NILMEngine(appliances)
+    
+    breakdown_results = []
+    for hour in range(24):
+        total_load = load_series[hour]
+        states = nilm.step(total_load, hour, dt_hours=1.0)
+        breakdown = nilm.get_breakdown(hour)
+        breakdown_results.append({"hour": hour, "total_load_kw": total_load, "breakdown": breakdown})
+    
+    return JSONResponse({
+        "status": "ok",
+        "daily_breakdown": breakdown_results,
+        "summary": {
+            "total_appliances": len(appliances),
+            "schedulable_count": sum(1 for a in appliances.values() if a.can_defer),
+            "peak_load_kw": max(load_series),
+            "avg_load_kw": round(sum(load_series)/24, 2),
+        }
+    })
+
+
+@app.get("/api/scenarios")
+def api_scenarios() -> Dict[str, Any]:
+    """获取预设工况列表。"""
+    from core.scenarios import ScenarioMatrix
+    
+    return {
+        "scenarios": ScenarioMatrix.list_scenarios(),
+        "count": len(ScenarioMatrix.list_scenarios()),
+    }
+
+
+@app.post("/api/scenarios/compare")
+def api_scenario_compare(req: ScenarioComparisonRequest) -> JSONResponse:
+    """对比 MPC 优化与普通策略在特定场景下的收益。"""
+    from core.scenarios import ScenarioMatrix, ScenarioType
+    
+    try:
+        scenario_type = ScenarioType(req.scenario_type)
+    except ValueError:
+        raise HTTPException(status_code=422, detail=f"Unknown scenario: {req.scenario_type}")
+    
+    matrix = ScenarioMatrix()
+    comparison = matrix.compare_strategies(scenario_type, req.mpc_savings_pct)
+    
+    return JSONResponse(comparison)
+
+
+@app.get("/api/soh/status")
+def api_soh_status(
+    cycles_used: int = Query(1000, ge=0),
+    days_calendar: int = Query(365, ge=0),
+) -> SOHStatus:
+    """获取电池健康度 SOH 状态。"""
+    from core.soh_roi import BatteryDegradationModel
+    
+    model = BatteryDegradationModel()
+    current_soh = model.get_soh(cycles_used, days_calendar)
+    
+    cycles_per_day = cycles_used / max(days_calendar, 1)
+    remaining = model.predict_remaining_life(current_soh, cycles_per_day)
+    
+    degradation_rate = (1.0 - current_soh) / max(days_calendar / 365.0, 1) * 100  # % per year
+    
+    return SOHStatus(
+        current_soh=current_soh,
+        cycles_used=cycles_used,
+        days_calendar=days_calendar,
+        degradation_rate_per_year=degradation_rate,
+        predicted_remaining_life=remaining,
+    )
+
+
+@app.post("/api/roi/report")
+def api_roi_report(req: ROIReportRequest) -> ROIReport:
+    """生成投资回报分析报告。"""
+    from core.soh_roi import ROIPredictor
+    
+    predictor = ROIPredictor(
+        battery_cost_cny=req.battery_cost_cny,
+        annual_savings_cny=req.annual_savings_cny,
+        annual_maintenance_cny=req.annual_maintenance_cny,
+        carbon_credit_value=req.carbon_credit_value,
+        annual_carbon_reduction_kg=req.carbon_reduction_kg,
+    )
+    
+    payback = predictor.calculate_payback_period()
+    lcoe = predictor.calculate_lcoe()
+    npv_irr = predictor.calculate_npv_irr()
+    
+    return ROIReport(
+        investment_summary={
+            "total_initial_investment_cny": payback["total_initial_investment_cny"],
+            "battery_share_pct": round(req.battery_cost_cny / payback["total_initial_investment_cny"] * 100, 1),
+        },
+        payback_analysis={
+            "simple_years": payback["payback_period_simple_years"],
+            "discounted_years": payback["payback_period_discounted_years"],
+            "annual_net_benefit_cny": payback["annual_net_benefit_cny"],
+        },
+        lcoe_analysis={
+            "lcoe_per_kwh": lcoe,
+            "comparison_to_grid": "competitive" if lcoe < 0.65 else "expensive",
+        },
+        npv_irr_analysis=npv_irr,
+        environmental_impact={
+            "annual_carbon_kg": req.annual_carbon_reduction_kg,
+            "lifecycle_carbon_kg": req.annual_carbon_reduction_kg * 20,
+            "annual_trees_equiv": req.annual_carbon_reduction_kg / 15,  # 每棵树年吸收~15kg CO₂
+            "annual_carbon_revenue": req.annual_carbon_reduction_kg * req.carbon_credit_value,
+        },
+        lifecycle_projection=[],  # 可扩展为年度现金流预测
+    )
+
+
+@app.get("/api/roi/export/html")
+def api_roi_export_html(req: ROIReportRequest) -> str:
+    """导出 HTML 格式 ROI 报告。"""
+    report = api_roi_report(req)
+    soh = api_soh_status()
+    
+    from core.soh_roi import generate_html_report
+    path = f"/tmp/anker_roi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    generate_html_report(soh, report, path)
+    
+    return path
+
+
+@app.get("/api/roi/export/pdf")
+def api_roi_export_pdf(req: ROIReportRequest) -> str:
+    """导出 PDF 格式 ROI 报告（需 reportlab）。"""
+    report = api_roi_report(req)
+    soh = api_soh_status()
+    
+    from core.soh_roi import generate_pdf_report
+    path = f"/tmp/anker_roi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    generate_pdf_report(soh, report, path)
+    
+    return path
     import uvicorn
     port = int(os.environ.get("PORT", "8000"))
     uvicorn.run("serving.app:app", host="127.0.0.1", port=port, reload=False)
