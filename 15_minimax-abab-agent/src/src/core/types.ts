@@ -163,6 +163,26 @@ export interface DialogueTurn {
   readonly at: number;
 }
 
+/** 嫌疑人心理压力状态 */
+export interface SuspectStress {
+  readonly suspectId: string;
+  readonly stressLevel: number; // 0-100
+  readonly breakingPoint?: number; // 破防阈值
+  readonly unlockedConfessions: readonly string[]; // 已解锁的证词 ID
+  readonly evidenceExposed: readonly string[]; // 已出示的证据 ID
+}
+
+/** 剧情分支追踪节点 */
+export interface StoryNode {
+  readonly nodeId: string;
+  readonly label: string;
+  readonly phase: ScenePhase;
+  readonly trustRequirement?: number;
+  readonly tensionRequirement?: number;
+  readonly isUnlocked: boolean;
+  readonly endingType?: 'good' | 'bad' | 'true' | 'hidden';
+}
+
 export interface DramaState {
   readonly sessionId: string;
   readonly personaId: string;
@@ -175,6 +195,14 @@ export interface DramaState {
   readonly revealedClueIds: readonly string[];
   readonly turns: readonly DialogueTurn[];
   readonly ended: boolean;
+  /** 每个嫌疑人的心理压力状态 */
+  readonly suspectStresses: ReadonlyMap<string, SuspectStress>;
+  /** 剧情分支追踪 */
+  readonly storyNodes: readonly StoryNode[];
+  /** 当前选中的证据（用于红绳墙连线展示） */
+  readonly selectedEvidenceId?: string;
+  /** 当前审讯模式选中的嫌疑人 */
+  readonly currentInterrogationSuspectId?: string;
 }
 
 export type DramaEventType =
