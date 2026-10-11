@@ -110,3 +110,37 @@ class HealthResponse(BaseModel):
     models: List[str] = Field(default_factory=list)
     cities: List[str] = Field(default_factory=list)
     version: str = "1.0"
+
+
+# New Phase 2 API Models
+class ApplianceConfig(BaseModel):
+    type: str
+    max_power_kw: float
+    min_power_kw: float = 0.0
+    efficiency: float = 1.0
+    soc_min: float = 0.0
+    soc_max: float = 1.0
+    priority: int = 5
+    can_defer: bool = True
+
+
+class ApplianceState(BaseModel):
+    soc: float = 0.5
+    power_kw: float = 0.0
+    energy_kwh: float = 0.0
+    status: str = "off"
+    runtime_hours: float = 0.0
+    temperature_c: float = 25.0
+    degradation_factor: float = 1.0
+
+
+class ScenarioConfig(BaseModel):
+    scenario_type: str = "sunny_high_pv"
+
+
+class ROIReportRequest(BaseModel):
+    battery_cost_cny: float = 25000.0
+    annual_savings_cny: float = 1500.0
+    annual_maintenance_cny: float = 500.0
+    carbon_reduction_kg: float = 300.0
+    carbon_credit_value: float = 0.05
