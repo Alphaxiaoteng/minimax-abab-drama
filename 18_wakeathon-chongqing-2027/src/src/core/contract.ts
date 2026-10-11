@@ -1,6 +1,6 @@
 /**
- * 冻结接口契约 v0.2 —— 所有模块（智能体 / 视觉 / 评测）共同依赖此文件。
- * 变更此文件必须同步 src/eval/ 下的评测基线。
+ * 冻结接口契约 v0.2 —— 所有模块（智能体/视觉/评测）共同依赖此文件。
+ * 变更此文件必须同步 src/eval/下的评测基线。
  */
 
 /** 12 幕演出分镜：Windows 音效 + 场景命令 + 雾灵台词 + 工程说明 */
@@ -80,6 +80,28 @@ export type EventMap = {
   /** 12 幕大秀进度：cmd 平台用；HUD 用它显示当前分镜 */
   "show:cue": { index: number; total: number; plan: ScenePlan };
   "show:state": { running: boolean; index: number };
+  /** 相机导播系统：预设切换事件通知 */
+  "camera:change": { preset: CameraPresetName };
+  /** UI 组件相机变化通知（用于 HUD 状态更新） */
+  "ui:cameraChange": { preset: string; title: string; isTransitioning: boolean };
+  /** 微气候控制：雾浓度调节 */
+  "weather:fogDensity": { value: number };
+  /** 微气候控制：体积光强度调节 */
+  "weather:volumetricLight": { value: number };
+  /** 微气候控制：辉光强度调节 */
+  "weather:bloom": { value: number };
+  /** 微气候控制：触发烟花 */
+  "weather:fireworks": Record<string, never>;
+  /** 智能交通：点击车辆后展示详情 */
+  "traffic:agentClick": { id: string; speed: number; target: string; state: 'moving' | 'stopped' | 'slowing'; avoidanceStrategy?: string };
 };
 
 export type EventName = keyof EventMap;
+
+/** 相机预设名称类型 */
+export type CameraPresetName = 
+  | 'jie-fang-bei-aerial' 
+  | 'hong-ya-dong-closeup' 
+  | 'nan-shan-panorama' 
+  | 'cable-car-pov' 
+  | 'rail-transit-tracking';

@@ -33,7 +33,22 @@ export class EventBus {
   }
 
   names(): EventName[] {
-    return ["countdown:tick", "wake:moment", "agent:utterance", "agent:command", "ui:intent", "show:cue", "show:state"];
+    return [
+      "countdown:tick",
+      "wake:moment",
+      "agent:utterance",
+      "agent:command",
+      "ui:intent",
+      "show:cue",
+      "show:state",
+      "camera:change",
+      "ui:cameraChange",
+      "weather:fogDensity",
+      "weather:volumetricLight",
+      "weather:bloom",
+      "weather:fireworks",
+      "traffic:agentClick",
+    ];
   }
 }
 
