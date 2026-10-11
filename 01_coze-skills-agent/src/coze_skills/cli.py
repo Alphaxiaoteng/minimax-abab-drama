@@ -3,6 +3,8 @@
 用法::
 
     PYTHONPATH=src python3 -m coze_skills.cli schema --out docs/coze-plugin-openapi.json
+    PYTHONPATH=src python3 -m coze_skills.cli schema --format yaml --out docs/coze-plugin-openapi.yaml
+    PYTHONPATH=src python3 -m coze_skills.cli audit
     PYTHONPATH=src python3 -m coze_skills.cli list
     PYTHONPATH=src python3 -m coze_skills.cli selftest
 
@@ -17,10 +19,18 @@ import json
 import sys
 from typing import Any, Dict, List, Optional, Sequence
 
+from .core.audit import run_audit
 from .core.registry import build_default_registry
 from .core.runner import ToolRunner
-from .core.schema import DEFAULT_SERVER_URL, build_openapi, validate_openapi
+from .core.schema import (
+    DEFAULT_PLUGIN_DESCRIPTION,
+    DEFAULT_PLUGIN_TITLE,
+    DEFAULT_SERVER_URL,
+    build_openapi,
+    validate_openapi,
+)
 from .core.spec import ToolResult
+from .core.yamlout import sorted_document, to_yaml
 
 
 def _load_registry(strict: bool = True):
@@ -45,6 +55,10 @@ def cmd_list(args: argparse.Namespace) -> int:
 def cmd_schema(args: argparse.Namespace) -> int:
     """生成 OpenAPI 文档 (含 info/servers/tags/example), 可选写入文件, 并做结构校验.
 
+    ``--format yaml`` 走的是网关同一套确定性序列化 (键名字典序 + 标准库 YAML 发射器),
+    因此本地导出的 YAML 与线上 ``GET /export/openapi?format=yaml`` 逐字节一致.
+
+    :param args: 需含 ``format`` / ``out`` / ``title`` / ``version`` / ``description`` / ``server_url``.
     :returns: 进程退出码 (校验不通过为 1, 便于 CI 拦截).
     """
     registry = _load_registry()
@@ -56,7 +70,10 @@ def cmd_schema(args: argparse.Namespace) -> int:
         server_url=args.server_url,
     )
     problems: List[str] = validate_openapi(doc)
-    payload = json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True)
+    if args.format == "yaml":
+        payload = to_yaml(sorted_document(doc))
+    else:
+        payload = json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True)
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fp:
             fp.write(payload)
@@ -81,6 +98,49 @@ def cmd_schema(args: argparse.Namespace) -> int:
         file=sys.stderr,
     )
     return 0
+
+
+#: 自检清单三档状态对应的行首标记 (info 是「不影响导入、但上架前值得看一眼」的提示项)
+_AUDIT_MARK = {"pass": "ok  ", "info": "info", "warning": "WARN", "error": "FAIL"}
+
+
+def cmd_audit(args: argparse.Namespace) -> int:
+    """跑一遍 Coze 平台兼容性自检清单 (与网关 ``GET /audit`` 同一套判据).
+
+    ``--format json`` 直接输出机器可解析的清单, 便于 CI 与提交材料归档;
+    退出码只由 warning/error 决定 —— info 是提示, 拦下 CI 只会逼人把检查关掉.
+
+    :param args: 需含 ``format`` / ``out`` / ``title`` / ``version`` / ``description`` / ``server_url``.
+    :returns: 存在 warning 或 error 时为 1, 否则 0.
+    """
+    registry = _load_registry()
+    report = run_audit(
+        registry,
+        title=args.title,
+        version=args.version,
+        description=args.description,
+        server_url=args.server_url,
+        runner=ToolRunner(registry),
+    )
+    summary = report["summary"]
+    if args.format == "json":
+        payload = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True)
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as fp:
+                fp.write(payload)
+            print(f"已写入 {args.out} ({len(payload)} 字节)")
+        else:
+            print(payload)
+    else:
+        print(f"=== Coze 兼容性自检 · {summary['checked']} 项 ===")
+        for item in report["items"]:
+            mark = _AUDIT_MARK.get(item["status"], "?   ")
+            print(f"  [{mark}] {item['name']}: {item['detail']}")
+        print(
+            f"→ {summary['pass']} pass / {summary['info']} info / "
+            f"{summary['warning']} warning / {summary['error']} error :: {report['verdict']}"
+        )
+    return 0 if report["ok"] else 1
 
 
 def cmd_selftest(args: argparse.Namespace) -> int:
@@ -123,19 +183,27 @@ def cmd_invoke(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """构造参数解析器 (子命令: list / schema / export-openapi / selftest / invoke)."""
+    """构造参数解析器 (子命令: list / schema / export-openapi / audit / selftest / invoke)."""
     parser = argparse.ArgumentParser(prog="coze_skills", description="扣子插件 Schema 生成与本地自检")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_list = sub.add_parser("list", help="列出全部已注册工具")
     p_list.set_defaults(func=cmd_list)
 
-    def _add_schema_args(p: argparse.ArgumentParser, help_text: str) -> None:
+    def _add_schema_args(
+        p: argparse.ArgumentParser,
+        help_text: str,
+        *,
+        format_choices: Sequence[str] = ("json", "yaml"),
+        format_default: str = "json",
+        format_help: str = "导出形态: json 便于程序消费, yaml 是扣子控制台「导入 OpenAPI」直接粘贴的形态",
+    ) -> None:
         p.description = help_text
         p.add_argument("--out", default=None, help="输出文件路径; 省略则打印到 stdout")
-        p.add_argument("--title", default="Coze 垂类提效插件集", help="OpenAPI info.title")
+        p.add_argument("--format", choices=format_choices, default=format_default, help=format_help)
+        p.add_argument("--title", default=DEFAULT_PLUGIN_TITLE, help="OpenAPI info.title")
         p.add_argument("--version", default="0.1.0", help="OpenAPI info.version")
-        p.add_argument("--description", default="垂类提效小工具统一网关", help="OpenAPI info.description")
+        p.add_argument("--description", default=DEFAULT_PLUGIN_DESCRIPTION, help="OpenAPI info.description")
         p.add_argument(
             "--server-url",
             default=DEFAULT_SERVER_URL,
@@ -150,10 +218,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_schema_args(
         sub.add_parser(
             "export-openapi",
-            help="导出完整 openapi.json: info/servers/tags + 每个工具的 example payload",
+            help="导出完整 openapi.json|yaml: info/servers/tags + 每个工具的 example payload",
         ),
-        "导出完整 openapi.json: info/servers/tags + 每个工具的 example payload, 严格通过 OpenAPI 3.0 结构校验",
+        "导出完整 OpenAPI 文档: info/servers/tags + 每个工具的 example payload, 严格通过 OpenAPI 3.0 结构校验",
     )
+    p_audit = sub.add_parser(
+        "audit",
+        help="Coze 平台兼容性自检清单 (与网关 GET /audit 同源; 有 warning/error 时退出码 1)",
+    )
+    _add_schema_args(
+        p_audit,
+        "对当前注册表生成的 Schema 跑满兼容性清单, 只导不发布, 适合提交前闸门",
+        format_choices=("text", "json"),
+        format_default="text",
+        format_help="text 给人看 (逐项打勾), json 给 CI 解析",
+    )
+    p_audit.set_defaults(func=cmd_audit)
 
     p_self = sub.add_parser("selftest", help="逐工具执行缺参调用, 验证校验链路")
     p_self.set_defaults(func=cmd_selftest)

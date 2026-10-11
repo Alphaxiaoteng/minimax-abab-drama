@@ -12,7 +12,7 @@
     <span class="logo">⚡</span>
     <div>
       <h1>Plugin Debugger Studio</h1>
-      <p>扣子电商提效插件集 · 合规审查 / 批量体检 / 差评归因 / 英文回复 · <b>全程离线，零外部依赖</b></p>
+      <p>扣子电商提效插件集 · 合规审查 / 批量体检 / 差评归因 / 英文回复 · Bot 演练 · 容灾沙箱 · 规范自检 · <b>全程离线，零外部依赖</b></p>
     </div>
   </div>
   <div class="topmeta">
@@ -27,6 +27,9 @@
   <button class="tab" data-tab="batch" role="tab">② 批量文案体检</button>
   <button class="tab" data-tab="insight" role="tab">③ 差评主题洞察</button>
   <button class="tab" data-tab="reply" role="tab">④ 差评英文回复</button>
+  <button class="tab" data-tab="bot" role="tab">🤖 Coze Bot 演练</button>
+  <button class="tab" data-tab="chaos" role="tab">🛡 容灾沙箱</button>
+  <button class="tab" data-tab="schema" role="tab">📤 规范导出与自检</button>
 </nav>
 
 <main>
@@ -174,10 +177,115 @@
       </div>
     </div>
   </section>
+
+  <!-- ================= ⑤ Coze Bot 对话演练场 ================= -->
+  <section class="panel" id="panel-bot">
+    <div class="card">
+      <div class="card-head">
+        <h2>🤖 Coze Bot 演练 <span class="sub">自然语言 → Function Calling 选择 → 直连同一网关执行 → 结构化卡片</span></h2>
+        <span id="bot-turns" class="pill pill-dim">0 轮</span>
+      </div>
+      <div id="bot-log" class="chatlog" aria-live="polite"></div>
+      <div id="bot-quicks" class="quicks"><span class="empty">快问快答载入中…</span></div>
+      <div class="chatrow">
+        <textarea id="bot-input" rows="2" spellcheck="false" placeholder="说人话就行，例如：这条文案能不能直接发:「全网销量第一，七天美白」"></textarea>
+        <div class="chatside">
+          <button id="bot-send" class="btn btn-primary" type="button">发送</button>
+          <button id="bot-reset" class="btn btn-ghost" type="button">清空上下文</button>
+        </div>
+      </div>
+      <div class="legend">
+        <span>上下文：<b id="bot-ctx" class="mono">无</b></span>
+        <span id="bot-note" class="empty">选择环节由本地确定性意图路由替身完成，Schema／校验／超时／响应结构与扣子完全同源，不消耗 Token 之外不发任何外部请求。</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ⑥ 容灾与异常注入沙箱 ================= -->
+  <section class="panel" id="panel-chaos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h2>429 限流保护 <span class="sub">尊重 Retry-After 的指数退避重试</span></h2>
+          <span id="th-verdict" class="pill pill-dim">未运行</span>
+        </div>
+        <div class="field-row">
+          <label>拒绝次数
+            <input id="th-reject" type="number" min="0" max="5" value="2">
+          </label>
+          <label>最大重试
+            <input id="th-attempt" type="number" min="1" max="6" value="4">
+          </label>
+          <button id="th-run" class="btn btn-primary" type="button">发起并退避重试</button>
+        </div>
+        <div id="th-log" class="simlog"><p class="empty">每次尝试的真实状态码、退避时长与恢复轮次都会逐行落在这里。</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>504 超时降级 <span class="sub">客户端预算中断 + 服务端降级封套</span></h2>
+          <span id="to-verdict" class="pill pill-dim">未运行</span>
+        </div>
+        <div class="field-row">
+          <label>上游耗时 ms
+            <input id="to-ms" type="number" min="0" max="5000" step="100" value="2500">
+          </label>
+          <label>客户端预算 ms
+            <input id="to-budget" type="number" min="0" max="5000" step="100" value="1200">
+          </label>
+          <button id="to-abort" class="btn btn-primary" type="button">预算中断</button>
+          <button id="to-degrade" class="btn btn-ghost" type="button">等待服务端降级</button>
+        </div>
+        <div id="to-log" class="simlog"><p class="empty">降级回退会取用最近一次成功结果（本地缓存），运营侧永远看得到东西。</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>畸形入参注入电池 <span class="sub">每条都打真实 POST /tools/{name}，由同一校验链路拦截</span></h2>
+        <div class="btns">
+          <span id="bat-verdict" class="pill pill-dim">用例 -</span>
+          <button id="bat-run" class="btn btn-primary" type="button">一键全量注入</button>
+        </div>
+      </div>
+      <div id="bat-log" class="battery"><p class="empty">等待注入 —— 红字诊断即线上扣子看到的原文，不藏堆栈。</p></div>
+    </div>
+  </section>
+
+  <!-- ================= ⑦ OpenAPI 导出与兼容性自检 ================= -->
+  <section class="panel" id="panel-schema">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h2>一键兼容性自检 <span class="sub">19 项判据 · 目标 0 error / 0 warning</span></h2>
+          <div class="btns">
+            <span id="audit-badge" class="badge badge-none">未运行</span>
+            <button id="audit-run" class="btn btn-primary" type="button">立即自检</button>
+          </div>
+        </div>
+        <div id="audit-list" class="audit"><p class="empty">点击「立即自检」，逐项核对结构合法性与平台可用性。</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>规范导出 <span class="sub">与线上 Schema 同源，可直接粘进扣子「导入 OpenAPI」</span></h2>
+          <label class="inline-lab">格式
+            <select id="ex-format"><option value="yaml">YAML</option><option value="json">JSON</option></select>
+          </label>
+        </div>
+        <div class="field-row">
+          <a id="ex-download" class="btn btn-primary" href="/export/openapi?format=yaml" download>下载配置文件</a>
+          <button id="ex-refresh" class="btn btn-ghost" type="button">刷新预览</button>
+          <span id="ex-meta" class="pill pill-dim">-</span>
+        </div>
+        <pre id="ex-preview" class="codepane">预览载入中…</pre>
+      </div>
+    </div>
+  </section>
 </main>
 
 <div id="toast" class="toast"></div>
-<footer class="foot">ToolSpec → OpenAPI 3.0 → 同一网关进程直调 · 结果确定可复现 · <a href="/openapi.coze.json">/openapi.coze.json</a> · <a href="/tools">/tools</a></footer>
+<footer class="foot">ToolSpec → OpenAPI 3.0 → 同一网关进程直调 · 结果确定可复现 · <a href="/openapi.coze.json">/openapi.coze.json</a> · <a href="/tools">/tools</a> · <a href="/audit">/audit</a> · <a href="/export/openapi?format=yaml">/export/openapi</a></footer>
 <script src="/studio/app.js"></script>
 </body>
 </html>
