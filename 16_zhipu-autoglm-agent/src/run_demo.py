@@ -239,7 +239,32 @@ class ReplayRecorder:
                            got=item.get("got"), handled=item.get("handled"),
                            fault=item.get("kind"), rnd=item.get("round"),
                            source=item.get("source"), conf=item.get("conf"))
+            elif act == "click":
+                self._stamp_click(item)
         self._cursor = len(self.ctrl.trace)
+
+    def _stamp_click(self, item: dict) -> None:
+        """把 Controller.click 记录的真实定位通道 / OCR 置信度回填到对应的 tap/dismiss 事件。
+
+        click 的 `at` 即点击中心（与 device.tap 收到的坐标同源），据此就近匹配最近一条
+        尚未回填的点击事件，看板节点树检查器就能展示端侧视觉 Agent 的底层识别细节。
+        """
+        at = item.get("at")
+        if not at or len(at) < 2:
+            return
+        src, conf = item.get("source"), item.get("conf")
+        for ev in reversed(self.events):
+            if ev.get("lane") != "action" or ev.get("kind") not in ("tap", "dismiss"):
+                continue
+            if ev.get("source") is not None:
+                continue  # 已回填，避免重复/串位
+            ex, ey = ev.get("x"), ev.get("y")
+            if ex is None or ey is None:
+                continue
+            if abs(ex - at[0]) <= 30 and abs(ey - at[1]) <= 30:
+                ev["source"] = src
+                ev["conf"] = conf
+                return
 
     # ---- 安装 ----
     def start(self) -> None:
@@ -254,12 +279,20 @@ class ReplayRecorder:
         _tap = dev.tap
         def tap(x, y, *a, **k):
             is_modal = bool(dev.modal)
+            popup_id = dev.modal  # 关闭前捕获弹窗屏 id，供看板渲染拦截快照
+            base_screen = dev.screen
             el, bounds = self._hit(x, y)
             _tap(x, y, *a, **k)
-            self._push("action", "dismiss" if is_modal else "tap",
-                       x=round(x), y=round(y),
-                       text=(el.text if el else ""), key=(el.key if el else ""),
-                       bounds=bounds)
+            if is_modal:
+                self._push("action", "dismiss", popup=popup_id,
+                           screen=base_screen, modal=True,
+                           x=round(x), y=round(y),
+                           text=(el.text if el else ""), key=(el.key if el else ""),
+                           rid=(el.rid if el else ""), bounds=bounds)
+            else:
+                self._push("action", "tap", x=round(x), y=round(y),
+                           text=(el.text if el else ""), key=(el.key if el else ""),
+                           rid=(el.rid if el else ""), bounds=bounds)
         dev.tap = tap  # type: ignore[assignment]
 
         _inp = dev.input_text
@@ -271,7 +304,8 @@ class ReplayRecorder:
             cx = round((bounds[0] + bounds[2]) / 2) if bounds else None
             cy = round((bounds[1] + bounds[3]) / 2) if bounds else None
             self._push("action", "type", text=text, field=focused,
-                       key=(el.key if el else focused), x=cx, y=cy, bounds=bounds)
+                       key=(el.key if el else focused), rid=(el.rid if el else ""),
+                       x=cx, y=cy, bounds=bounds)
             _inp(text, *a, **k)
         dev.input_text = input_text  # type: ignore[assignment]
 
@@ -280,6 +314,21 @@ class ReplayRecorder:
             _clear(*a, **k)
             self._push("action", "clear", field=getattr(dev, "_focused", None))
         dev.clear_field = clear_field  # type: ignore[assignment]
+
+        # 滑动/滚动：swipe 只改 offsets、不消耗 RNG，可安全instrument。
+        # 记录起点→终点与手指方向，看板据此绘制方向指示箭头。
+        _sw = dev.swipe
+        def swipe(x1, y1, x2, y2, *a, **k):
+            _sw(x1, y1, x2, y2, *a, **k)
+            dx = x2 - x1
+            dy = y2 - y1
+            if abs(dy) >= abs(dx):
+                direction = "up" if dy < 0 else ("down" if dy > 0 else "none")
+            else:
+                direction = "left" if dx < 0 else ("right" if dx > 0 else "none")
+            self._push("action", "swipe", x1=round(x1), y1=round(y1),
+                       x2=round(x2), y2=round(y2), direction=direction)
+        dev.swipe = swipe  # type: ignore[assignment]
 
         for meth in ("click", "type_text", "watch", "tap_if_present"):
             self._wrap_ctrl(meth)
@@ -309,6 +358,8 @@ def _build_layout(dev) -> dict:
             "elements": [
                 {"key": e.key, "text": e.text or "", "cls": e.cls,
                  "editable": bool(e.editable), "clickable": bool(e.clickable),
+                 "rid": e.rid or "", "desc": e.desc or "",
+                 "noisy": bool(e.noisy), "scrollable": bool(e.scrollable),
                  "x": round(float(e.x), 4), "y": round(float(e.y), 4),
                  "w": round(float(e.w), 4), "h": round(float(e.h), 4)}
                 for e in sd.elements
