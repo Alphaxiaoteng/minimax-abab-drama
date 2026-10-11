@@ -122,6 +122,15 @@ def _plugin_error_schema() -> Dict[str, Any]:
 #: 默认网关地址: Coze 插件导入后 servers 需指向公网可达的 HTTP 服务地址
 DEFAULT_SERVER_URL = "http://127.0.0.1:8000"
 
+#: 默认插件标题: 出现在 Coze 插件详情页与导入框, 与 CLI 默认值同源
+DEFAULT_PLUGIN_TITLE = "Coze 垂类提效插件集"
+
+#: 默认插件描述: 必须一句话说清「给谁、解决什么、是否离线」, 否则详情页一片空白
+DEFAULT_PLUGIN_DESCRIPTION = (
+    "垂类提效小工具统一网关: 文案合规审查 / 批量体检 / 差评主题归因 / 英文客服回复, "
+    "全程本地规则引擎计算, 不依赖任何外部接口, 断网也能稳定出结果。"
+)
+
 
 def build_openapi(
     registry: ToolRegistry,

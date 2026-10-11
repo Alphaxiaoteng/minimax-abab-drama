@@ -31,9 +31,14 @@ CN_STOP_WORDS: Tuple[str, ...] = ("的", "了", "是", "很", "都", "就", "也
 #: 英文停用词 (小写)
 EN_STOP_WORDS: Tuple[str, ...] = ("the", "is", "and", "for", "with", "this", "that", "it", "i", "a")
 
-#: 负面情绪词 (命中即该条评论记为 negative)
+#: 负面情绪词 (命中即该条评论记为 negative)。
+#: 覆盖面必须与 THEME_KEYWORDS 的口语表述同步 —— 词表太窄时, 一整屏真实差评
+#: (「快递太慢」「盒子压烂」「偏小穿不进去」) 会算出个位数的负面占比, 面板结论即失真。
 NEGATIVE_WORDS: Tuple[str, ...] = (
-    "bad", "awful", "terrible", "worst", "useless", "差", "垃圾", "失望", "退货",
+    "bad", "awful", "terrible", "worst", "useless", "poor", "broken", "damaged", "late",
+    "rude", "disappointing", "差", "垃圾", "失望", "退货", "投诉", "慢", "破", "烂", "裂",
+    "坏", "偏小", "偏大", "穿不", "刺鼻", "异味", "不值", "太贵", "粗糙", "线头", "掉色",
+    "开线", "不符", "色差", "不回", "没回", "劣质", "假货", "压", "断裂",
 )
 
 #: 主题 -> 关键词表 (中英混合, 覆盖跨境差评八类高频归因)
