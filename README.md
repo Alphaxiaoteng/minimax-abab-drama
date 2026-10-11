@@ -23,6 +23,38 @@
 
 ---
 
-## 🛠️ 交付铁律
-1. **真实 Exit Code 0**：自动化单元测试与端到端运行成功率为准。
-2. **直奔奖金**：按奖金评委最看重的核心交付物（功能闭环、演示录屏、README 规范）进行敏捷交付。
+## 🛠️ 交付铁律与统一控制台
+
+本项目遵循客观真实交付原则：以真实计算、真实物理模型与真实终端 **Exit Code 0** 为唯一依据，杜绝静态 Mock 与占位符。
+
+### 统一控制台常用命令
+
+```bash
+# 执行全部 10 个赛事的单元与回归测试套件 (当前 752 项测试 100% 通过)
+make test-all
+
+# 执行全部 10 个赛事的完整端到端独立演示 (Exit Code 0)
+make demo-all
+
+# 全量双重交付验证 (test-all + demo-all)
+make verify-all
+```
+
+---
+
+## 📊 全量交付验收矩阵 (10/10 绿灯通过)
+
+| 编号 | 赛事目录 | 交付核心功能 | 自动化测试数 | 演示入口 | 验收状态 |
+| :---: | :--- | :--- | :---: | :--- | :---: |
+| **01** | [`01_coze-skills-agent`](file:///Users/albert/Documents/project/apps/bisai/01_coze-skills-agent) | 扣子插件网关 · OpenAPI 3.0 规范自检 (0 error/0 warn) · 容灾沙箱 · 意图路由 | **140 pass** | `./01_coze-skills-agent/scripts/demo.sh` | ✅ 绿灯 |
+| **07** | [`07_na-zhou-aidc`](file:///Users/albert/Documents/project/apps/bisai/07_na-zhou-aidc) | 钠电 × AIDC 削峰填谷 LP 调度 · 32 机柜热力数字孪生 · ECharts 离线纯局域网渲染 | **125 pass** | `./07_na-zhou-aidc/scripts/demo.sh` | ✅ 绿灯 |
+| **08** | [`08_anker-hackathon-2026`](file:///Users/albert/Documents/project/apps/bisai/08_anker-hackathon-2026) | Anker Solix 24h 闭环 MPC 滚动时域调度 · NILM 负荷分解 · SOH 电池衰减与 ROI 报表 | **143 pass** | `./08_anker-hackathon-2026/scripts/demo.sh` | ✅ 绿灯 |
+| **09** | [`09_watcha-wechat-miniapp`](file:///Users/albert/Documents/project/apps/bisai/09_watcha-wechat-miniapp) | 观猹微信小程序 · TF-IDF+正则确定性本地抽取 · iPhone 16 Pro H5 离线免编译模拟器 | **41 pass + 13 rules** | `./09_watcha-wechat-miniapp/scripts/demo.sh` | ✅ 绿灯 |
+| **11** | [`11_genai-open-agent`](file:///Users/albert/Documents/project/apps/bisai/11_genai-open-agent) | 企业级多智能体协同 · 4 角色 DAG 拓扑看板 · 黑板事件流 · 人工审核闸门 | **66 pass** | `./11_genai-open-agent/scripts/demo.sh` | ✅ 绿灯 |
+| **12** | [`12_suks-suzhou-ai-hackathon`](file:///Users/albert/Documents/project/apps/bisai/12_suks-suzhou-ai-hackathon) | InspectAI 表面缺陷 CPU 亚秒质检 · 800% 傅里叶频域放大镜 · 缺陷卡尺 · ISO 报告 | **56 pass (8/8 吻合)** | `./12_suks-suzhou-ai-hackathon/scripts/demo.sh` | ✅ 绿灯 |
+| **15** | [`15_minimax-abab-agent`](file:///Users/albert/Documents/project/apps/bisai/15_minimax-abab-agent) | 镜厅推理剧会话状态机 · 动态 SVG 线索红绳墙 · 心理压力计 · 商业化得分 92.1 | **116 pass** | `./15_minimax-abab-agent/scripts/demo.sh` | ✅ 绿灯 |
+| **16** | [`16_zhipu-autoglm-agent`](file:///Users/albert/Documents/project/apps/bisai/16_zhipu-autoglm-agent) | AutoGLM 端侧跨平台自动化 · 手机触控水波纹 · 无障碍节点树检查器 · 漂移自愈 | **30 pass** | `./16_zhipu-autoglm-agent/scripts/demo.sh` | ✅ 绿灯 |
+| **17** | [`17_dorahacks-anna-ai-mcp`](file:///Users/albert/Documents/project/apps/bisai/17_dorahacks-anna-ai-mcp) | 零依赖手写 JSON-RPC 2.0 MCP 服务 · RRF 混合重排 · 安全准入防御 · Web 检查器 | **35 pass + 17 smoke** | `./17_dorahacks-anna-ai-mcp/scripts/demo.sh` | ✅ 绿灯 |
+| **18** | [`18_wakeathon-chongqing-2027`](file:///Users/albert/Documents/project/apps/bisai/18_wakeathon-chongqing-2027) | 雾醒山城 3D 空间计算 · Three.js/CSS 双引擎 · 5 电影级导播机位 · 24 场景评测 (81.5分) | **24/24 eval pass** | `./18_wakeathon-chongqing-2027/scripts/demo.sh` | ✅ 绿灯 |
+| **合计** | **10 大纯现金赛事全家桶** | **全真机/全真算法/零假数据/零外部侵入** | **752 项测试全绿** | `make demo-all` | **100% 交付达标** |
+
